@@ -1,11 +1,13 @@
 package com.github.nikolaybespalov.gtoziexplorermap;
 
+import org.apache.commons.lang3.StringUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.image.ImageWorker;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.coverage.grid.Format;
 import org.opengis.geometry.Envelope;
 import org.opengis.parameter.GeneralParameterValue;
@@ -26,6 +28,25 @@ import java.util.Iterator;
 public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
     public OziExplorerMapReader(Path path) {
+        if (path == null) {
+            throw new IllegalArgumentException("asdasd");
+        }
+
+        OziMapFile mapFile = new OziMapFile(path);
+
+        OziProjection oziProjection = mapFile.getProjection();
+
+        if (oziProjection == null) {
+            throw new IllegalArgumentException("asdasd");
+        }
+
+        if (StringUtils.compare(OziProjection.LatitudeLongitude, oziProjection.getName()) == 0) {
+            crs = DefaultGeographicCRS.WGS84;
+
+        }
+        else {
+            throw new IllegalArgumentException("Unsupported projection");
+        }
     }
 
     @Override
@@ -57,6 +78,8 @@ public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
             return null;
         }
 
+
+
         return null;
 
 //        Rectangle sourceRegion = new Rectangle(x, y, w, h); // The region you want to extract
@@ -68,7 +91,6 @@ public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 //            ImageReader reader = readers.next();
 //            reader.setInput(stream);
 //
-        new ImageWorker().warp()
 //            param.setSourceRegion(sourceRegion); // Set region
 //
 //            BufferedImage image = reader.read(0, param); // Will read only the region specified

@@ -1,5 +1,7 @@
 package com.github.nikolaybespalov.gtoziexplorermap;
 
+import java.util.Arrays;
+
 @SuppressWarnings("unused")
 public enum OziEllipsoid {
     WGS_84(20, "WGS 84", 6378137.0, 298.257223563);
@@ -14,4 +16,14 @@ public enum OziEllipsoid {
         this.a = a;
         this.invf = invf;
     }
+
+    static OziEllipsoid byCode(int code) {
+        return Arrays.stream(values()).filter(oziEllipsoid -> oziEllipsoid.code == code).findFirst().get();
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
 }

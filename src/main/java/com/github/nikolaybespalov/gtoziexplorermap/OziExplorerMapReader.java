@@ -8,11 +8,14 @@ import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.data.DataSourceException;
+import org.geotools.data.WorldFileWriter;
+import org.geotools.gce.image.WorldImageReader;
+import org.geotools.gce.image.WorldImageWriter;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geotools.referencing.cs.DefaultCartesianCS;
+import org.geotools.referencing.operation.matrix.GeneralMatrix;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
 import org.opengis.coverage.grid.Format;
 import org.opengis.geometry.DirectPosition;
@@ -32,6 +35,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -43,16 +47,48 @@ public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
             throw new IllegalArgumentException("asdasd");
         }
 
-//        OziMapFile mapFile = new OziMapFile(path);
-//
-//        OziProjection oziProjection = mapFile.getProjection();
-//
-//        if (oziProjection == null) {
-//            throw new IllegalArgumentException("asdasd");
-//        }
+        double xMin = -26.858472, yMin = 152.288056;
+        double xMax = -26.449320, yMax = 152.991764;
+
+        double xPixelSize = xMax - xMin, yPixelSize = yMax - yMin, xULC = xMin, yULC = yMin;
+        Rectangle actualDim = new Rectangle(0, 0, 1202, 778);
 
         this.crs = DefaultGeographicCRS.WGS84;
-        this.originalGridRange = new GeneralGridEnvelope(new Rectangle(0, 0, 123, 123));
+        this.originalGridRange = new GeneralGridEnvelope(actualDim);
+        AffineTransform tt = AffineTransform.getTranslateInstance(1, 1).scale(1, 1);
+        GeneralMatrix gm = new GeneralMatrix(new double[][]{
+                {xPixelSize, 0, xULC},
+                {0, yPixelSize, yULC},
+                {0, 0, 0}});
+        this.raster2Model = ProjectiveTransform.create(gm);
+
+        try {
+            originalEnvelope = CRS.transform(ProjectiveTransform.create(gm), new GeneralEnvelope(actualDim));
+        } catch (TransformException e) {
+            throw new DataSourceException(e);
+        }
+
+        originalEnvelope.setCoordinateReferenceSystem(crs);
+
+        try {
+            Path wldPath = Files.createFile(Paths.get(path.getParent().toString(), coverageName + ".wld"));
+
+            WorldFileWriter writer = new WorldFileWriter(wldPath.toFile(), gm.toAffineTransform2D());
+        } catch (IOException e) {
+            throw new DataSourceException(e);
+        }
+        //this.originalEnvelope = raster2Model.transform()
+        //this.originalEnvelope = new GeneralEnvelope(new double[]{xMin, yMin}, new double[]{xMax, yMax});
+//        final GeneralMatrix gm = new GeneralMatrix(3);
+//
+//        // compute an "offset and scale" matrix
+//        gm.setElement(0, 0, xPixelSize);
+//        gm.setElement(1, 1, yPixelSize);
+//        gm.setElement(0, 1, rotationX);
+//        gm.setElement(1, 0, rotationY);
+//        gm.setElement(0, 2, xULC);
+//        gm.setElement(1, 2, yULC);
+//        this.raster2Model = ProjectiveTransform.create(new GeneralMatrix());
         //originalEnvelope = CRS.transform(CRS.findMathTransform(DefaultCartesianCS.GENERIC_2D, ), new GeneralEnvelope(actualDim));
         //originalEnvelope.setCoordinateReferenceSystem(crs);
 
@@ -64,7 +100,7 @@ public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
             double a = 152.991764 - 152.288056;
             double b = -26.858472 - -26.449320;
 
-            AffineTransform t = AffineTransform.getScaleInstance(1202 / b, 778 / b);
+            AffineTransform t = AffineTransform.getScaleInstance(1202 / b, 778 / a);
 
             AffineTransform t2 = AffineTransform.getTranslateInstance(26.449320, -152.288056);
 
@@ -79,6 +115,10 @@ public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
         } catch (FactoryException | NoninvertibleTransformException e) {
             return;
         }
+
+        AffineTransform.getScaleInstance(1202 , 778 ).concatenate(
+                AffineTransform.getTranslateInstance(26.449320, -152.288056)
+        );
 
         try (Stream<String> lines = Files.lines(path, Charset.forName("windows-1251"))) {
             lines.forEach(line -> {
@@ -144,7 +184,6 @@ public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
         } catch (IOException e) {
             throw new DataSourceException(e);
         }
-
 
 
         int asd = 0;

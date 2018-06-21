@@ -16,6 +16,7 @@ import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.operation.matrix.GeneralMatrix;
+import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
 import org.opengis.coverage.grid.Format;
 import org.opengis.geometry.DirectPosition;
@@ -43,9 +44,9 @@ import java.util.stream.Stream;
 public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
     public OziExplorerMapReader(Path path) throws DataSourceException {
-        if (path == null) {
-            throw new IllegalArgumentException("asdasd");
-        }
+        super(path);
+
+        this.coverageName = "Demo1";
 
         double xMin = -26.858472, yMin = 152.288056;
         double xMax = -26.449320, yMax = 152.991764;
@@ -55,7 +56,8 @@ public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
         this.crs = DefaultGeographicCRS.WGS84;
         this.originalGridRange = new GeneralGridEnvelope(actualDim);
-        AffineTransform tt = AffineTransform.getTranslateInstance(1, 1).scale(1, 1);
+        AffineTransform tt = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
+
         GeneralMatrix gm = new GeneralMatrix(new double[][]{
                 {xPixelSize, 0, xULC},
                 {0, yPixelSize, yULC},
@@ -71,9 +73,16 @@ public class OziExplorerMapReader extends AbstractGridCoverage2DReader {
         originalEnvelope.setCoordinateReferenceSystem(crs);
 
         try {
-            Path wldPath = Files.createFile(Paths.get(path.getParent().toString(), coverageName + ".wld"));
+            Path wldPath = Paths.get(path.getParent().toString(), coverageName + ".wld");
 
-            WorldFileWriter writer = new WorldFileWriter(wldPath.toFile(), gm.toAffineTransform2D());
+            if (wldPath.toFile().exists()) {
+                Files.delete(Paths.get(path.getParent().toString(), coverageName + ".wld"));
+            }
+
+            Files.createFile(wldPath);
+
+
+            WorldFileWriter writer = new WorldFileWriter(wldPath.toFile(), tt);
         } catch (IOException e) {
             throw new DataSourceException(e);
         }

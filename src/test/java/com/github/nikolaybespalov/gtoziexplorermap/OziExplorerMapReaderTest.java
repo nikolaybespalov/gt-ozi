@@ -10,12 +10,13 @@ import org.opengis.parameter.ParameterValue;
 
 import java.awt.*;
 import java.io.IOException;
+import java.nio.file.Paths;
 
 public class OziExplorerMapReaderTest {
 
     @Test
     public void test1() throws IOException {
-        OziExplorerMapReader reader = new OziExplorerMapReader(null);
+        OziExplorerMapReader reader = new OziExplorerMapReader(Paths.get("c:\\Users\\Nikolay Bespalov\\Documents\\github.com\\nikolaybespalov\\gt-oziexplorermap\\src\\test\\resources\\Maps\\Demo1.map"));
 
         GeneralEnvelope generalEnvelope = new GeneralEnvelope(new double[]{0, 1,}, new double[]{2, 3,});
 

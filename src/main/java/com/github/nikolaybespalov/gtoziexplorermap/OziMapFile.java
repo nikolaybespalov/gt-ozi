@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
@@ -26,6 +28,7 @@ public class OziMapFile {
     private static final String HEADER = "OziExplorer Map Data File";
     private String version;
     private OziProjection projection;
+    private List<OziPoint> points = Collections.emptyList();
     private OziProjectionSetup projectionSetup;
 //    private final String imageFile;
 //    private final OziDatum datum;
@@ -120,6 +123,37 @@ public class OziMapFile {
                         }
                     }
 
+                } else if (line.startsWith("Point")) {
+                    String[] values = line.split(",");
+
+                    if (values.length < 17) {
+                        return;
+                    }
+
+                    if (!NumberUtils.isCreatable(values[2]) || NumberUtils.isCreatable(values[3])) {
+                        return;
+                    }
+
+                    double x = NumberUtils.toDouble(values[2]);
+                    double y = NumberUtils.toDouble(values[3]);
+
+                    if (!NumberUtils.isCreatable(values[6]) || !NumberUtils.isCreatable(values[7]) ||
+                            !NumberUtils.isCreatable(values[9]) || !NumberUtils.isCreatable(values[10])) {
+                        return;
+                    }
+
+                    double lat = (NumberUtils.toDouble(values[6]) + NumberUtils.toDouble(values[7])) / 60.0;
+                    double lon = (NumberUtils.toDouble(values[9]) + NumberUtils.toDouble(values[10])) / 60.0;
+
+                    points.add(new OziPoint());
+
+//                    if (values[8].equals("S")) {
+//                        lat = -lat;
+//                    }
+//
+//                    if (values[11].equals("W")) {
+//                        lon = -lon;
+//                    }
                 }
             });
         } catch (IOException e) {

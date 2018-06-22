@@ -1,5 +1,6 @@
 package com.github.nikolaybespalov.gtoziexplorermap;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
@@ -9,15 +10,15 @@ import org.geotools.data.WorldFileWriter;
 import org.geotools.gce.image.WorldImageReader;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralEnvelope;
+import org.geotools.metadata.iso.citation.Citations;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geotools.referencing.datum.DefaultEllipsoid;
-import org.geotools.referencing.datum.DefaultGeodeticDatum;
 import org.geotools.referencing.operation.DefiningConversion;
 import org.geotools.referencing.operation.projection.Mercator1SP;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
+import org.geotools.referencing.wkt.Formattable;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.parameter.GeneralParameterValue;
@@ -26,15 +27,14 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CRSFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
-import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.cs.CartesianCS;
-import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.datum.Datum;
 import org.opengis.referencing.operation.Conversion;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
 import org.opengis.referencing.operation.TransformException;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
@@ -91,7 +91,6 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
                     Mercator1SP.Provider a = new Mercator1SP.Provider();
 
 
-
                 } else if (key.startsWith("Map Projection")) {
                     try {
                         String name = values[1];
@@ -109,6 +108,7 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
                                 CartesianCS cartCS = org.geotools.referencing.cs.DefaultCartesianCS.GENERIC_2D;
                                 MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
                                 ParameterValueGroup parameters = mtFactory.getDefaultParameters("Mercator_1SP");
+
 //                                parameters.parameter("central_meridian").setValue(-111.0);
 //                                parameters.parameter("latitude_of_origin").setValue(0.0);
 //                                parameters.parameter("scale_factor").setValue(1.0);
@@ -118,7 +118,7 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
                                 CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
 
-                                Map<String, ?> properties = Collections.singletonMap("name", "WGS 84 / UTM Zone 12N");
+                                Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
 
                                 this.crs = crsFactory.createProjectedCRS(properties, geoCRS, conversion, cartCS);
                                 break;
@@ -190,27 +190,32 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
         }
 
         try {
-            Path wldPath = Paths.get(path.getParent().toString(), "Demo1" + ".wld");
+
+            String baseName = FilenameUtils.removeExtension(path.toString());
+
+            Path wldPath = Paths.get(baseName + ".wld");
 
             if (wldPath.toFile().exists()) {
-                Files.delete(Paths.get(path.getParent().toString(), "Demo1" + ".wld"));
+                Files.delete(Paths.get(baseName + ".wld"));
             }
 
             Files.createFile(wldPath);
 
             WorldFileWriter writer = new WorldFileWriter(wldPath.toFile(), tempTransform);
 
-            Path prjPath = Paths.get(path.getParent().toString(), "Demo1" + ".prj");
+            Path prjPath = Paths.get(baseName + ".prj");
 
             if (prjPath.toFile().exists()) {
-                Files.delete(Paths.get(path.getParent().toString(), "Demo1" + ".prj"));
+                Files.delete(Paths.get(baseName + ".prj"));
             }
+
+
 
             Files.createFile(prjPath);
 
             final FileWriter prjWriter = new FileWriter(prjPath.toFile());
 
-            prjWriter.write(crs.toWKT());
+            prjWriter.write(((Formattable) crs).toWKT(Citations.OGC, 4));
 
             prjWriter.close();
         } catch (IOException e) {

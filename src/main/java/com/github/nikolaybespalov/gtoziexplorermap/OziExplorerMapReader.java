@@ -14,14 +14,15 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
 import org.opengis.coverage.grid.Format;
+import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -34,17 +35,24 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
     private MathTransform world2Model;
+    private Path imageFilePath;
     private WorldImageReader worldImageReader;
 
     public OziExplorerMapReader(Path path) throws DataSourceException, FactoryException, TransformException {
         super(path);
 
-        Path imageFilePath = Paths.get("c:\\Program Files\\OziExplorer\\Maps\\Demo1.bmp");
-
-        this.crs = DefaultGeographicCRS.WGS84;
-
         Rectangle gridRange = new Rectangle();
         GeneralEnvelope envelope = new GeneralEnvelope(2);
+
+        try (Stream<String> lines = Files.lines(path, Charset.forName("windows-1251"))) {
+            imageFilePath = Paths.get(lines.skip(2).findFirst().get());
+
+            if (!imageFilePath.toFile().exists()) {
+                imageFilePath = Paths.get(imageFilePath.toFile().getName());
+            }
+        } catch (IOException e) {
+            throw new DataSourceException(e);
+        }
 
         try (Stream<String> lines = Files.lines(path, Charset.forName("windows-1251"))) {
             lines.forEach(line -> {
@@ -126,11 +134,11 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
         this.raster2Model = ProjectiveTransform.create(t);
 
-        AffineTransform tempTransform = new AffineTransform((AffineTransform)this.raster2Model);
-//        tempTransform.translate(-0.5D, -0.5D);
+        AffineTransform tempTransform = new AffineTransform((AffineTransform) this.raster2Model);
+        tempTransform.translate(+0.5D, +0.5D);
 
         try {
-            originalEnvelope = CRS.transform(ProjectiveTransform.create(tempTransform), new GeneralEnvelope(new Rectangle(0, 0, 1202, 778)));
+            originalEnvelope = CRS.transform(raster2Model, new GeneralEnvelope(gridRange));
             originalEnvelope.setCoordinateReferenceSystem(crs);
         } catch (TransformException e) {
             throw new DataSourceException(e);
@@ -145,7 +153,7 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
             Files.createFile(wldPath);
 
-            WorldFileWriter writer = new WorldFileWriter(wldPath.toFile(), raster2Model);
+            WorldFileWriter writer = new WorldFileWriter(wldPath.toFile(), tempTransform);
 
             Path prjPath = Paths.get(path.getParent().toString(), "Demo1" + ".prj");
 
@@ -164,18 +172,7 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
             throw new DataSourceException(e);
         }
 
-        worldImageReader = new WorldImageReader(imageFilePath.toFile());
-
-
-        int asd = 0;
-        int asdf = asd;
-
-//        if (StringUtils.compare(OziProjection.LatitudeLongitude, oziProjection.getName()) == 0) {
-//            crs = DefaultGeographicCRS.WGS84;
-//
-//        } else {
-//            throw new IllegalArgumentException("Unsupported projection");
-//        }
+        worldImageReader = new WorldImageReader(path.getParent().toString() + "/" + imageFilePath.toFile().getName());
     }
 
     @Override
@@ -186,5 +183,15 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
     @Override
     public GridCoverage2D read(GeneralParameterValue[] params) throws IllegalArgumentException, IOException {
         return worldImageReader.read(params);
+    }
+
+    @Override
+    public GridEnvelope getOriginalGridRange() {
+        return worldImageReader.getOriginalGridRange();
+    }
+
+    @Override
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+        return worldImageReader.getCoordinateReferenceSystem();
     }
 }

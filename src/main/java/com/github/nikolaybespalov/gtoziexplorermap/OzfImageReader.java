@@ -1,6 +1,7 @@
 package com.github.nikolaybespalov.gtoziexplorermap;
 
-import it.geosolutions.imageio.stream.input.compressed.InflaterImageInputStream;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Shorts;
 
 import javax.imageio.ImageReadParam;
 import javax.imageio.ImageReader;
@@ -8,17 +9,18 @@ import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.ImageInputStreamImpl;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.util.Iterator;
-import java.util.zip.DataFormatException;
-import java.util.zip.Inflater;
 
+// https://trac.osgeo.org/gdal/browser/sandbox/klokan/ozf/ozf-binary-format-description.txt
+// http://www.oziexplorer3.com/eng/help/map_file_format.html
 public final class OzfImageReader extends ImageReader {
     ImageInputStream stream = null;
-
+    byte k2;
     boolean isOzf3 = false;
     int width;
     int height;
@@ -83,6 +85,7 @@ public final class OzfImageReader extends ImageReader {
         }
 
         stream = (ImageInputStream) input;
+        stream.setByteOrder(ByteOrder.LITTLE_ENDIAN);
 
         try {
             byte[] header = new byte[14];
@@ -108,82 +111,35 @@ public final class OzfImageReader extends ImageReader {
 
                 byte k = b[0x93];
 
-                byte k2 = (byte) ((k + 0x8A) & 0xFF);
+                k2 = (byte) ((k + 0x8A) & 0xFF);
 
                 stream.skipBytes(4);
-
-                stream = new ImageInputStreamImpl() {
-                    @Override
-                    public int read() throws IOException {
-                        return 0;
-                    }
-
-                    @Override
-                    public int read(byte[] bytes, int offset, int length) throws IOException {
-                        int n = ((ImageInputStream) input).read(bytes, offset, length);
-
-                        decrypt(bytes, offset, length, k2);
-
-                        return n;
-                    }
-                };
-
-                this.stream = new InflaterImageInputStream((ImageInputStream) input, new Inflater(){
-                    byte[] bytes;
-                    int offset;
-                    int length;
-
-                    @Override
-                    public void setInput(byte[] bytes, int offset, int length) {
-                        super.setInput(bytes, offset, length);
-
-                        this.bytes = bytes;
-                        this.offset = offset;
-                        this.length = length;
-                    }
-
-                    @Override
-                    public int inflate(byte[] bytes, int offset, int length) throws DataFormatException {
-                        decrypt(this.bytes, this.offset, this.length, k2);
-
-                        System.arraycopy(this.bytes, this.offset, bytes, offset, length);
-
-                        return length;
-                    }
-                });
-
-                //CipherInputStream asd = new CipherInputStream(null, null);
-
-                //DataInputStream dataInputStream = new DataInputStream();
-
-                //int i = stream.readInt();
-                //int i2 = stream.readInt();
-
-//                byte[] bb = new byte[4];
-//
-//                stream.readFully(bb);
-//
-//                byte[] bbb = decrypt(bb, k);
-//
-//                int i3 = Ints.fromByteArray(new byte[]{bbb[3], bbb[2], bbb[1], bbb[0]});
-
-
-                int asd = 0;
-                int asdf = asd;
             } catch (IOException e) {
                 throw new IllegalArgumentException(e);
             }
-        } else {
-
         }
 
         try {
-            //stream.setByteOrder(ByteOrder.LITTLE_ENDIAN);
-            int headerSize = stream.readInt();
+            byte[] header2 = new byte[40];
+
+            if (stream.read(header2) != 40) {
+                throw new IllegalArgumentException();
+            }
+
+            if (isOzf3) {
+                decrypt(header2, 0, 40, k2);
+            }
+
+            int headerSize = readInt(header2, 0);
 
             if (headerSize != 40) {
                 throw new IllegalArgumentException();
             }
+
+            width = readInt(header2, 4);
+            height = readInt(header2, 8);
+            depth = readShort(header2, 12);
+            bpp = readShort(header2, 14);
 
             int asd = 0;
             int asdf = asd;
@@ -192,19 +148,15 @@ public final class OzfImageReader extends ImageReader {
         }
     }
 
-    private void readHeader() {
-
+    protected static int readInt(byte[] bytes, int offset) {
+        return Ints.fromBytes(bytes[3 + offset], bytes[2 + offset], bytes[1 + offset], bytes[offset]);
     }
 
-    private byte[] readFirst14Bytes() throws IOException {
-        byte[] header = new byte[14];
-
-        stream.readFully(header);
-
-        return header;
+    protected static short readShort(byte[] bytes, int offset) {
+        return Shorts.fromBytes(bytes[1 + offset], bytes[offset]);
     }
 
-    private static void decrypt(byte[] bytes, int offset, int length, byte key) {
+    protected static void decrypt(byte[] bytes, int offset, int length, byte key) {
         for (int i = offset; i < length; ++i) {
             bytes[i] = (byte) (((int) bytes[i] ^ (int) (abyKey[i % abyKey.length] + key)) & 0xFF);
         }

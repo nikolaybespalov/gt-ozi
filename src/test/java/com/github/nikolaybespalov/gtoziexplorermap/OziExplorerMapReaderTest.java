@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.TransformException;
 
 import javax.imageio.spi.IIORegistry;
 import java.awt.*;
@@ -21,7 +20,7 @@ import static org.junit.Assert.*;
 public class OziExplorerMapReaderTest {
 
     @Test
-    public void testDemo1() throws IOException, FactoryException, TransformException {
+    public void testDemo1() throws IOException {
         OziExplorerMapReader reader = new OziExplorerMapReader(Paths.get("c:\\Users\\Nikolay Bespalov\\Documents\\github.com\\nikolaybespalov\\gt-oziexplorermap\\src\\test\\resources\\Maps\\Demo1.map"));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
@@ -44,11 +43,12 @@ public class OziExplorerMapReaderTest {
         expectedOriginalEnvelope.add(new DirectPosition2D(152.991764, -26.858472));
         expectedOriginalEnvelope.add(new DirectPosition2D(152.288056, -26.858472));
 
-        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.0001, false));
+        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.001, false));
+        //assertEquals(expectedOriginalEnvelope, originalEnvelope);
     }
 
     @Test
-    public void testWorld() throws IOException, FactoryException, TransformException {
+    public void testWorld() throws IOException, FactoryException {
         IIORegistry.getDefaultInstance().registerServiceProvider(new OzfImageReaderSpi());
 
         OziExplorerMapReader reader = new OziExplorerMapReader(Paths.get("c:\\Users\\Nikolay Bespalov\\Documents\\github.com\\nikolaybespalov\\gt-oziexplorermap\\src\\test\\resources\\Maps\\World.map"));
@@ -85,9 +85,21 @@ public class OziExplorerMapReaderTest {
         assertNotNull(originalEnvelope);
 
         GeneralEnvelope expectedOriginalEnvelope = new GeneralEnvelope(expectedCrs);
-        expectedOriginalEnvelope.add(new DirectPosition2D(-1.992618885199597E7, -1.790989307498489E7));
-        expectedOriginalEnvelope.add(new DirectPosition2D(1.992618885199597E7, 1.832794874451037E7));
+        //expectedOriginalEnvelope.add(new DirectPosition2D(-1.992618885199597E7, -1.790989307498489E7));
+        //expectedOriginalEnvelope.add(new DirectPosition2D(1.992618885199597E7, 1.832794874451037E7));
 
-        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.0001, false));
+//        expectedOriginalEnvelope.add(new DirectPosition2D(-20046458.654, 18365954.163));
+//        expectedOriginalEnvelope.add(new DirectPosition2D(-20046458.654,-20551246.174));
+//        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654,18365954.163));
+//        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654,-20551246.174));
+
+        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, -20551246.174));
+        expectedOriginalEnvelope.add(new DirectPosition2D(-20046458.654, -20551246.174));
+        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, 18365954.163));
+        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, -20551246.174));
+
+
+        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.001, false));
+        //assertEquals(expectedOriginalEnvelope, originalEnvelope);
     }
 }

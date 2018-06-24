@@ -14,6 +14,7 @@ import org.geotools.metadata.iso.citation.Citations;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.geotools.referencing.operation.DefaultConicProjection;
 import org.geotools.referencing.operation.DefiningConversion;
 import org.geotools.referencing.operation.projection.Mercator1SP;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
@@ -34,7 +35,6 @@ import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
 import org.opengis.referencing.operation.TransformException;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 @SuppressWarnings("unused")
 public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
     private Datum datum;
+    private String projectionName;
     private MathTransform world2Model;
     private Path imageFilePath;
     private WorldImageReader worldImageReader;
@@ -74,7 +75,7 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
         try (Stream<String> lines = Files.lines(path, Charset.forName("windows-1251"))) {
             lines.forEach(line -> {
-                String[] values = Arrays.stream(line.split(",")).map(String::trim).toArray(String[]::new);
+                String[] values = Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
 
                 if (values.length < 1) {
                     return;
@@ -92,29 +93,54 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
 
                 } else if (key.startsWith("Map Projection")) {
+                    String name = values[1];
+
+                    if (StringUtils.isEmpty(name)) {
+                        return;
+                    }
+
+                    projectionName = name;
+                } else if (key.startsWith("Projection Setup")) {
+                    if (StringUtils.isEmpty(projectionName)) {
+                        return;
+                    }
+
                     try {
-                        String name = values[1];
-
-                        if (StringUtils.isEmpty(name)) {
-                            return;
-                        }
-
-                        switch (name) {
+                        switch (projectionName) {
                             case "Latitude/Longitude":
                                 this.crs = DefaultGeographicCRS.WGS84;
                                 break;
                             case "Mercator":
+                                if (values.length < 6) {
+                                    return;
+                                }
+
                                 GeographicCRS geoCRS = org.geotools.referencing.crs.DefaultGeographicCRS.WGS84;
                                 CartesianCS cartCS = org.geotools.referencing.cs.DefaultCartesianCS.GENERIC_2D;
                                 MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
                                 ParameterValueGroup parameters = mtFactory.getDefaultParameters("Mercator_1SP");
 
-//                                parameters.parameter("central_meridian").setValue(-111.0);
-//                                parameters.parameter("latitude_of_origin").setValue(0.0);
-//                                parameters.parameter("scale_factor").setValue(1.0);
-//                                parameters.parameter("false_easting").setValue(500000.0);
-//                                parameters.parameter("false_northing").setValue(0.0);
-                                Conversion conversion = new DefiningConversion("Transverse_Mercator", parameters);
+                                if (NumberUtils.isCreatable(values[1])) {
+                                    parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(values[1]));
+                                }
+
+                                if (NumberUtils.isCreatable(values[2])) {
+                                    parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(values[2]));
+                                }
+
+                                if (NumberUtils.isCreatable(values[3])) {
+                                    parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
+                                }
+
+                                if (NumberUtils.isCreatable(values[4])) {
+                                    parameters.parameter("false_easting").setValue(NumberUtils.toDouble(values[4]));
+                                }
+
+                                if (NumberUtils.isCreatable(values[5])) {
+                                    parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
+                                }
+
+                                Conversion conversion = new DefiningConversion("Mercator_1SP", parameters);
 
                                 CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
 
@@ -127,11 +153,10 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
                         }
 
                         world2Model = CRS.findMathTransform(DefaultGeographicCRS.WGS84, this.crs, true);
-                    } catch (FactoryException e) {
+                    }
+                    catch (FactoryException e) {
                         return;
                     }
-                } else if (key.startsWith("Projection Setup")) {
-
                 } else if (key.startsWith("MMPXY")) {
                     if (values.length < 4) {
                         return;
@@ -155,14 +180,17 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
                     DirectPosition2D borderPosition = new DirectPosition2D(NumberUtils.toDouble(values[2]), NumberUtils.toDouble(values[3]));
 
+                    if (crs == null) {
+                        return;
+                    }
 
-                    envelope.add(borderPosition);
+                    envelope.setCoordinateReferenceSystem(crs);
 
-//                    try {
-//                        envelope.add(world2Model.transform(borderPosition, null));
-//                    } catch (TransformException e) {
-//                        return;
-//                    }
+                    try {
+                        envelope.add(world2Model.transform(borderPosition, null));
+                    } catch (TransformException e) {
+                        return;
+                    }
                 }
             });
         } catch (IOException e) {
@@ -210,7 +238,6 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
             }
 
 
-
             Files.createFile(prjPath);
 
             final FileWriter prjWriter = new FileWriter(prjPath.toFile());
@@ -244,4 +271,6 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return worldImageReader.getCoordinateReferenceSystem();
     }
+
+    // TODO: определить остальные методы
 }

@@ -9,25 +9,26 @@ import javax.imageio.ImageTypeSpecifier;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageReaderSpi;
 import javax.imageio.stream.ImageInputStream;
+import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
+import java.awt.image.DataBuffer;
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 // https://trac.osgeo.org/gdal/browser/sandbox/klokan/ozf/ozf-binary-format-description.txt
 // http://www.oziexplorer3.com/eng/help/map_file_format.html
 public final class OzfImageReader extends ImageReader {
-    ImageInputStream stream = null;
-    byte k2;
-    boolean isOzf3 = false;
-    int width;
-    int height;
-    int bpp;
-    int depth;
+    private ImageInputStream stream = null;
+    private byte k2;
+    private boolean isOzf3 = false;
+    private int width;
+    private int height;
+    private int bpp;
+    private int depth;
 
-    static final byte abyKey[] = {
+    private static final byte abyKey[] = {
             (byte) 0x2D, (byte) 0x4A, (byte) 0x43, (byte) 0xF1, (byte) 0x27, (byte) 0x9B, (byte) 0x69, (byte) 0x4F,
             (byte) 0x36, (byte) 0x52, (byte) 0x87, (byte) 0xEC, (byte) 0x5F, (byte) 0x42, (byte) 0x53, (byte) 0x22,
             (byte) 0x9E, (byte) 0x8B, (byte) 0x2D, (byte) 0x83, (byte) 0x3D, (byte) 0xD2, (byte) 0x84, (byte) 0xBA,
@@ -45,17 +46,36 @@ public final class OzfImageReader extends ImageReader {
 
     @Override
     public int getWidth(int i) throws IOException {
-        return 0;
+        return width;
     }
 
     @Override
     public int getHeight(int i) throws IOException {
-        return 0;
+        return height;
     }
 
     @Override
     public Iterator<ImageTypeSpecifier> getImageTypes(int i) throws IOException {
-        return null;
+        ImageTypeSpecifier imageType = null;
+        int datatype = DataBuffer.TYPE_BYTE;
+        java.util.List<ImageTypeSpecifier> l = new ArrayList<>();
+        int colorType = ColorSpace.TYPE_RGB;
+        switch (colorType) {
+            case ColorSpace.TYPE_GRAY:
+                imageType = ImageTypeSpecifier.createGrayscale(8, datatype, false);
+                break;
+
+            case ColorSpace.TYPE_RGB:
+                ColorSpace rgb = ColorSpace.getInstance(ColorSpace.CS_sRGB);
+                int[] bandOffsets = new int[3];
+                bandOffsets[0] = 0;
+                bandOffsets[1] = 1;
+                bandOffsets[2] = 2;
+                imageType = ImageTypeSpecifier.createInterleaved(rgb, bandOffsets, datatype, false, false);
+                break;
+        }
+        l.add(imageType);
+        return l.iterator();
     }
 
     @Override
@@ -74,14 +94,11 @@ public final class OzfImageReader extends ImageReader {
     }
 
     @Override
-    public void setInput(Object input,
-                         boolean seekForwardOnly,
-                         boolean ignoreMetadata) {
+    public void setInput(Object input, boolean seekForwardOnly, boolean ignoreMetadata) {
         super.setInput(input, seekForwardOnly, ignoreMetadata);
 
         if (!(input instanceof ImageInputStream)) {
-            throw new IllegalArgumentException
-                    ("input not an ImageInputStream!");
+            throw new IllegalArgumentException("input not an ImageInputStream!");
         }
 
         stream = (ImageInputStream) input;
@@ -148,17 +165,17 @@ public final class OzfImageReader extends ImageReader {
         }
     }
 
-    protected static int readInt(byte[] bytes, int offset) {
+    private static int readInt(byte[] bytes, int offset) {
         return Ints.fromBytes(bytes[3 + offset], bytes[2 + offset], bytes[1 + offset], bytes[offset]);
     }
 
-    protected static short readShort(byte[] bytes, int offset) {
+    private static short readShort(byte[] bytes, int offset) {
         return Shorts.fromBytes(bytes[1 + offset], bytes[offset]);
     }
 
-    protected static void decrypt(byte[] bytes, int offset, int length, byte key) {
+    private static void decrypt(byte[] bytes, int offset, int length, byte key) {
         for (int i = offset; i < length; ++i) {
-            bytes[i] = (byte) (((int) bytes[i] ^ (int) (abyKey[i % abyKey.length] + key)) & 0xFF);
+            bytes[i] = (byte) (((int) bytes[i] ^ (abyKey[i % abyKey.length] + key)) & 0xFF);
         }
     }
 }

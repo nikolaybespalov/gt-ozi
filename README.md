@@ -1,5 +1,7 @@
 # gt-oziexplorermap
 
+gt-ozi is a GeoTools extension that allows you to use OziExplorer files(map/ozf2/ozf3/ozf4) without using GDAL or any other binary libraries.
+
 ## Supported projections
 - Latitude/Longitude
 - Mercator
@@ -34,35 +36,158 @@
 - ~~Gnomonic~~
 
 ## Supported datums
+- Adindan (Africa - Eritrea, Ethiopia and Sudan, EPSG:4201)
+- Afgooye (Somalia, EPSG:4205)
+- Ain el Abd 1970 (Asia - Middle East - Bahrain, Kuwait and Saudi Arabia, EPSG:4204)
+- Anna 1 Astro 1965 (Cocos (Keeling) Islands, EPSG:4708)
+- Arc 1950 (Africa - Botswana, Malawi, Zambia, Zimbabwe, EPSG:4209)
+- Arc 1960 (Africa - Kenya, Tanzania and Uganda, EPSG:4210)
+- Ascension Island 1958 (St Helena - Ascension Island, EPSG:4712)
+- Astro B4 Sorol Atoll (USA - Hawaii - Tern Island and Sorel Atoll, EPSG:4707)
+- Astro Beacon 1945 (Japan - Iwo Jima, EPSG:4709)
+- Astro DOS 71/4 (St Helena - St Helena Island, EPSG:4710)
+- Astronomic Stn 1952 (Japan - Minamitori-shima (Marcus Island), EPSG:4711)
+- Australian Geodetic 1966 (Australasia - Australia and PNG - AGD66, EPSG:4202)
+- Australian Geodetic 1984 (Australia - AGD84, EPSG:4203)
+- Australian Geocentric 1994 (GDA94) (Australia - GDA94, EPSG:4283)
+- Austrian (MGI - Europe, Austria and former Yugoslavia, EPSG:4312)
+- Bellevue (IGN) (Vanuatu - southern islands, EPSG:4714)
+- Bermuda 1957 (Bermuda, EPSG:4216)
+- Bogota Observatory (Colombia, EPSG:4218)
+- Campo Inchauspe (Argentina, EPSG:4221)
+- Canton Astro 1966 (Kiribati - Phoenix Islands, EPSG:4716)
+- Cape (Africa - Botswana and South Africa, EPSG:4222)
+- Cape Canaveral (North America - Bahamas and USA - Florida, EPSG:4717)
+- Carthage (Tunisia, EPSG:4223)
+- CH-1903 (Europe - Liechtenstein and Switzerland, EPSG:4149)
+- Chatham 1971 (New Zealand - Chatham Islands, EPSG:4672)
+- Chua Astro (South America - Brazil ; N Paraguay, EPSG:4224)
+- Corrego Alegre (Brazil - Corrego Alegre, EPSG:4225)
+- Djakarta (Batavia) (Indonesia - Java, EPSG:4211)
+- DOS 1968 (Solomon Islands - Gizo Island : EPSG:4718 + EPSG:15805 (gcs.csv uses EPSG:15807))
+- Easter Island 1967 (Chile - Easter Island, EPSG:4719)
+- Egypt (Egypt - EPSG code is 4199, but transformation parameters are missing in gcs.csv)
+- European 1950 (Europe, EPSG:4230)
+- European 1950 (Mean France) (Europe -France)
+- European 1950 (Spain and Portugal) (Europe - Spain and Portugal)
+- European 1979 (Europe - west, EPSG:4668)
+- Finland Hayford (Finland (KKJ), EPSG:4123)
+- Gandajika Base (Maldives, EPSG:4233)
+- Geodetic Datum 1949 (New Zealand (NZGD49), EPSG:4272)
+- GGRS 87 (Greece, EPSG:4121)
+- Guam 1963 (Guam, EPSG:4675)
+- GUX 1 Astro (Solomon Islands - Guadalcanal Island, EPSG:4718)
+- Hartebeeshoek94 (South Africa, EPSG:4148)
+- Hermannskogel (Boznia and Herzegovina; Croatia; FYR Macedonia; Montenegro; Serbia; Slovenia (MGI 1901), EPSG:3906)
+- Hjorsey 1955 (Iceland, EPSG:4658)
+- Hong Kong 1963 (China - Hong Kong, EPSG:4739)
+- Hu-Tzu-Shan (Taiwan, EPSG:4236)
+- Indian Bangladesh (Bangladesh (Gulshan 303), EPSG:4682)
+- Indian Thailand (Thailand, EPSG:4240)
+- Israeli (Asia - Middle East - Israel, Jordan and Palestine Territory (Palestine 1923), EPSG:4281)
+- Ireland 1965 (Europe - Ireland (Republic and Ulster), EPSG:4299)
+- ISTS 073 Astro 1969 (British Indian Ocean Territory - Diego Garcia, EPSG:4724)
+- Johnston Island (Johnston Island, EPSG:4725)
+- Kandawala (Sri Lanka, EPSG:4244)
+- Kerguelen Island (French Southern Territories - Kerguelen, EPSG:4698)
+- Kertau 1948 (Asia - Malaysia (west) and Singapore, EPSG:4245)
+- L.C. 5 Astro (Cayman Islands - Little Cayman and Cayman Brac, EPSG:4726)
+- Liberia 1964 (Liberia, EPSG:4251)
+- Luzon Mindanao (Philippines - Mindanao (EPSG:4253 + EPSG:1162 Coordinate Transformation))
+- Luzon Philippines (Philippines - excluding Mindanao, EPSG:4253)
+- Mahe 1971 (Seychelles, EPSG:4256)
+- Marco Astro (Portugal - Selvagens islands (Madeira), EPSG:4616)
+- Massawa (Eritrea, EPSG:4262)
+- Merchich (Morocco, EPSG:4261)
+- Midway Astro 1961 (Midway Islands - Sand and Eastern Islands, EPSG:4727)
+- Minna (Nigeria, EPSG:4263)
+- NAD27 Alaska (Alaska (EPSG:4269 + EPSG:1176 Coordinate Transformation))
+- NAD27 Bahamas (Bahamas (EPSG:4269 + EPSG:1177 Coordinate Transformation))
+- NAD27 Canada (Canada (EPSG:4269 + EPSG:1172 Coordinate Transformation))
+- NAD27 Canal Zone (Panama (EPSG:4269 + EPSG:1184 Coordinate Transformation))
+- NAD27 Caribbean (Caribbean)
+- NAD27 Central (Central America (EPSG:4269 + EPSG:1171 Coordinate Transformation))
+- NAD27 CONUS (Continental US (EPSG:4269 + EPSG:1173 Coordinate Transformation))
+- NAD27 Cuba (Cuba (EPSG:4269 + EPSG:1185 Coordinate Transformation))
+- NAD27 Greenland (Greenland - Hayes Peninsula (EPSG:4269 + EPSG:1186 Coordinate Transformation))
+- NAD27 Mexico (Mexico (EPSG:4269 + EPSG:1187 Coordinate Transformation))
+- NAD27 San Salvador (San Salvador (EPSG:4269 + EPSG:1178 Coordinate Transformation))
+- NAD83 (North America, EPSG:4269)
+- Nahrwn Masirah Ilnd (Oman - Masirah Island (EPSG:4270 + EPSG:1189))
+- Nahrwn Saudi Arbia (Saudi Arabia (EPSG:4270 + EPSG:1190))
+- Nahrwn United Arab (United Arab Emirates (UAE) (EPSG:4270 + EPSG:1191))
+- Naparima BWI (Trinidad and Tobago - Tobago, EPSG:4271)
+- NGO1948 (Norway, EPSG:4273)
+- NTF France (France, EPSG:4275)
+- Norsk (Norway (NGO 1948), EPSG:4817)
+- NZGD1949 (New Zealand, EPSG:4272)
+- NZGD2000 (New Zealand, EPSG:4167)
+- Observatorio 1966 (Portugal - western Azores, EPSG:4182)
+- Old Egyptian (Egypt (1907), EPSG:4229)
+- Old Hawaiian (USA - Hawaii, EPSG:4135)
+- Oman (Oman, EPSG:4232)
+- Ord Srvy Grt Britn (UK - Great Britain; Isle of Man, EPSG:4277)
+- Pico De Las Nieves (Spain - Canary Islands, EPSG:4728)
+- Pitcairn Astro 1967 (Pitcairn Island, EPSG:4729)
+- Potsdam Rauenberg DHDN (Germany, EPSG:4314)
+- Prov So Amrican 1956 (South America - PSAD56, EPSG:4248)
+- Prov So Chilean 1963 (South America - Tierra del Fuego, EPSG:4254)
+- Puerto Rico (Caribbean - Puerto Rico and the Virgin Islands, EPSG:4139)
+- Pulkovo 1942 (1) (Europe - FSU, EPSG:4284)
+- Pulkovo 1942 (2) (Europe - FSU, EPSG:4284)
+- Qatar National (Qatar, EPSG:4285)
+- Qornoq (Greenland, EPSG:4287)
+- Reunion (France - Reunion Island, EPSG:4626)
+- Rijksdriehoeksmeting (Netherlands, EPSG:4289)
+- Rome 1940 (Italy - including San Marino and Vatican, EPSG:4806)
+- RT 90 (Sweden, EPSG:4124)
+- S42 (Europe - eastern - S-42, EPSG:4179)
+- Santo (DOS) (Vanuatu - northern islands, EPSG:4730)
+- Sao Braz (Portugal - eastern Azores, EPSG:4184)
+- Sapper Hill 1943 (Falkland Islands, EPSG:4292)
+- Schwarzeck (Namibia, EPSG:4293)
+- South American 1969 (South America - SAD69, EPSG:4291)
+- South Asia (Singapore (unknown EPSG code))
+- Southeast Base (Porto Santo and Madeira Islands, EPSG:4615)
+- Southwest Base (Faial, Graciosa, Pico, Sao Jorge and Terceira, EPSG:4183)
+- Timbalai 1948 (Asia - Brunei and East Malaysia, EPSG:4298)
+- Tokyo (Asia - Japan and Korea, EPSG:4301)
+- Tristan Astro 1968 (St Helena - Tristan da Cunha, EPSG:4734)
+- Viti Levu 1916 (Fiji - Viti Levu, EPSG:4731)
+- Wake-Eniwetok 1960 (Marshall Islands - Eniwetok, Kwajalein and Wake islands, EPSG:4732)
+- WGS 72 (World, EPSG:4322)
+- WGS 84 (World, EPSG:4326)
+- Yacare (Uruguay, EPSG:4309)
+- Zanderij (Suriname, EPSG:4311)
 
 ## Supported ellipsoids
 - Airy 1830
 - Modified Airy
 - Australian National
-- ~~Bessel 1841~~
-- ~~Clarke 1866~~
-- ~~Clarke 1880~~
-- ~~Everest (India 1830)~~
-- ~~Everest (1948)~~
-- ~~Modified Fischer 1960~~
-- ~~Everest (Pakistan)~~
-- ~~Indonesian 1974~~
-- ~~GRS 80~~
-- ~~Helmert 1906~~
-- ~~Hough 1960~~
-- ~~International 1924~~
+- Bessel 1841
+- Clarke 1866
+- Clarke 1880
+- Everest (India 1830)
+- Everest (1948)
+- Modified Fischer 1960
+- Everest (Pakistan)
+- Indonesian 1974
+- GRS 80
+- Helmert 1906
+- Hough 1960
+- International 1924
 - Krassovsky 1940
-- ~~South American 1969~~
-- ~~Everest (Malaysia 1969)~~
-- ~~Everest (Sabah Sarawak)~~
-- ~~WGS 72~~
+- South American 1969
+- Everest (Malaysia 1969)
+- Everest (Sabah Sarawak)
+- WGS 72
 - WGS 84
-- ~~Bessel 1841 (Namibia)~~
-- ~~Everest (India 1956)~~
-- ~~Clarke 1880 Palestine~~
-- ~~Clarke 1880 IGN~~
-- ~~Hayford 1909~~
-- ~~Clarke 1858~~
-- ~~Bessel 1841 (Norway)~~
-- ~~Plessis 1817 (France)~~
-- ~~Hayford 1924~~
+- Bessel 1841 (Namibia)
+- Everest (India 1956)
+- Clarke 1880 Palestine
+- Clarke 1880 IGN
+- Hayford 1909
+- Clarke 1858
+- Bessel 1841 (Norway)
+- Plessis 1817 (France)
+- Hayford 1924

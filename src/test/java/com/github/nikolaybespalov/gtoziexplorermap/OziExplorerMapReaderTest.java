@@ -44,7 +44,7 @@ public class OziExplorerMapReaderTest {
         expectedOriginalEnvelope.add(new DirectPosition2D(152.991764, -26.858472));
         expectedOriginalEnvelope.add(new DirectPosition2D(152.288056, -26.858472));
 
-        assertEquals(expectedOriginalEnvelope, originalEnvelope);
+        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.0001, false));
     }
 
     @Test

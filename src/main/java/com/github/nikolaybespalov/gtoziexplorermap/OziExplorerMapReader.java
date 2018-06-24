@@ -14,9 +14,11 @@ import org.geotools.metadata.iso.citation.Citations;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geotools.referencing.operation.DefaultConicProjection;
+import org.geotools.referencing.cs.DefaultCartesianCS;
+import org.geotools.referencing.cs.DefaultEllipsoidalCS;
+import org.geotools.referencing.datum.DefaultEllipsoid;
+import org.geotools.referencing.datum.DefaultGeodeticDatum;
 import org.geotools.referencing.operation.DefiningConversion;
-import org.geotools.referencing.operation.projection.Mercator1SP;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
 import org.geotools.referencing.wkt.Formattable;
@@ -28,8 +30,9 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CRSFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.cs.CartesianCS;
-import org.opengis.referencing.datum.Datum;
+import org.opengis.referencing.datum.*;
 import org.opengis.referencing.operation.Conversion;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
@@ -46,12 +49,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
-    private Datum datum;
+    private GeographicCRS geoCRS;
     private String projectionName;
     private MathTransform world2Model;
     private Path imageFilePath;
@@ -87,11 +91,35 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
                     return;
                 }
 
-                if (key.startsWith("Datum")) {
+                if (key.startsWith("WGS 84")) {
+                    String name = values[0];
 
-                    Mercator1SP.Provider a = new Mercator1SP.Provider();
+                    if (StringUtils.isEmpty(name)) {
+                        return;
+                    }
+
+                    String ellipsoidName = "asd";
+
+                    DatumFactory datumFactory = ReferencingFactoryFinder.getDatumFactory(null);
+
+                    Ellipsoid ellipsoid = DefaultEllipsoid.WGS84;
+
+                    PrimeMeridian greenwichMeridian = org.geotools.referencing.datum.DefaultPrimeMeridian.GREENWICH;
+
+                    Map<String, String> map = new HashMap<>();
 
 
+                    try {
+                        map.put("name", "WGS 84");
+                        GeodeticDatum datum = datumFactory.createGeodeticDatum(map, ellipsoid, greenwichMeridian);
+
+                        map.clear();
+                        map.put("name", "WGS 84");
+                        geoCRS = ReferencingFactoryFinder.getCRSFactory(null).createGeographicCRS(map, datum, DefaultEllipsoidalCS.GEODETIC_2D);
+                    }
+                    catch (FactoryException e) {
+                        return;
+                    }
                 } else if (key.startsWith("Map Projection")) {
                     String name = values[1];
 
@@ -108,15 +136,14 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
                     try {
                         switch (projectionName) {
                             case "Latitude/Longitude":
-                                this.crs = DefaultGeographicCRS.WGS84;
+                                this.crs = this.geoCRS;
                                 break;
                             case "Mercator":
                                 if (values.length < 6) {
                                     return;
                                 }
 
-                                GeographicCRS geoCRS = org.geotools.referencing.crs.DefaultGeographicCRS.WGS84;
-                                CartesianCS cartCS = org.geotools.referencing.cs.DefaultCartesianCS.GENERIC_2D;
+                                CartesianCS cartCS = DefaultCartesianCS.GENERIC_2D;
                                 MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
                                 ParameterValueGroup parameters = mtFactory.getDefaultParameters("Mercator_1SP");
 
@@ -146,15 +173,18 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
                                 Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
 
-                                this.crs = crsFactory.createProjectedCRS(properties, geoCRS, conversion, cartCS);
+                                //GeographicCRS base = new DefaultGeographicCRS();
+
+                                ProjectedCRS projectedCRS = crsFactory.createProjectedCRS(properties, geoCRS, conversion, cartCS);
+
+                                this.crs = projectedCRS;
                                 break;
                             default:
                                 return;
                         }
 
                         world2Model = CRS.findMathTransform(DefaultGeographicCRS.WGS84, this.crs, true);
-                    }
-                    catch (FactoryException e) {
+                    } catch (FactoryException e) {
                         return;
                     }
                 } else if (key.startsWith("MMPXY")) {

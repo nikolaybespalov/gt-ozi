@@ -16,8 +16,10 @@ import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.cs.DefaultCartesianCS;
 import org.geotools.referencing.cs.DefaultEllipsoidalCS;
+import org.geotools.referencing.datum.BursaWolfParameters;
 import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.geotools.referencing.datum.DefaultGeodeticDatum;
+import org.geotools.referencing.datum.DefaultPrimeMeridian;
 import org.geotools.referencing.operation.DefiningConversion;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
@@ -32,7 +34,9 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.cs.CartesianCS;
-import org.opengis.referencing.datum.*;
+import org.opengis.referencing.datum.DatumFactory;
+import org.opengis.referencing.datum.Ellipsoid;
+import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.operation.Conversion;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.MathTransformFactory;
@@ -98,26 +102,60 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
                         return;
                     }
 
-                    String ellipsoidName = "asd";
+                    String ellipsoidName = values[4];
 
-                    DatumFactory datumFactory = ReferencingFactoryFinder.getDatumFactory(null);
+                    Ellipsoid ellipsoid;
 
-                    Ellipsoid ellipsoid = DefaultEllipsoid.WGS84;
+                    switch (ellipsoidName) {
 
-                    PrimeMeridian greenwichMeridian = org.geotools.referencing.datum.DefaultPrimeMeridian.GREENWICH;
-
-                    Map<String, String> map = new HashMap<>();
-
+                        case "GRS 80":
+                            ellipsoid = DefaultEllipsoid.GRS80;
+                            break;
+                        case "Clarke 1866":
+                            ellipsoid = DefaultEllipsoid.CLARKE_1866;
+                            break;
+                        case "International 1924":
+                            ellipsoid = DefaultEllipsoid.INTERNATIONAL_1924;
+                            break;
+                        case "WGS 84":
+                            ellipsoid = DefaultEllipsoid.WGS84;
+                            break;
+                        default:
+                            return;
+                    }
 
                     try {
-                        map.put("name", "WGS 84");
-                        GeodeticDatum datum = datumFactory.createGeodeticDatum(map, ellipsoid, greenwichMeridian);
+                        Map<String, Object> map = new HashMap<>();
+
+                        map.put("name", name);
+
+                        final BursaWolfParameters toWGS84 = new BursaWolfParameters(DefaultGeodeticDatum.WGS84);
+
+                        if (NumberUtils.isCreatable(values[1])) {
+                            toWGS84.dx = NumberUtils.toDouble(values[1]);
+                        }
+
+                        if (NumberUtils.isCreatable(values[2])) {
+                            toWGS84.dy = NumberUtils.toDouble(values[2]);
+                        }
+
+                        if (NumberUtils.isCreatable(values[3])) {
+                            toWGS84.dz = NumberUtils.toDouble(values[3]);
+                        }
+
+                        if (!toWGS84.isIdentity()) {
+                            map.put(DefaultGeodeticDatum.BURSA_WOLF_KEY, toWGS84);
+                        }
+
+                        DatumFactory datumFactory = ReferencingFactoryFinder.getDatumFactory(null);
+                        GeodeticDatum datum = datumFactory.createGeodeticDatum(map, ellipsoid, DefaultPrimeMeridian.GREENWICH);
 
                         map.clear();
-                        map.put("name", "WGS 84");
-                        geoCRS = ReferencingFactoryFinder.getCRSFactory(null).createGeographicCRS(map, datum, DefaultEllipsoidalCS.GEODETIC_2D);
-                    }
-                    catch (FactoryException e) {
+                        map.put("name", name);
+
+                        CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+                        geoCRS = crsFactory.createGeographicCRS(map, datum, DefaultEllipsoidalCS.GEODETIC_2D);
+                    } catch (FactoryException e) {
                         return;
                     }
                 } else if (key.startsWith("Map Projection")) {

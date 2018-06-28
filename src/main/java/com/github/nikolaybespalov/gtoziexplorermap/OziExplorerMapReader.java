@@ -17,6 +17,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.datum.PixelInCell;
 import org.opengis.referencing.operation.MathTransform;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,16 +28,16 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
     private WorldImageReader worldImageReader;
 
     @SuppressWarnings("WeakerAccess")
-    public OziExplorerMapReader(Path path) throws DataSourceException {
-        super(path);
+    public OziExplorerMapReader(File file) throws DataSourceException {
+        super(file);
 
         try {
-            OziMapFileReader oziMapFileReader = new OziMapFileReader(path);
+            OziMapFileReader oziMapFileReader = new OziMapFileReader(file);
 
             CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
             MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();
 
-            String baseName = FilenameUtils.removeExtension(path.toString());
+            String baseName = FilenameUtils.removeExtension(file.getAbsolutePath());
 
             Path wldPath = Paths.get(baseName + ".wld");
 

@@ -1,6 +1,5 @@
 package com.github.nikolaybespalov.gtoziexplorermap;
 
-import java.text.MessageFormat;
 import java.util.Enumeration;
 import java.util.ResourceBundle;
 

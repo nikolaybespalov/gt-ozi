@@ -1,5 +1,7 @@
 package com.github.nikolaybespalov.gtoziexplorermap;
 
+import com.google.common.io.Resources;
+import org.apache.commons.io.FileUtils;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralEnvelope;
@@ -10,10 +12,8 @@ import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import javax.imageio.spi.IIORegistry;
 import java.awt.*;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,7 +23,7 @@ public class OziExplorerMapReaderTest {
 
     @Test
     public void testDemo1() throws IOException {
-        OziExplorerMapReader reader = new OziExplorerMapReader(Paths.get("c:\\Users\\Nikolay Bespalov\\Documents\\github.com\\nikolaybespalov\\gt-oziexplorermap\\src\\test\\resources\\Maps\\Demo1.map"));
+        OziExplorerMapReader reader = new OziExplorerMapReader(FileUtils.toFile(Resources.getResource("Maps/Demo1.map")));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
 
@@ -51,9 +51,7 @@ public class OziExplorerMapReaderTest {
 
     @Test
     public void testWorld() throws IOException, FactoryException {
-        IIORegistry.getDefaultInstance().registerServiceProvider(new OzfImageReaderSpi());
-
-        OziExplorerMapReader reader = new OziExplorerMapReader(Paths.get("c:\\Users\\Nikolay Bespalov\\Documents\\github.com\\nikolaybespalov\\gt-oziexplorermap\\src\\test\\resources\\Maps\\World.map"));
+        OziExplorerMapReader reader = new OziExplorerMapReader(FileUtils.toFile(Resources.getResource("Maps/World.map")));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
 

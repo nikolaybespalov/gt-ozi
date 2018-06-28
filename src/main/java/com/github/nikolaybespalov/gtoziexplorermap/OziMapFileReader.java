@@ -35,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 
@@ -214,8 +213,8 @@ public final class OziMapFileReader {
     private MathTransform grid2Crs;
     private File imageFile;
 
-    public OziMapFileReader(Path path) throws IOException {
-        List<String> lines = Files.readAllLines(path, Charset.forName("windows-1251"));
+    public OziMapFileReader(File file) throws IOException {
+        List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("windows-1251"));
 
         if (lines.size() < 40) {
             throw new IOException("Too few");
@@ -256,7 +255,7 @@ public final class OziMapFileReader {
                     imageFile = new File(v0);
 
                     if (!imageFile.exists()) {
-                        imageFile = new File(path.getParent().toFile(), imageFile.getName());
+                        imageFile = new File(file.getParent(), imageFile.getName());
 
                         if (!imageFile.exists()) {
                             return;

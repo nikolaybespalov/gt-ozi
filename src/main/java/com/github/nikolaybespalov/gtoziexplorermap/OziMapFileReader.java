@@ -217,7 +217,7 @@ public final class OziMapFileReader {
         List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("windows-1251"));
 
         if (lines.size() < 40) {
-            throw new IOException("Too few");
+            throw new IOException("too few data!");
         }
 
         Collections.swap(lines, 9, 39);

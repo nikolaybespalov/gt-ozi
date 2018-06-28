@@ -85,22 +85,13 @@ public class OziExplorerMapReaderTest {
         assertNotNull(originalEnvelope);
 
         GeneralEnvelope expectedOriginalEnvelope = new GeneralEnvelope(expectedCrs);
-        //expectedOriginalEnvelope.add(new DirectPosition2D(-1.992618885199597E7, -1.790989307498489E7));
-        //expectedOriginalEnvelope.add(new DirectPosition2D(1.992618885199597E7, 1.832794874451037E7));
-
-//        expectedOriginalEnvelope.add(new DirectPosition2D(-20046458.654, 18365954.163));
-//        expectedOriginalEnvelope.add(new DirectPosition2D(-20046458.654,-20551246.174));
-//        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654,18365954.163));
-//        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654,-20551246.174));
 
         expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, -20551246.174));
         expectedOriginalEnvelope.add(new DirectPosition2D(-20046458.654, -20551246.174));
         expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, 18365954.163));
         expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, -20551246.174));
 
-
         assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.001, false));
-        //assertEquals(expectedOriginalEnvelope, originalEnvelope);
     }
 
     @Test

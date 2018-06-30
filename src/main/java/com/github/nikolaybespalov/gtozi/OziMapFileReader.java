@@ -262,6 +262,9 @@ public final class OziMapFileReader {
                 case 2:
                     imageFile = new File(v0);
 
+                    // TODO: check windows path on linux
+                    // E:\Gpsmap\B3release\Maps\Demo1.bmp
+
                     if (!imageFile.exists()) {
                         imageFile = new File(file.getParent(), imageFile.getName());
 

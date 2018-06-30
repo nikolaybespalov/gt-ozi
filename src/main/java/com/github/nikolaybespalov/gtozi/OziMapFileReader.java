@@ -222,7 +222,7 @@ public final class OziMapFileReader {
 
         Collections.swap(lines, 9, 39);
 
-        List<OziCalibrationPoint> calibrationPoints = new ArrayList<>();
+        List<CalibrationPoint> calibrationPoints = new ArrayList<>();
 
         for (int lineIndex = 0; lineIndex < lines.size(); ++lineIndex) {
             String line = lines.get(lineIndex);
@@ -379,7 +379,7 @@ public final class OziMapFileReader {
                         }
 
                         if (pixelLine != null && xy != null) {
-                            calibrationPoints.add(new OziCalibrationPoint(pixelLine, xy));
+                            calibrationPoints.add(new CalibrationPoint(pixelLine, xy));
                         }
                     }
                 }
@@ -396,8 +396,8 @@ public final class OziMapFileReader {
         double yULC;
 
         if (calibrationPoints.size() == 2) {
-            OziCalibrationPoint cp1 = calibrationPoints.get(1);
-            OziCalibrationPoint cp0 = calibrationPoints.get(0);
+            CalibrationPoint cp1 = calibrationPoints.get(1);
+            CalibrationPoint cp0 = calibrationPoints.get(0);
 
             xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
             yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
@@ -447,5 +447,23 @@ public final class OziMapFileReader {
         }
 
         return null;
+    }
+
+    private static final class CalibrationPoint {
+        private final Point pixelLine;
+        private final DirectPosition2D xy;
+
+        public CalibrationPoint(Point pixelLine, DirectPosition2D xy) {
+            this.pixelLine = pixelLine;
+            this.xy = xy;
+        }
+
+        public Point getPixelLine() {
+            return pixelLine;
+        }
+
+        public DirectPosition2D getXy() {
+            return xy;
+        }
     }
 }

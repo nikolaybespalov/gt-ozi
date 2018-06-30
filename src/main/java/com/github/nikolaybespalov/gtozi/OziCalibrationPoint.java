@@ -1,4 +1,4 @@
-package com.github.nikolaybespalov.gtoziexplorermap;
+package com.github.nikolaybespalov.gtozi;
 
 import org.geotools.geometry.DirectPosition2D;
 

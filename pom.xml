@@ -9,7 +9,52 @@
     <version>0.1.0-SNAPSHOT</version>
 
     <name>gt-ozi</name>
-    <url>https://github.com/nikolaybespalov/gt-ozi</url>
+    <description>GeoTools plugin that allows you to use OziExplorer files(map/ozf2/ozf3/ozf4) without using GDAL/OziApi
+        or any other environment dependencies.
+    </description>
+    <url>https://github.com/nikolaybespalov/imageio-ozf</url>
+    <inceptionYear>2018</inceptionYear>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Nikolay Bespalov</name>
+            <email>nikolaybespalov@gmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/nikolaybespalov/imageio-ozf</url>
+        <connection>scm:git:https://github.com/nikolaybespalov/imageio-ozf.git</connection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <url>https://github.com/nikolaybespalov/imageio-ozf/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Travis-CI</system>
+        <url>https://travis-ci.org/nikolaybespalov/imageio-ozf</url>
+    </ciManagement>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

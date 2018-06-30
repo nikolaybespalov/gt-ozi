@@ -1,4 +1,4 @@
-package com.github.nikolaybespalov.gtoziexplorermap;
+package com.github.nikolaybespalov.gtozi;
 
 import java.util.Enumeration;
 import java.util.ResourceBundle;

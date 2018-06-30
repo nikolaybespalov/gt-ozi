@@ -1,4 +1,4 @@
-package com.github.nikolaybespalov.gtoziexplorermap;
+package com.github.nikolaybespalov.gtozi;
 
 import java.text.MessageFormat;
 import java.util.ResourceBundle;

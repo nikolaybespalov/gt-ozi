@@ -1,4 +1,4 @@
-package com.github.nikolaybespalov.gtoziexplorermap;
+package com.github.nikolaybespalov.gtozi;
 
 import com.google.common.io.Resources;
 import org.apache.commons.io.FileUtils;

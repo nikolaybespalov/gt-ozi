@@ -1,4 +1,4 @@
-package com.github.nikolaybespalov.gtoziexplorermap;
+package com.github.nikolaybespalov.gtozi;
 
 import org.apache.commons.io.FilenameUtils;
 import org.geotools.coverage.grid.GridCoverage2D;

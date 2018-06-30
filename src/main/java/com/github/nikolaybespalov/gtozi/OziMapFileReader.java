@@ -37,6 +37,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @SuppressWarnings("WeakerAccess")
 public final class OziMapFileReader {
@@ -206,6 +208,7 @@ public final class OziMapFileReader {
         put("Zanderij", createGeodeticDatum("Zanderij", INTERNATIONAL_1924, -265, 120, -358));
     }};
 
+    private static final Logger log = Logger.getLogger(OziMapFileReader.class.getName());
     private CoordinateReferenceSystem crs;
     private GeographicCRS geoCrs;
     private String projectionName;
@@ -228,7 +231,7 @@ public final class OziMapFileReader {
             String line = lines.get(lineIndex);
             String[] values = Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
 
-            if (values.length < 1) {
+            if (values.length == 0) {
                 return;
             }
 
@@ -277,6 +280,7 @@ public final class OziMapFileReader {
                         CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
                         geoCrs = crsFactory.createGeographicCRS(ImmutableMap.of("name", v0), datum, DefaultEllipsoidalCS.GEODETIC_2D);
                     } catch (FactoryException e) {
+                        log.log(Level.SEVERE, "", e);
                         return;
                     }
                     break;

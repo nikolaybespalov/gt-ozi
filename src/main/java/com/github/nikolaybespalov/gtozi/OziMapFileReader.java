@@ -220,7 +220,7 @@ public final class OziMapFileReader {
         List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("windows-1251"));
 
         if (lines.size() < 40) {
-            throw new IOException("too few data!");
+            throw new IOException("too few lines!");
         }
 
         Collections.swap(lines, 9, 39);
@@ -229,10 +229,15 @@ public final class OziMapFileReader {
 
         for (int lineIndex = 0; lineIndex < lines.size(); ++lineIndex) {
             String line = lines.get(lineIndex);
+
+            if (line.isEmpty()) {
+                continue;
+            }
+
             String[] values = Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
 
             if (values.length == 0) {
-                return;
+                throw new IllegalArgumentException("too few values!");
             }
 
             String v0 = values[0];
@@ -391,7 +396,7 @@ public final class OziMapFileReader {
         }
 
         if (calibrationPoints.size() < 2) {
-            return;
+            throw new IllegalArgumentException("too few calibration points!");
         }
 
         double xPixelSize;
@@ -408,8 +413,7 @@ public final class OziMapFileReader {
             xULC = cp0.getXy().x - cp0.getPixelLine().x * xPixelSize;
             yULC = cp0.getXy().y - cp0.getPixelLine().y * yPixelSize;
         } else {
-            // TODO: implement
-            return;
+            throw new IllegalArgumentException("too few calibration points2!");
         }
 
         grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);

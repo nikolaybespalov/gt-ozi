@@ -8,21 +8,35 @@
       <w>amrican</w>
       <w>arbia</w>
       <w>astro</w>
+      <w>aust</w>
+      <w>azimuthual</w>
       <w>batavia</w>
       <w>bellevue</w>
+      <w>bonne</w>
+      <w>boznia</w>
+      <w>brac</w>
       <w>braz</w>
       <w>britn</w>
       <w>campo</w>
       <w>chatham</w>
       <w>chua</w>
+      <w>codacy</w>
       <w>conus</w>
       <w>corrego</w>
+      <w>cunha</w>
       <w>dhdn</w>
       <w>djakarta</w>
+      <w>faial</w>
+      <w>fuego</w>
       <w>gandajika</w>
       <w>gdal</w>
       <w>geogcs</w>
       <w>ggrs</w>
+      <w>gizo</w>
+      <w>gnomonic</w>
+      <w>graciosa</w>
+      <w>grinten</w>
+      <w>gulshan</w>
       <w>hartebeeshoek</w>
       <w>hayford</w>
       <w>helmert</w>
@@ -34,15 +48,20 @@
       <w>inchauspe</w>
       <w>invf</w>
       <w>ists</w>
+      <w>jima</w>
       <w>kandawala</w>
       <w>kerguelen</w>
       <w>kertau</w>
       <w>krassovsky</w>
+      <w>kwajalein</w>
+      <w>lanka</w>
       <w>levu</w>
       <w>mahe</w>
+      <w>marino</w>
       <w>masirah</w>
       <w>massawa</w>
       <w>merchich</w>
+      <w>minamitori</w>
       <w>mmpll</w>
       <w>mmpxy</w>
       <w>nahrwn</w>
@@ -50,11 +69,14 @@
       <w>norsk</w>
       <w>northing</w>
       <w>nzgd</w>
+      <w>nztm</w>
       <w>observatorio</w>
       <w>pico</w>
       <w>plessis</w>
+      <w>polyconic</w>
       <w>primem</w>
       <w>projcs</w>
+      <w>psad</w>
       <w>pulkovo</w>
       <w>qornoq</w>
       <w>rauenberg</w>
@@ -62,13 +84,21 @@
       <w>sabah</w>
       <w>santo</w>
       <w>schwarzeck</w>
+      <w>selvagens</w>
       <w>shan</w>
+      <w>shima</w>
+      <w>sorel</w>
       <w>sorol</w>
       <w>srvy</w>
+      <w>terceira</w>
+      <w>tierra</w>
       <w>timbalai</w>
+      <w>vicgrid</w>
+      <w>vicmap</w>
       <w>viti</w>
       <w>yacare</w>
       <w>zanderij</w>
+      <w>zealand</w>
     </words>
   </dictionary>
 </component>

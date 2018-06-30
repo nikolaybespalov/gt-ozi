@@ -1,4 +1,8 @@
 # gt-ozi
+[![Build Status](https://travis-ci.org/nikolaybespalov/gt-ozi.svg?branch=master)](https://travis-ci.org/nikolaybespalov/gt-ozi)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/8c3475abc76c4885a5f72875edb0fd16)](https://www.codacy.com/app/nikolaybespalov/gt-ozi)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8c3475abc76c4885a5f72875edb0fd16)](https://www.codacy.com/app/nikolaybespalov/gt-ozi)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.nikolaybespalov/gt-ozi/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.nikolaybespalov/gt-ozi)
 
 GeoTools plugin that allows you to use OziExplorer files(map/ozf2/ozf3/ozf4) without using GDAL/OziApi or any other environment dependencies.
 

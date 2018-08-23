@@ -12,7 +12,7 @@
     <description>GeoTools plugin that allows you to use OziExplorer files(map/ozf2/ozf3/ozf4) without using GDAL/OziApi
         or any other environment dependencies.
     </description>
-    <url>https://github.com/nikolaybespalov/imageio-ozf</url>
+    <url>https://github.com/nikolaybespalov/gt-ozi</url>
     <inceptionYear>2018</inceptionYear>
 
     <licenses>
@@ -31,18 +31,18 @@
     </developers>
 
     <scm>
-        <url>https://github.com/nikolaybespalov/imageio-ozf</url>
-        <connection>scm:git:https://github.com/nikolaybespalov/imageio-ozf.git</connection>
+        <url>https://github.com/nikolaybespalov/gt-ozi</url>
+        <connection>scm:git:https://github.com/nikolaybespalov/gt-ozi.git</connection>
         <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
-        <url>https://github.com/nikolaybespalov/imageio-ozf/issues</url>
+        <url>https://github.com/nikolaybespalov/gt-ozi/issues</url>
     </issueManagement>
 
     <ciManagement>
         <system>Travis-CI</system>
-        <url>https://travis-ci.org/nikolaybespalov/imageio-ozf</url>
+        <url>https://travis-ci.org/nikolaybespalov/gt-ozi</url>
     </ciManagement>
 
     <distributionManagement>

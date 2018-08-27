@@ -5,6 +5,7 @@ import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.data.DataSourceException;
 import org.geotools.data.WorldFileWriter;
+import org.geotools.factory.Hints;
 import org.geotools.gce.image.WorldImageReader;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.metadata.iso.citation.Citations;
@@ -24,20 +25,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
+public final class OziMapReader extends AbstractGridCoverage2DReader {
     private WorldImageReader worldImageReader;
 
     @SuppressWarnings("WeakerAccess")
-    public OziExplorerMapReader(File file) throws DataSourceException {
-        super(file);
+    public OziMapReader(Object input) throws DataSourceException {
+        this(input, null);
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public OziMapReader(Object input, Hints uHints) throws DataSourceException {
+        super(input, uHints);
 
         try {
-            OziMapFileReader oziMapFileReader = new OziMapFileReader(file);
+            OziMapFileReader oziMapFileReader = new OziMapFileReader((File) input);
 
             CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
             MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();
 
-            String baseName = FilenameUtils.removeExtension(file.getAbsolutePath());
+            String baseName = FilenameUtils.removeExtension(((File) input).getAbsolutePath());
 
             Path wldPath = Paths.get(baseName + ".wld");
 
@@ -71,7 +77,7 @@ public final class OziExplorerMapReader extends AbstractGridCoverage2DReader {
 
     @Override
     public Format getFormat() {
-        return null;
+        return new OziMapFormat();
     }
 
     @Override

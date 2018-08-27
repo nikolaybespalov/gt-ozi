@@ -17,11 +17,11 @@ import java.io.IOException;
 
 import static org.junit.Assert.*;
 
-public class OziExplorerMapReaderTest {
+public class OziMapReaderTest {
 
     @Test
     public void testDemo1() throws IOException {
-        OziExplorerMapReader reader = new OziExplorerMapReader(FileUtils.toFile(Resources.getResource("Maps/Demo1.map")));
+        OziMapReader reader = new OziMapReader(FileUtils.toFile(Resources.getResource("Maps/Demo1.map")));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
 
@@ -48,7 +48,7 @@ public class OziExplorerMapReaderTest {
 
     @Test
     public void testWorld() throws IOException, FactoryException {
-        OziExplorerMapReader reader = new OziExplorerMapReader(FileUtils.toFile(Resources.getResource("Maps/World.map")));
+        OziMapReader reader = new OziMapReader(FileUtils.toFile(Resources.getResource("Maps/World.map")));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
 

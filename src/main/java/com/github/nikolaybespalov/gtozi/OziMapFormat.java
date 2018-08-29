@@ -9,11 +9,22 @@ import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OziMapFormat extends AbstractGridFormat implements Format {
     private static final Logger LOGGER = org.geotools.util.logging.Logging.getLogger(OziMapFormat.class);
+
+    public OziMapFormat() {
+        writeParameters = null;
+        mInfo = new HashMap<String, String>();
+        mInfo.put("name", "Ozi");
+        mInfo.put("description", "OziExplorer Map File Format");
+        mInfo.put("vendor", "nikolaybespalov");
+        mInfo.put("version", "0.1");
+        mInfo.put("docURL", "https://github.com/nikolaybespalov/gt-ozi");
+    }
 
     @Override
     public AbstractGridCoverage2DReader getReader(Object o) {
@@ -42,7 +53,7 @@ public class OziMapFormat extends AbstractGridFormat implements Format {
 
     @Override
     public boolean accepts(Object o, Hints hints) {
-        return false;
+        return true;
     }
 
     @Override

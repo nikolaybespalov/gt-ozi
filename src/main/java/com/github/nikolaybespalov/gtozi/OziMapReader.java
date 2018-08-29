@@ -3,6 +3,7 @@ package com.github.nikolaybespalov.gtozi;
 import org.apache.commons.io.FilenameUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
+import org.geotools.data.DataSourceException;
 import org.geotools.data.WorldFileWriter;
 import org.geotools.factory.Hints;
 import org.geotools.gce.image.WorldImageReader;
@@ -10,6 +11,7 @@ import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.metadata.iso.citation.Citations;
 import org.geotools.metadata.iso.spatial.PixelTranslation;
 import org.geotools.referencing.wkt.Formattable;
+import org.geotools.util.URLs;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.parameter.GeneralParameterValue;
@@ -22,11 +24,16 @@ import org.opengis.referencing.operation.TransformException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
+
+import static org.geotools.util.logging.Logging.getLogger;
 
 public final class OziMapReader extends AbstractGridCoverage2DReader {
+    private static final Logger LOGGER = getLogger(OziMapReader.class);
     private WorldImageReader worldImageReader;
 
     @SuppressWarnings("WeakerAccess")
@@ -38,7 +45,18 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
     public OziMapReader(Object input, Hints uHints) throws IOException, FactoryException, TransformException {
         super(input, uHints);
 
-        OziMapFileReader oziMapFileReader = new OziMapFileReader((File) input);
+        File inputFile = null;
+        if (source instanceof File) {
+            inputFile = (File) source;
+        } else if (source instanceof URL && (((URL) source).getProtocol().equals("file"))) {
+            inputFile = URLs.urlToFile((URL) source);
+        }
+
+        if (inputFile == null) {
+            throw new DataSourceException("Unknown input: " + input.getClass());
+        }
+
+        OziMapFileReader oziMapFileReader = new OziMapFileReader(inputFile);
 
         CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
         MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();

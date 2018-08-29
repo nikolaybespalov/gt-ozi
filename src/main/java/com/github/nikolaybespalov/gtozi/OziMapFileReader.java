@@ -331,6 +331,8 @@ public final class OziMapFileReader {
                                     this.crs = crsFactory.createProjectedCRS(properties, geoCrs, conversion, cartCS);
                                     break;
                                 }
+                                default:
+                                    break;
                             }
 
                             world2Crs = CRS.findMathTransform(DefaultGeographicCRS.WGS84, this.crs, true);

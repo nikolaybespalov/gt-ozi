@@ -41,16 +41,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
     public OziMapReader(Object input, Hints uHints) throws IOException, FactoryException, TransformException {
         super(input, uHints);
 
-        File inputFile = null;
-        if (source instanceof File) {
-            inputFile = (File) source;
-        } else if (source instanceof URL && (((URL) source).getProtocol().equals("file"))) {
-            inputFile = URLs.urlToFile((URL) source);
-        }
-
-        if (inputFile == null) {
-            throw new DataSourceException("Unknown input: " + input.getClass());
-        }
+        File inputFile = getSourceAsFile();
 
         OziMapFileReader oziMapFileReader = new OziMapFileReader(inputFile);
 

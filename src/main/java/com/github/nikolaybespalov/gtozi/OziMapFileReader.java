@@ -389,18 +389,121 @@ public final class OziMapFileReader {
         double yULC;
 
         if (calibrationPoints.size() == 2) {
-            CalibrationPoint cp1 = calibrationPoints.get(1);
+            CalibrationPoint cp1 = calibrationPoints.get(calibrationPoints.size() - 1);
             CalibrationPoint cp0 = calibrationPoints.get(0);
 
             xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
             yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
             xULC = cp0.getXy().x - cp0.getPixelLine().x * xPixelSize;
             yULC = cp0.getXy().y - cp0.getPixelLine().y * yPixelSize;
-        } else {
-            throw new IOException("too few calibration points2!");
-        }
 
-        grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
+            grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
+        } else if (calibrationPoints.size() > 2) {
+            throw new IOException("Too much calibration points (TEMP)");
+//            CalibrationPoint cp0 = calibrationPoints.get(0);
+//
+//            double min_pixel = cp0.pixelLine.x;
+//            double max_pixel = cp0.pixelLine.x;
+//            double min_line = cp0.pixelLine.y;
+//            double max_line = cp0.pixelLine.y;
+//            double min_geox = cp0.xy.x;
+//            double max_geox = cp0.xy.x;
+//            double min_geoy = cp0.xy.y;
+//            double max_geoy = cp0.xy.y;
+//
+//            for (int i = 1; i < calibrationPoints.size(); ++i) {
+//                CalibrationPoint cp = calibrationPoints.get(i);
+//
+//                min_pixel = Math.min(min_pixel, cp.pixelLine.x);
+//                max_pixel = Math.max(max_pixel, cp.pixelLine.x);
+//                min_line = Math.min(min_line, cp.pixelLine.y);
+//                max_line = Math.max(max_line, cp.pixelLine.y);
+//                min_geox = Math.min(min_geox, cp0.xy.x);
+//                max_geox = Math.max(max_geox, cp0.xy.x);
+//                min_geoy = Math.min(min_geoy, cp0.xy.y);
+//                max_geoy = Math.max(max_geoy, cp0.xy.y);
+//            }
+//
+//            double EPS = 1.0e-12;
+//
+//            if (Math.abs(max_pixel - min_pixel) < EPS
+//                    || Math.abs(max_line - min_line) < EPS
+//                    || Math.abs(max_geox - min_geox) < EPS
+//                    || Math.abs(max_geoy - min_geoy) < EPS) {
+//                throw new IOException("Degenerate in at least one dimension");
+//            }
+//
+//            double pl_normalize[] = new double[6], geo_normalize[] = new double[6];
+//
+//            pl_normalize[0] = -min_pixel / (max_pixel - min_pixel);
+//            pl_normalize[1] = 1.0 / (max_pixel - min_pixel);
+//            pl_normalize[2] = 0.0;
+//            pl_normalize[3] = -min_line / (max_line - min_line);
+//            pl_normalize[4] = 0.0;
+//            pl_normalize[5] = 1.0 / (max_line - min_line);
+//
+//            geo_normalize[0] = -min_geox / (max_geox - min_geox);
+//            geo_normalize[1] = 1.0 / (max_geox - min_geox);
+//            geo_normalize[2] = 0.0;
+//            geo_normalize[3] = -min_geoy / (max_geoy - min_geoy);
+//            geo_normalize[4] = 0.0;
+//            geo_normalize[5] = 1.0 / (max_geoy - min_geoy);
+//
+//            /* -------------------------------------------------------------------- */
+//            /* In the general case, do a least squares error approximation by       */
+//            /* solving the equation Sum[(A - B*x + C*y - Lon)^2] = minimum          */
+//            /* -------------------------------------------------------------------- */
+//
+//            double sum_x = 0.0;
+//            double sum_y = 0.0;
+//            double sum_xy = 0.0;
+//            double sum_xx = 0.0;
+//            double sum_yy = 0.0;
+//            double sum_Lon = 0.0;
+//            double sum_Lonx = 0.0;
+//            double sum_Lony = 0.0;
+//            double sum_Lat = 0.0;
+//            double sum_Latx = 0.0;
+//            double sum_Laty = 0.0;
+//
+////            for (int i = 0; i < calibrationPoints.size(); ++i) {
+////                double pixel, line, geox, geoy;
+////
+//////                GDALApplyGeoTransform(pl_normalize,
+//////                        pasGCPs[i].dfGCPPixel,
+//////                        pasGCPs[i].dfGCPLine,
+//////                        &pixel, &line);
+//////                GDALApplyGeoTransform(geo_normalize,
+//////                        pasGCPs[i].dfGCPX,
+//////                        pasGCPs[i].dfGCPY,
+//////                        &geox, &geoy);
+////
+////                sum_x += pixel;
+////                sum_y += line;
+////                sum_xy += pixel * line;
+////                sum_xx += pixel * pixel;
+////                sum_yy += line * line;
+////                sum_Lon += geox;
+////                sum_Lonx += geox * pixel;
+////                sum_Lony += geox * line;
+////                sum_Lat += geoy;
+////                sum_Latx += geoy * pixel;
+////                sum_Laty += geoy * line;
+////            }
+////
+////    const double divisor =
+////                    calibrationPoints.size() * (sum_xx * sum_yy - sum_xy * sum_xy)
+////                            + 2 * sum_x * sum_y * sum_xy - sum_y * sum_y * sum_xx
+////                            - sum_x * sum_x * sum_yy;
+////
+////            /* -------------------------------------------------------------------- */
+////            /*      If the divisor is zero, there is no valid solution.             */
+////            /* -------------------------------------------------------------------- */
+////            if (divisor == 0.0)
+////                return FALSE;
+        } else {
+            throw new IOException("Too few calibration points");
+        }
     }
 
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {

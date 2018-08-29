@@ -84,7 +84,7 @@ public class OziMapFormat extends AbstractGridFormat implements Format {
         return null;
     }
 
-    private File inputAsFile(Object input) {
+    private static File inputAsFile(Object input) {
         if (input == null) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, "Input cannot be null");

@@ -1,9 +1,6 @@
 package com.github.nikolaybespalov.gtozi;
 
-import com.google.common.io.Resources;
-import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.GridFormatFactorySpi;
-import org.geotools.coverage.grid.io.GridFormatFinder;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -11,7 +8,7 @@ import java.util.Collections;
 import static org.junit.Assert.*;
 
 public class OziMapFormatFactorySpiTest {
-    GridFormatFactorySpi spi = new OziMapFormatFactorySpi();
+    private GridFormatFactorySpi spi = new OziMapFormatFactorySpi();
 
     @Test
     public void testCreateFormat() {

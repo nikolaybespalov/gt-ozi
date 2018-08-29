@@ -28,12 +28,8 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Logger;
-
-import static org.geotools.util.logging.Logging.getLogger;
 
 public final class OziMapReader extends AbstractGridCoverage2DReader {
-    private static final Logger LOGGER = getLogger(OziMapReader.class);
     private WorldImageReader worldImageReader;
 
     @SuppressWarnings("WeakerAccess")

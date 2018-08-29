@@ -1,7 +1,5 @@
 package com.github.nikolaybespalov.gtozi;
 
-import com.google.common.io.Resources;
-import org.apache.commons.io.FileUtils;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralEnvelope;
@@ -22,7 +20,7 @@ public class OziMapReaderTest {
 
     @Test
     public void testDemo1() throws IOException, FactoryException, TransformException {
-        OziMapReader reader = new OziMapReader(FileUtils.toFile(Resources.getResource("Maps/Demo1.map")));
+        OziMapReader reader = new OziMapReader(ResourceUtils.getResourceAsFile(("Maps/Demo1.map")));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
 
@@ -49,7 +47,7 @@ public class OziMapReaderTest {
 
     @Test
     public void testWorld() throws IOException, FactoryException, TransformException {
-        OziMapReader reader = new OziMapReader(FileUtils.toFile(Resources.getResource("Maps/World.map")));
+        OziMapReader reader = new OziMapReader(ResourceUtils.getResourceAsFile(("Maps/World.map")));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
 

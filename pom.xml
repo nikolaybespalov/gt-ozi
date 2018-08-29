@@ -5,7 +5,7 @@
 
     <groupId>com.github.nikolaybespalov</groupId>
     <artifactId>gt-ozi</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.1</version>
 
     <name>gt-ozi</name>
     <description>GeoTools plugin that allows you to use OziExplorer files(map/ozf2/ozf3/ozf4) without using GDAL/OziApi
@@ -32,7 +32,7 @@
     <scm>
         <url>https://github.com/nikolaybespalov/gt-ozi</url>
         <connection>scm:git:https://github.com/nikolaybespalov/gt-ozi.git</connection>
-        <tag>HEAD</tag>
+        <tag>0.1.1</tag>
     </scm>
 
     <issueManagement>

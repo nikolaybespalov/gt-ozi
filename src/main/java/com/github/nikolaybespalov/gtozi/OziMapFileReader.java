@@ -352,11 +352,11 @@ public final class OziMapFileReader {
                                     NumberUtils.toDouble(v9) + NumberUtils.toDouble(v10) / 60.0,
                                     NumberUtils.toDouble(v6) + NumberUtils.toDouble(v7) / 60.0);
 
-                            if (v11.equals("W")) {
+                            if ("W".equals(v11)) {
                                 latLon.x = -latLon.x;
                             }
 
-                            if (v8.equals("S")) {
+                            if ("S".equals(v8)) {
                                 latLon.y = -latLon.y;
                             }
 

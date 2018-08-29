@@ -35,8 +35,8 @@ public class OziMapFormat extends AbstractGridFormat implements Format {
             try {
                 return new OziMapReader(o);
             } catch (IOException | FactoryException | TransformException e) {
-                if (LOGGER.isLoggable(Level.WARNING))
-                    LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
+                LOGGER.log(Level.SEVERE, e.getLocalizedMessage(), e);
+
                 return null;
             }
         }

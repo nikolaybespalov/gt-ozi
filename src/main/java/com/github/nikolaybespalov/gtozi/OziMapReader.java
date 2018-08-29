@@ -29,50 +29,46 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
     private WorldImageReader worldImageReader;
 
     @SuppressWarnings("WeakerAccess")
-    public OziMapReader(Object input) throws DataSourceException {
+    public OziMapReader(Object input) throws IOException {
         this(input, null);
     }
 
     @SuppressWarnings("WeakerAccess")
-    public OziMapReader(Object input, Hints uHints) throws DataSourceException {
+    public OziMapReader(Object input, Hints uHints) throws IOException {
         super(input, uHints);
 
-        try {
-            OziMapFileReader oziMapFileReader = new OziMapFileReader((File) input);
+        OziMapFileReader oziMapFileReader = new OziMapFileReader((File) input);
 
-            CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
-            MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();
+        CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
+        MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();
 
-            String baseName = FilenameUtils.removeExtension(((File) input).getAbsolutePath());
+        String baseName = FilenameUtils.removeExtension(((File) input).getAbsolutePath());
 
-            Path wldPath = Paths.get(baseName + ".wld");
+        Path wldPath = Paths.get(baseName + ".wld");
 
-            if (wldPath.toFile().exists()) {
-                Files.delete(Paths.get(baseName + ".wld"));
-            }
-
-            Files.createFile(wldPath);
-
-            new WorldFileWriter(wldPath.toFile(), PixelTranslation.translate(grid2Crs, PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER)); // Нет необходимости закрывать WorldFileWriter
-
-            Path prjPath = Paths.get(baseName + ".prj");
-
-            if (prjPath.toFile().exists()) {
-                Files.delete(Paths.get(baseName + ".prj"));
-            }
-
-            Files.createFile(prjPath);
-
-            final FileWriter prjWriter = new FileWriter(prjPath.toFile());
-
-            prjWriter.write(((Formattable) crs).toWKT(Citations.OGC, 2));
-
-            prjWriter.close();
-
-            worldImageReader = new WorldImageReader(oziMapFileReader.getImageFile());
-        } catch (IOException e) {
-            throw new DataSourceException(e);
+        if (wldPath.toFile().exists()) {
+            Files.delete(Paths.get(baseName + ".wld"));
         }
+
+        Files.createFile(wldPath);
+
+        new WorldFileWriter(wldPath.toFile(), PixelTranslation.translate(grid2Crs, PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER)); // Нет необходимости закрывать WorldFileWriter
+
+        Path prjPath = Paths.get(baseName + ".prj");
+
+        if (prjPath.toFile().exists()) {
+            Files.delete(Paths.get(baseName + ".prj"));
+        }
+
+        Files.createFile(prjPath);
+
+        final FileWriter prjWriter = new FileWriter(prjPath.toFile());
+
+        prjWriter.write(((Formattable) crs).toWKT(Citations.OGC, 2));
+
+        prjWriter.close();
+
+        worldImageReader = new WorldImageReader(oziMapFileReader.getImageFile());
     }
 
     @Override

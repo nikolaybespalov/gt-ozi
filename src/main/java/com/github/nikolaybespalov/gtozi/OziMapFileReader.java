@@ -237,7 +237,7 @@ public final class OziMapFileReader {
             String[] values = Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
 
             if (values.length == 0) {
-                throw new IllegalArgumentException("too few values!");
+                throw new IOException("too few values!");
             }
 
             String v0 = values[0];
@@ -269,7 +269,7 @@ public final class OziMapFileReader {
                         imageFile = new File(file.getParent(), imageFile.getName());
 
                         if (!imageFile.exists()) {
-                            return;
+                            throw new IOException("File not found: " + imageFile);
                         }
                     }
                     break;
@@ -399,7 +399,7 @@ public final class OziMapFileReader {
         }
 
         if (calibrationPoints.size() < 2) {
-            throw new IllegalArgumentException("too few calibration points!");
+            throw new IOException("too few calibration points!");
         }
 
         double xPixelSize;

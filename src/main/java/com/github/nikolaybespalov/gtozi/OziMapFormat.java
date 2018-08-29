@@ -9,6 +9,7 @@ import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,7 +32,7 @@ public class OziMapFormat extends AbstractGridFormat implements Format {
         if (o instanceof File) {
             try {
                 return new OziMapReader((File) o);
-            } catch (DataSourceException e) {
+            } catch (IOException e) {
                 if (LOGGER.isLoggable(Level.WARNING))
                     LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
                 return null;

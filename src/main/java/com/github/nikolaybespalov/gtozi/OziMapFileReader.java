@@ -37,8 +37,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @SuppressWarnings("WeakerAccess")
 public final class OziMapFileReader {
@@ -208,7 +206,6 @@ public final class OziMapFileReader {
         put("Zanderij", createGeodeticDatum("Zanderij", INTERNATIONAL_1924, -265, 120, -358));
     }};
 
-    private static final Logger log = Logger.getLogger(OziMapFileReader.class.getName());
     private CoordinateReferenceSystem crs;
     private GeographicCRS geoCrs;
     private String projectionName;

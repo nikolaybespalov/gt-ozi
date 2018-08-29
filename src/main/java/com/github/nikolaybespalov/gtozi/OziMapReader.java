@@ -3,7 +3,6 @@ package com.github.nikolaybespalov.gtozi;
 import org.apache.commons.io.FilenameUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
-import org.geotools.data.DataSourceException;
 import org.geotools.data.WorldFileWriter;
 import org.geotools.factory.Hints;
 import org.geotools.gce.image.WorldImageReader;

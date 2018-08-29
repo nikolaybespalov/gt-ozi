@@ -14,9 +14,11 @@ import org.geotools.referencing.wkt.Formattable;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.parameter.GeneralParameterValue;
+import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.datum.PixelInCell;
 import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -29,12 +31,12 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
     private WorldImageReader worldImageReader;
 
     @SuppressWarnings("WeakerAccess")
-    public OziMapReader(Object input) throws IOException {
+    public OziMapReader(Object input) throws IOException, FactoryException, TransformException {
         this(input, null);
     }
 
     @SuppressWarnings("WeakerAccess")
-    public OziMapReader(Object input, Hints uHints) throws IOException {
+    public OziMapReader(Object input, Hints uHints) throws IOException, FactoryException, TransformException {
         super(input, uHints);
 
         OziMapFileReader oziMapFileReader = new OziMapFileReader((File) input);

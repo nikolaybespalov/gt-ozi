@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.TransformException;
 
 import java.awt.*;
 import java.io.IOException;
@@ -20,7 +21,7 @@ import static org.junit.Assert.*;
 public class OziMapReaderTest {
 
     @Test
-    public void testDemo1() throws IOException {
+    public void testDemo1() throws IOException, FactoryException, TransformException {
         OziMapReader reader = new OziMapReader(FileUtils.toFile(Resources.getResource("Maps/Demo1.map")));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
@@ -47,7 +48,7 @@ public class OziMapReaderTest {
     }
 
     @Test
-    public void testWorld() throws IOException, FactoryException {
+    public void testWorld() throws IOException, FactoryException, TransformException {
         OziMapReader reader = new OziMapReader(FileUtils.toFile(Resources.getResource("Maps/World.map")));
 
         CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();

@@ -7,6 +7,8 @@ import org.geotools.data.DataSourceException;
 import org.geotools.factory.Hints;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +34,7 @@ public class OziMapFormat extends AbstractGridFormat implements Format {
         if (o instanceof File) {
             try {
                 return new OziMapReader((File) o);
-            } catch (IOException e) {
+            } catch (IOException | FactoryException | TransformException e) {
                 if (LOGGER.isLoggable(Level.WARNING))
                     LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
                 return null;

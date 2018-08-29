@@ -216,7 +216,7 @@ public final class OziMapFileReader {
     private MathTransform grid2Crs;
     private File imageFile;
 
-    public OziMapFileReader(File file) throws IOException {
+    public OziMapFileReader(File file) throws IOException, FactoryException, TransformException {
         List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("windows-1251"));
 
         if (lines.size() < 40) {
@@ -236,16 +236,7 @@ public final class OziMapFileReader {
 
             String[] values = Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
 
-            if (values.length == 0) {
-                throw new IOException("too few values!");
-            }
-
             String v0 = values[0];
-
-            if (StringUtils.isEmpty(v0)) {
-                continue;
-            }
-
             String v1 = values.length > 1 ? values[1] : "";
             String v2 = values.length > 2 ? values[2] : "";
             String v3 = values.length > 3 ? values[3] : "";
@@ -284,13 +275,8 @@ public final class OziMapFileReader {
                         return;
                     }
 
-                    try {
-                        CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
-                        geoCrs = crsFactory.createGeographicCRS(ImmutableMap.of("name", v0), datum, DefaultEllipsoidalCS.GEODETIC_2D);
-                    } catch (FactoryException e) {
-                        log.log(Level.SEVERE, "", e);
-                        return;
-                    }
+                    CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+                    geoCrs = crsFactory.createGeographicCRS(ImmutableMap.of("name", v0), datum, DefaultEllipsoidalCS.GEODETIC_2D);
                     break;
                 default: {
                     if (v0.startsWith("Map Projection")) {
@@ -341,7 +327,7 @@ public final class OziMapFileReader {
 
                                     Conversion conversion = new DefiningConversion("Mercator_1SP", parameters);
 
-                                    CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+                                    crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
 
                                     Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
 
@@ -377,14 +363,10 @@ public final class OziMapFileReader {
                                 latLon.y = -latLon.y;
                             }
 
-                            try {
-                                DirectPosition2D p = new DirectPosition2D(crs);
+                            DirectPosition2D p = new DirectPosition2D(crs);
 
-                                if (world2Crs.transform(latLon, p) != null) {
-                                    xy = p;
-                                }
-                            } catch (TransformException e) {
-                                // TODO: implement
+                            if (world2Crs.transform(latLon, p) != null) {
+                                xy = p;
                             }
                         } else if (NumberUtils.isCreatable(v14) && NumberUtils.isCreatable(v15)) {
                             xy = new DirectPosition2D(crs, NumberUtils.toDouble(v15), NumberUtils.toDouble(v14));
@@ -416,7 +398,7 @@ public final class OziMapFileReader {
             xULC = cp0.getXy().x - cp0.getPixelLine().x * xPixelSize;
             yULC = cp0.getXy().y - cp0.getPixelLine().y * yPixelSize;
         } else {
-            throw new IllegalArgumentException("too few calibration points2!");
+            throw new IOException("too few calibration points2!");
         }
 
         grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);

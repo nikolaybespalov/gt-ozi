@@ -12,6 +12,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 
 import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
@@ -89,4 +90,60 @@ public class OziMapReaderTest {
 
         assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.001, false));
     }
+
+    @Test
+    public void testSas() throws IOException, FactoryException, TransformException {
+        OziMapReader reader = new OziMapReader(ResourceUtils.getResourceAsFile(("Maps/testSAS.map")));
+
+        CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
+
+        assertNotNull(crs);
+        CoordinateReferenceSystem expectedCrs = CRS.parseWKT("PROJCS[\"unnamed\",\n" +
+                "    GEOGCS[\"WGS 84\",\n" +
+                "        DATUM[\"WGS_1984\",\n" +
+                "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n" +
+                "                AUTHORITY[\"EPSG\",\"7030\"]],\n" +
+                "            AUTHORITY[\"EPSG\",\"6326\"]],\n" +
+                "        PRIMEM[\"Greenwich\",0,\n" +
+                "            AUTHORITY[\"EPSG\",\"8901\"]],\n" +
+                "        UNIT[\"degree\",0.0174532925199433,\n" +
+                "            AUTHORITY[\"EPSG\",\"9122\"]],\n" +
+                "        AUTHORITY[\"EPSG\",\"4326\"]],\n" +
+                "    PROJECTION[\"Mercator_1SP\"],\n" +
+                "    PARAMETER[\"central_meridian\",0],\n" +
+                "    PARAMETER[\"scale_factor\",1],\n" +
+                "    PARAMETER[\"false_easting\",0],\n" +
+                "    PARAMETER[\"false_northing\",0],\n" +
+                "    UNIT[\"Meter\",1]]");
+        assertTrue(CRS.equalsIgnoreMetadata(expectedCrs, crs));
+
+        GridEnvelope originalGridRange = reader.getOriginalGridRange();
+
+        assertNotNull(originalGridRange);
+        assertEquals(new GridEnvelope2D(new Rectangle(0, 0, 360, 306)), originalGridRange);
+
+        GeneralEnvelope originalEnvelope = reader.getOriginalEnvelope();
+
+        assertNotNull(originalEnvelope);
+
+        GeneralEnvelope expectedOriginalEnvelope = new GeneralEnvelope(expectedCrs);
+
+        expectedOriginalEnvelope.add(new DirectPosition2D(3209132.19552484, 8125562.398880421));
+        expectedOriginalEnvelope.add(new DirectPosition2D(440277.2874353309, 374235.69432003144));
+
+        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.001, false));
+    }
+
+//    @Test
+//    public void testSas2()
+//            throws Exception {
+//        testMap(
+//                new BitmapOziMapRenderer(),
+//                testSasPath,
+//                "bitmap:map",
+//                "EPSG:3395",
+//                RendererTestUtils.EXTRACT_SRS,
+//                new Rectangle2D.Double(3209132.19552484, 8125562.398880421, 440277.2874353309, 374235.69432003144),
+//                RendererTestUtils.IS_NOT_OBJECT_INFO_SUPPORTED);
+//    }
 }

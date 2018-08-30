@@ -12,7 +12,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 
 import static org.junit.Assert.*;

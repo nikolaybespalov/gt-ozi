@@ -467,9 +467,8 @@ public final class OziMapFileReader {
             double sum_Latx = 0.0;
             double sum_Laty = 0.0;
 
-            for (int i = 0; i < calibrationPoints.size(); ++i) {
-                CalibrationPoint cp = calibrationPoints.get(i);
-//
+            for (CalibrationPoint cp : calibrationPoints) {
+                //
 ////                GDALApplyGeoTransform(pl_normalize,
 ////                        pasGCPs[i].dfGCPPixel,
 ////                        pasGCPs[i].dfGCPLine,
@@ -568,7 +567,7 @@ public final class OziMapFileReader {
                 throw new IOException("HZ");
             }
 
-            double padfGeoTransform[] = new double[] {0, 0, 0, 0, 0, 0};
+            double padfGeoTransform[] = new double[]{0, 0, 0, 0, 0, 0};
 
             GDALComposeGeoTransforms(pl_normalize, gt_normalized, gt1p2);
             GDALComposeGeoTransforms(gt1p2, inv_geo_normalize, padfGeoTransform);
@@ -579,9 +578,6 @@ public final class OziMapFileReader {
             yULC = padfGeoTransform[5];
 
             grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
-
-            int asd = 0;
-            int asdf = asd;
         } else {
             throw new IOException("Too few calibration points");
         }

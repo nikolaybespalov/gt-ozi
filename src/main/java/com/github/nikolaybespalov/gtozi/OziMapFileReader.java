@@ -388,7 +388,7 @@ public final class OziMapFileReader {
         double xULC;
         double yULC;
 
-        if (calibrationPoints.size() == 1) {
+        if (calibrationPoints.size() == 2) {
             CalibrationPoint cp1 = calibrationPoints.get(calibrationPoints.size() - 1);
             CalibrationPoint cp0 = calibrationPoints.get(0);
 
@@ -398,7 +398,7 @@ public final class OziMapFileReader {
             yULC = cp0.getXy().y - cp0.getPixelLine().y * yPixelSize;
 
             grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
-        } else if (calibrationPoints.size() >= 2) {
+        } else if (calibrationPoints.size() > 2) {
             int nGCPCount = calibrationPoints.size();
             //throw new IOException("Too much calibration points (TEMP)");
             CalibrationPoint cp0 = calibrationPoints.get(0);
@@ -467,27 +467,37 @@ public final class OziMapFileReader {
             double sum_Latx = 0.0;
             double sum_Laty = 0.0;
 
+
             for (CalibrationPoint cp : calibrationPoints) {
-                //
-////                GDALApplyGeoTransform(pl_normalize,
-////                        pasGCPs[i].dfGCPPixel,
-////                        pasGCPs[i].dfGCPLine,
-////                        &pixel, &line);
+                DirectPosition2D pixelLine = new DirectPosition2D();
 
-                double pixel = geo_normalize[0] + cp.pixelLine.x * geo_normalize[1]
-                        + cp.pixelLine.y * geo_normalize[2];
-                double line = geo_normalize[3] + cp.pixelLine.x * geo_normalize[4]
-                        + cp.pixelLine.y * geo_normalize[5];
+                GDALApplyGeoTransform(pl_normalize,
+                        cp.pixelLine.x,
+                        cp.pixelLine.y,
+                        pixelLine);
 
-////                GDALApplyGeoTransform(geo_normalize,
-////                        pasGCPs[i].dfGCPX,
-////                        pasGCPs[i].dfGCPY,
-////                        &geox, &geoy);
+                double pixel = pixelLine.x;
+                double line = pixelLine.y;
 
-                double geox = geo_normalize[0] + cp.xy.x * geo_normalize[1]
-                        + cp.xy.y * geo_normalize[2];
-                double geoy = geo_normalize[3] + cp.xy.x * geo_normalize[4]
-                        + cp.xy.y * geo_normalize[5];
+                DirectPosition2D xy = new DirectPosition2D();
+
+//                double pixel = geo_normalize[0] + cp.pixelLine.x * geo_normalize[1]
+//                        + cp.pixelLine.y * geo_normalize[2];
+//                double line = geo_normalize[3] + cp.pixelLine.x * geo_normalize[4]
+//                        + cp.pixelLine.y * geo_normalize[5];
+
+                GDALApplyGeoTransform(geo_normalize,
+                        cp.xy.x,
+                        cp.xy.y,
+                        xy);
+
+                double geox = xy.x;
+                double geoy = xy.y;
+
+//                double geox = geo_normalize[0] + cp.xy.x * geo_normalize[1]
+//                        + cp.xy.y * geo_normalize[2];
+//                double geoy = geo_normalize[3] + cp.xy.x * geo_normalize[4]
+//                        + cp.xy.y * geo_normalize[5];
 
                 sum_x += pixel;
                 sum_y += line;
@@ -503,8 +513,8 @@ public final class OziMapFileReader {
             }
 
             double divisor =
-                    calibrationPoints.size() * (sum_xx * sum_yy - sum_xy * sum_xy)
-                            + 2.0 * sum_x * sum_y * sum_xy - sum_y * sum_y * sum_xx
+                    nGCPCount * (sum_xx * sum_yy - sum_xy * sum_xy)
+                            + 2 * sum_x * sum_y * sum_xy - sum_y * sum_y * sum_xx
                             - sum_x * sum_x * sum_yy;
 
             /* -------------------------------------------------------------------- */
@@ -572,10 +582,15 @@ public final class OziMapFileReader {
             GDALComposeGeoTransforms(pl_normalize, gt_normalized, gt1p2);
             GDALComposeGeoTransforms(gt1p2, inv_geo_normalize, padfGeoTransform);
 
-            xPixelSize = padfGeoTransform[0];
-            yPixelSize = padfGeoTransform[3];
-            xULC = padfGeoTransform[4];
-            yULC = padfGeoTransform[5];
+            xPixelSize = padfGeoTransform[1];
+            yPixelSize = padfGeoTransform[5];
+            xULC = padfGeoTransform[0];
+            yULC = padfGeoTransform[3];
+
+//            xPixelSize = inv_geo_normalize[1] / inv_geo_normalize[1];
+//            yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
+//            xULC = cp0.getXy().x - cp0.getPixelLine().x * xPixelSize;
+//            yULC = cp0.getXy().y - cp0.getPixelLine().y * yPixelSize;
 
             grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
         } else {
@@ -600,7 +615,7 @@ public final class OziMapFileReader {
             gt_out[3] = -gt_in[3] / gt_in[5];
             gt_out[4] = 0.0;
             gt_out[5] = 1.0 / gt_in[5];
-            return false;
+            return true;
         }
 
         // Assume a 3rd row that is [1 0 0].
@@ -668,6 +683,15 @@ public final class OziMapFileReader {
 
         System.arraycopy(gtwrk, 0, padfGTOut, 0, gtwrk.length);
         //memcpy(padfGTOut, gtwrk, sizeof(gtwrk));
+    }
+
+    private static void GDALApplyGeoTransform(double[] padfGeoTransform,
+                                              double dfPixel, double dfLine,
+                                              DirectPosition2D pdfGeo) {
+        pdfGeo.x = padfGeoTransform[0] + dfPixel * padfGeoTransform[1]
+                + dfLine * padfGeoTransform[2];
+        pdfGeo.y = padfGeoTransform[3] + dfPixel * padfGeoTransform[4]
+                + dfLine * padfGeoTransform[5];
     }
 
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {

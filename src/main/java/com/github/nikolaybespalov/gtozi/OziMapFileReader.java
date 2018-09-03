@@ -44,7 +44,7 @@ public final class OziMapFileReader {
     private static final Ellipsoid MODIFIED_AIRY = DefaultEllipsoid.createFlattenedSphere("Modified Airy", 6377340.189, 299.3249646, SI.METER);
     private static final Ellipsoid AUSTRALIAN_NATIONAL = DefaultEllipsoid.createFlattenedSphere("Australian National", 6378160.0, 298.25, SI.METER);
     private static final Ellipsoid BESSEL_1841 = DefaultEllipsoid.createFlattenedSphere("Bessel 1841", 6377397.155, 299.1528128, SI.METER);
-    private static final Ellipsoid CLARKE_1866 = DefaultEllipsoid.createFlattenedSphere("Clarke 1866", 6378206.4, 294.9786982, SI.METER);
+    private static final Ellipsoid CLARKE_1866 = DefaultEllipsoid.CLARKE_1866;
     private static final Ellipsoid CLARKE_1880 = DefaultEllipsoid.createFlattenedSphere("Clarke 1880", 6378249.145, 293.465, SI.METER);
     private static final Ellipsoid EVEREST_INDIA_1830 = DefaultEllipsoid.createFlattenedSphere("Everest (India 1830)", 6377276.345, 300.8017, SI.METER);
     private static final Ellipsoid EVEREST_1948 = DefaultEllipsoid.createFlattenedSphere("Everest (1948)", 6377304.063, 300.8017, SI.METER);
@@ -53,10 +53,10 @@ public final class OziMapFileReader {
     private static final Ellipsoid EVEREST_PAKISTAN = DefaultEllipsoid.createFlattenedSphere("Everest (Pakistan)", 6377309.613, 300.8017, SI.METER);
     @SuppressWarnings("unused")
     private static final Ellipsoid INDONESIAN_1974 = DefaultEllipsoid.createFlattenedSphere("Indonesian 1974", 6378160.0, 298.247, SI.METER);
-    private static final Ellipsoid GRS_80 = DefaultEllipsoid.createFlattenedSphere("GRS 80", 6378137.0, 298.257222101, SI.METER);
+    private static final Ellipsoid GRS_80 = DefaultEllipsoid.GRS80;
     private static final Ellipsoid HELMERT_1906 = DefaultEllipsoid.createFlattenedSphere("Helmert 1906", 6378200.0, 298.3, SI.METER);
     private static final Ellipsoid HOUGH_1960 = DefaultEllipsoid.createFlattenedSphere("Hough 1960", 6378270.0, 297.0, SI.METER);
-    private static final Ellipsoid INTERNATIONAL_1924 = DefaultEllipsoid.createFlattenedSphere("International 1924", 6378388.0, 297.0, SI.METER);
+    private static final Ellipsoid INTERNATIONAL_1924 = DefaultEllipsoid.INTERNATIONAL_1924;
     private static final Ellipsoid KRASSOVSKY_1940 = DefaultEllipsoid.createFlattenedSphere("Krassovsky 1940", 6378245.0, 298.3, SI.METER);
     private static final Ellipsoid SOUTH_AMERICAN_1969 = DefaultEllipsoid.createFlattenedSphere("South American 1969", 6378160.0, 298.25, SI.METER);
     @SuppressWarnings("unused")

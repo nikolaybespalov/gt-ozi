@@ -434,7 +434,8 @@ public final class OziMapFileReader {
                 throw new IOException("Degenerate in at least one dimension");
             }
 
-            double pl_normalize[] = new double[6], geo_normalize[] = new double[6];
+            double pl_normalize[] = new double[6];
+            double geo_normalize[] = new double[6];
 
             pl_normalize[0] = -min_pixel / (max_pixel - min_pixel);
             pl_normalize[1] = 1.0 / (max_pixel - min_pixel);
@@ -471,7 +472,7 @@ public final class OziMapFileReader {
             for (CalibrationPoint cp : calibrationPoints) {
                 DirectPosition2D pixelLine = new DirectPosition2D();
 
-                GDALApplyGeoTransform(pl_normalize,
+                gdalApplyGeoTransform(pl_normalize,
                         cp.pixelLine.x,
                         cp.pixelLine.y,
                         pixelLine);
@@ -486,7 +487,7 @@ public final class OziMapFileReader {
 //                double line = geo_normalize[3] + cp.pixelLine.x * geo_normalize[4]
 //                        + cp.pixelLine.y * geo_normalize[5];
 
-                GDALApplyGeoTransform(geo_normalize,
+                gdalApplyGeoTransform(geo_normalize,
                         cp.xy.x,
                         cp.xy.y,
                         xy);
@@ -573,14 +574,14 @@ public final class OziMapFileReader {
             double gt1p2[] = new double[]{0, 0, 0, 0, 0, 0};
             double inv_geo_normalize[] = new double[]{0, 0, 0, 0, 0, 0};
 
-            if (!GDALInvGeoTransform(geo_normalize, inv_geo_normalize)) {
+            if (!gdalInvGeoTransform(geo_normalize, inv_geo_normalize)) {
                 throw new IOException("HZ");
             }
 
             double padfGeoTransform[] = new double[]{0, 0, 0, 0, 0, 0};
 
-            GDALComposeGeoTransforms(pl_normalize, gt_normalized, gt1p2);
-            GDALComposeGeoTransforms(gt1p2, inv_geo_normalize, padfGeoTransform);
+            gdalComposeGeoTransforms(pl_normalize, gt_normalized, gt1p2);
+            gdalComposeGeoTransforms(gt1p2, inv_geo_normalize, padfGeoTransform);
 
             xPixelSize = padfGeoTransform[1];
             yPixelSize = padfGeoTransform[5];
@@ -598,7 +599,7 @@ public final class OziMapFileReader {
         }
     }
 
-    private static boolean GDALInvGeoTransform(double[] gt_in, double[] gt_out) {
+    private static boolean gdalInvGeoTransform(double[] gt_in, double[] gt_out) {
         // Special case - no rotation - to avoid computing determinate
         // and potential precision issues.
         if (gt_in[2] == 0.0 && gt_in[4] == 0.0 &&
@@ -643,7 +644,7 @@ public final class OziMapFileReader {
         return true;
     }
 
-    private static void GDALComposeGeoTransforms(double[] padfGT1, double[] padfGT2,
+    private static void gdalComposeGeoTransforms(double[] padfGT1, double[] padfGT2,
                                                  double[] padfGTOut) {
         double gtwrk[] = new double[]{0, 0, 0, 0, 0, 0};
         // We need to think of the geotransform in a more normal form to do
@@ -685,7 +686,7 @@ public final class OziMapFileReader {
         //memcpy(padfGTOut, gtwrk, sizeof(gtwrk));
     }
 
-    private static void GDALApplyGeoTransform(double[] padfGeoTransform,
+    private static void gdalApplyGeoTransform(double[] padfGeoTransform,
                                               double dfPixel, double dfLine,
                                               DirectPosition2D pdfGeo) {
         pdfGeo.x = padfGeoTransform[0] + dfPixel * padfGeoTransform[1]

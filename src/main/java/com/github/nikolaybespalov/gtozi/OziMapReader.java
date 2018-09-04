@@ -40,12 +40,16 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
         File inputFile = getSourceAsFile();
 
+        if (inputFile == null) {
+            throw new IllegalArgumentException("No input stream for the provided source: " + source);
+        }
+
         OziMapFileReader oziMapFileReader = new OziMapFileReader(inputFile);
 
         CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
         MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();
 
-        String baseName = FilenameUtils.removeExtension(((File) input).getAbsolutePath());
+        String baseName = FilenameUtils.removeExtension(inputFile.getAbsolutePath());
 
         Path wldPath = Paths.get(baseName + ".wld");
 

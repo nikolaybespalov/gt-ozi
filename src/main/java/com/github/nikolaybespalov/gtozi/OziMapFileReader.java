@@ -237,6 +237,8 @@ public final class OziMapFileReader {
             String v1 = values.length > 1 ? values[1] : "";
             String v2 = values.length > 2 ? values[2] : "";
             String v3 = values.length > 3 ? values[3] : "";
+            String v4 = values.length > 4 ? values[4] : "";
+            String v5 = values.length > 5 ? values[5] : "";
             String v6 = values.length > 6 ? values[6] : "";
             String v7 = values.length > 7 ? values[7] : "";
             String v8 = values.length > 8 ? values[8] : "";
@@ -315,11 +317,11 @@ public final class OziMapFileReader {
                                     }
 
                                     if (NumberUtils.isCreatable(values[4])) {
-                                        parameters.parameter("false_easting").setValue(NumberUtils.toDouble(values[4]));
+                                        parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
                                     }
 
                                     if (NumberUtils.isCreatable(values[5])) {
-                                        parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
+                                        parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
                                     }
 
                                     Conversion conversion = new DefiningConversion("Mercator_1SP", parameters);

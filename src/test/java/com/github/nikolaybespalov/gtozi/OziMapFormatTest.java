@@ -1,10 +1,15 @@
 package com.github.nikolaybespalov.gtozi;
 
 import org.geotools.coverage.grid.io.AbstractGridFormat;
+import org.geotools.data.DataSourceException;
 import org.geotools.factory.GeoTools;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+
+import java.io.IOException;
 
 import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OziMapFormatTest {
     private AbstractGridFormat format = new OziMapFormat();
@@ -24,13 +29,13 @@ public class OziMapFormatTest {
         assertFalse(format.accepts("string"));
         assertFalse(format.accepts(ResourceUtils.getResourceAsUrl("Maps/World.ozf2")));
         assertTrue(format.accepts(ResourceUtils.getResourceAsFile(("Maps/World.map"))));
-        assertTrue(format.accepts(ResourceUtils.getResourceAsUrl("Maps/SeamlessMaps/SeamlessMap.map")));
+        assertFalse(format.accepts(ResourceUtils.getResourceAsUrl("Maps/SeamlessMaps/SeamlessMap.map")));
     }
 
     @Test
     public void testGetReader() {
         assertNull(format.getReader(null));
-        assertNull(format.getReader("string"));
+        assertThrows(IllegalArgumentException.class, () -> format.getReader("string"));
         assertNotNull(format.getReader(ResourceUtils.getResourceAsUrl("Maps/World.map")));
         assertNull(format.getReader(ResourceUtils.getResourceAsFile(("Maps/SeamlessMaps/SeamlessMap.map"))));
         assertNotNull(format.getReader(ResourceUtils.getResourceAsFile(("Maps/World.map")), GeoTools.getDefaultHints()));

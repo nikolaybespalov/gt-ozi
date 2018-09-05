@@ -5,15 +5,12 @@ import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
 import org.geotools.factory.GeoTools;
 import org.geotools.factory.Hints;
-import org.geotools.util.URLs;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,13 +33,26 @@ public class OziMapFormat extends AbstractGridFormat implements Format {
 
     @Override
     public boolean accepts(Object source, Hints hints) {
-        File inputFile = inputAsFile(source);
-
-        if (inputFile == null) {
+        if (source == null) {
+            LOGGER.severe("input should not be null");
             return false;
         }
 
-        return inputFile.getName().endsWith(".map");
+        try {
+            AbstractGridCoverage2DReader reader = getReader(source, hints);
+
+            if (reader != null) {
+                reader.dispose();
+
+                return true;
+            }
+        } catch (Throwable t) {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, t.getLocalizedMessage(), t);
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -52,14 +62,13 @@ public class OziMapFormat extends AbstractGridFormat implements Format {
 
     @Override
     public AbstractGridCoverage2DReader getReader(Object source, Hints hints) {
-        File inputFile = inputAsFile(source);
-
-        if (inputFile == null) {
+        if (source == null) {
+            LOGGER.severe("input should not be null");
             return null;
         }
 
         try {
-            return new OziMapReader(inputFile);
+            return new OziMapReader(source);
         } catch (IOException | FactoryException | TransformException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, e.getLocalizedMessage(), e);
@@ -82,32 +91,5 @@ public class OziMapFormat extends AbstractGridFormat implements Format {
     @Override
     public GeoToolsWriteParams getDefaultImageIOWriteParameters() {
         return null;
-    }
-
-    private static File inputAsFile(Object input) {
-        if (input == null) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Input cannot be null");
-            }
-
-            return null;
-        }
-
-        File inputFile = null;
-        if (input instanceof File) {
-            inputFile = (File) input;
-        } else if (input instanceof URL && (((URL) input).getProtocol().equals("file"))) {
-            inputFile = URLs.urlToFile((URL) input);
-        }
-
-        if (inputFile == null) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, "Unknown input: " + input.getClass());
-            }
-
-            return null;
-        }
-
-        return inputFile;
     }
 }

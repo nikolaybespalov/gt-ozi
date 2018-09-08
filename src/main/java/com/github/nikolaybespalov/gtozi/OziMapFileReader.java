@@ -20,7 +20,6 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CRSFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
-import org.opengis.referencing.cs.CartesianCS;
 import org.opengis.referencing.datum.DatumFactory;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.GeodeticDatum;
@@ -300,11 +299,10 @@ public final class OziMapFileReader {
                                         return;
                                     }
 
-                                    CartesianCS cartCS = DefaultCartesianCS.GENERIC_2D;
                                     MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
                                     ParameterValueGroup parameters = mtFactory.getDefaultParameters("Mercator_1SP");
 
-                                    if (NumberUtils.isCreatable(v1)) {
+                                    if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
                                         parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
                                     }
 
@@ -316,11 +314,11 @@ public final class OziMapFileReader {
                                         parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
                                     }
 
-                                    if (NumberUtils.isCreatable(values[4])) {
+                                    if (NumberUtils.isCreatable(v4)) {
                                         parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
                                     }
 
-                                    if (NumberUtils.isCreatable(values[5])) {
+                                    if (NumberUtils.isCreatable(v5)) {
                                         parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
                                     }
 
@@ -330,14 +328,16 @@ public final class OziMapFileReader {
 
                                     Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
 
-                                    this.crs = crsFactory.createProjectedCRS(properties, geoCrs, conversion, cartCS);
+                                    this.crs = crsFactory.createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
+
                                     break;
                                 }
                                 default:
                                     break;
                             }
 
-                            world2Crs = CRS.findMathTransform(DefaultGeographicCRS.WGS84, this.crs, true);
+
+                            world2Crs = CRS.findMathTransform(geoCrs, this.crs, false);
                         } catch (FactoryException e) {
                             return;
                         }
@@ -364,13 +364,13 @@ public final class OziMapFileReader {
                                 latLon.y = -latLon.y;
                             }
 
-                            DirectPosition2D p = new DirectPosition2D(crs);
+                            DirectPosition2D p = new DirectPosition2D();
 
                             if (world2Crs.transform(latLon, p) != null) {
                                 xy = p;
                             }
                         } else if (NumberUtils.isCreatable(v14) && NumberUtils.isCreatable(v15)) {
-                            xy = new DirectPosition2D(crs, NumberUtils.toDouble(v15), NumberUtils.toDouble(v14));
+                            xy = new DirectPosition2D(crs, NumberUtils.toDouble(v14), NumberUtils.toDouble(v15));
                         }
 
                         if (pixelLine != null && xy != null) {
@@ -396,8 +396,8 @@ public final class OziMapFileReader {
 
             xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
             yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
-            xULC = cp0.getXy().x - cp0.getPixelLine().x * xPixelSize;
-            yULC = cp0.getXy().y - cp0.getPixelLine().y * yPixelSize;
+            xULC = cp0.getXy().x - (double) cp0.getPixelLine().x * xPixelSize;
+            yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
 
             grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
         } else if (calibrationPoints.size() > 2) {

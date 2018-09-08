@@ -1,6 +1,8 @@
 package com.github.nikolaybespalov.gtozi;
 
 import org.geotools.coverage.grid.GridEnvelope2D;
+import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
+import org.geotools.gce.geotiff.GeoTiffReader;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.referencing.CRS;
@@ -12,6 +14,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
@@ -130,6 +133,18 @@ public class OziMapReaderTest {
         expectedOriginalEnvelope.add(new DirectPosition2D(3209132.19552484 + 440277.2874353309, 8125562.398880421 + 374235.69432003144));
 
         assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.01, false));
+    }
+
+    @Test
+    public void testMer() throws IOException, FactoryException, TransformException {
+        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map");
+        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.tiff");
+
+        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
+        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
+
+        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
+        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.1, false));
     }
 
 //    @Test

@@ -4,7 +4,10 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/8c3475abc76c4885a5f72875edb0fd16)](https://www.codacy.com/app/nikolaybespalov/gt-ozi)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.nikolaybespalov/gt-ozi/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.nikolaybespalov/gt-ozi)
 
-GeoTools plugin that allows you to use OziExplorer files(map/ozf2/ozf3/ozf4) without using GDAL/OziApi or any other environment dependencies.
+[GeoTools](http://geotools.org/) plugin that allows you to use [OziExplorer](http://www.oziexplorer3.com/) files(map/ozf2/ozf3/ozf4) 
+without using [GDAL](https://www.gdal.org/frmt_map.html)/[OziApi](http://www.oziexplorer3.com/oziapi/oziapi.html) or any other environment dependencies.
+
+The main idea is to parse the projection parameters from .MAP file and provide them to [WorldImageReader](http://docs.geotools.org/stable/javadocs/org/geotools/gce/image/WorldImageReader.html).
 
 ## Supported projections
 - Latitude/Longitude

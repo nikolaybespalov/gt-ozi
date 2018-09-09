@@ -15,6 +15,8 @@ import org.geotools.referencing.datum.DefaultPrimeMeridian;
 import org.geotools.referencing.operation.DefiningConversion;
 import org.geotools.referencing.operation.projection.MapProjection;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
+import org.geotools.referencing.operation.transform.ConcatenatedTransform;
+import org.opengis.geometry.DirectPosition;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CRSFactory;
@@ -23,10 +25,7 @@ import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.datum.DatumFactory;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.GeodeticDatum;
-import org.opengis.referencing.operation.Conversion;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.MathTransformFactory;
-import org.opengis.referencing.operation.TransformException;
+import org.opengis.referencing.operation.*;
 
 import javax.measure.unit.SI;
 import java.awt.*;
@@ -486,12 +485,17 @@ public final class OziMapFileReader {
             pl_normalize[4] = 0.0;
             pl_normalize[5] = 1.0 / (max_line - min_line);
 
+            AffineTransform2D pl_normalize2 = new AffineTransform2D(pl_normalize[1], pl_normalize[2], pl_normalize[4], pl_normalize[5], pl_normalize[0], pl_normalize[3]);
+
             geo_normalize[0] = -min_geox / (max_geox - min_geox);
             geo_normalize[1] = 1.0 / (max_geox - min_geox);
             geo_normalize[2] = 0.0;
             geo_normalize[3] = -min_geoy / (max_geoy - min_geoy);
             geo_normalize[4] = 0.0;
             geo_normalize[5] = 1.0 / (max_geoy - min_geoy);
+
+            AffineTransform2D geo_normalize2 = new AffineTransform2D(geo_normalize[1], geo_normalize[2], geo_normalize[4], geo_normalize[5], geo_normalize[0], geo_normalize[3]);
+
 
             /* -------------------------------------------------------------------- */
             /* In the general case, do a least squares error approximation by       */
@@ -514,33 +518,17 @@ public final class OziMapFileReader {
             for (CalibrationPoint cp : calibrationPoints) {
                 DirectPosition2D pixelLine = new DirectPosition2D();
 
-                gdalApplyGeoTransform(pl_normalize,
-                        cp.pixelLine.x,
-                        cp.pixelLine.y,
-                        pixelLine);
+                pl_normalize2.transform(cp.pixelLine, pixelLine);
 
                 double pixel = pixelLine.x;
                 double line = pixelLine.y;
 
                 DirectPosition2D xy = new DirectPosition2D();
 
-//                double pixel = geo_normalize[0] + cp.pixelLine.x * geo_normalize[1]
-//                        + cp.pixelLine.y * geo_normalize[2];
-//                double line = geo_normalize[3] + cp.pixelLine.x * geo_normalize[4]
-//                        + cp.pixelLine.y * geo_normalize[5];
-
-                gdalApplyGeoTransform(geo_normalize,
-                        cp.xy.x,
-                        cp.xy.y,
-                        xy);
+                geo_normalize2.transform((DirectPosition) cp.xy, xy);
 
                 double geox = xy.x;
                 double geoy = xy.y;
-
-//                double geox = geo_normalize[0] + cp.xy.x * geo_normalize[1]
-//                        + cp.xy.y * geo_normalize[2];
-//                double geoy = geo_normalize[3] + cp.xy.x * geo_normalize[4]
-//                        + cp.xy.y * geo_normalize[5];
 
                 sum_x += pixel;
                 sum_y += line;
@@ -609,132 +597,19 @@ public final class OziMapFileReader {
                     + sum_Laty * (nGCPCount * sum_xx - sum_x * sum_x))
                     / divisor;
 
+            AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], gt_normalized[4], gt_normalized[5], gt_normalized[0], gt_normalized[3]);
+
             /* -------------------------------------------------------------------- */
             /*      Compose the resulting transformation with the normalization     */
             /*      geotransformations.                                             */
             /* -------------------------------------------------------------------- */
-            double gt1p2[] = new double[]{0, 0, 0, 0, 0, 0};
-            double inv_geo_normalize[] = new double[]{0, 0, 0, 0, 0, 0};
+            MathTransform2D inv_geo_normalize2 = geo_normalize2.inverse();
+            MathTransform gt1p2 = ConcatenatedTransform.create(pl_normalize2, gt_normalized2);
 
-            if (!gdalInvGeoTransform(geo_normalize, inv_geo_normalize)) {
-                throw new IOException("HZ");
-            }
-
-            double padfGeoTransform[] = new double[]{0, 0, 0, 0, 0, 0};
-
-            gdalComposeGeoTransforms(pl_normalize, gt_normalized, gt1p2);
-            gdalComposeGeoTransforms(gt1p2, inv_geo_normalize, padfGeoTransform);
-
-            xPixelSize = padfGeoTransform[1];
-            yPixelSize = padfGeoTransform[5];
-            xULC = padfGeoTransform[0];
-            yULC = padfGeoTransform[3];
-
-//            xPixelSize = inv_geo_normalize[1] / inv_geo_normalize[1];
-//            yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
-//            xULC = cp0.getXy().x - cp0.getPixelLine().x * xPixelSize;
-//            yULC = cp0.getXy().y - cp0.getPixelLine().y * yPixelSize;
-
-            grid2Crs = new AffineTransform2D(xPixelSize, padfGeoTransform[2], padfGeoTransform[4], yPixelSize, xULC, yULC);
+            grid2Crs = ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
         } else {
             throw new IOException("Too few calibration points");
         }
-    }
-
-    private static boolean gdalInvGeoTransform(double[] gt_in, double[] gt_out) {
-        // Special case - no rotation - to avoid computing determinate
-        // and potential precision issues.
-        if (gt_in[2] == 0.0 && gt_in[4] == 0.0 &&
-                gt_in[1] != 0.0 && gt_in[5] != 0.0) {
-        /*X = gt_in[0] + x * gt_in[1]
-          Y = gt_in[3] + y * gt_in[5]
-          -->
-          x = -gt_in[0] / gt_in[1] + (1 / gt_in[1]) * X
-          y = -gt_in[3] / gt_in[5] + (1 / gt_in[5]) * Y
-        */
-            gt_out[0] = -gt_in[0] / gt_in[1];
-            gt_out[1] = 1.0 / gt_in[1];
-            gt_out[2] = 0.0;
-            gt_out[3] = -gt_in[3] / gt_in[5];
-            gt_out[4] = 0.0;
-            gt_out[5] = 1.0 / gt_in[5];
-            return true;
-        }
-
-        // Assume a 3rd row that is [1 0 0].
-
-        // Compute determinate.
-
-        double det = gt_in[1] * gt_in[5] - gt_in[2] * gt_in[4];
-
-        if (Math.abs(det) < 0.000000000000001)
-            return false;
-
-        double inv_det = 1.0 / det;
-
-        // Compute adjoint, and divide by determinate.
-
-        gt_out[1] = gt_in[5] * inv_det;
-        gt_out[4] = -gt_in[4] * inv_det;
-
-        gt_out[2] = -gt_in[2] * inv_det;
-        gt_out[5] = gt_in[1] * inv_det;
-
-        gt_out[0] = (gt_in[2] * gt_in[3] - gt_in[0] * gt_in[5]) * inv_det;
-        gt_out[3] = (-gt_in[1] * gt_in[3] + gt_in[0] * gt_in[4]) * inv_det;
-
-        return true;
-    }
-
-    private static void gdalComposeGeoTransforms(double[] padfGT1, double[] padfGT2,
-                                                 double[] padfGTOut) {
-        double gtwrk[] = new double[]{0, 0, 0, 0, 0, 0};
-        // We need to think of the geotransform in a more normal form to do
-        // the matrix multiple:
-        //
-        //  __                     __
-        //  | gt[1]   gt[2]   gt[0] |
-        //  | gt[4]   gt[5]   gt[3] |
-        //  |  0.0     0.0     1.0  |
-        //  --                     --
-        //
-        // Then we can use normal matrix multiplication to produce the
-        // composed transformation.  I don't actually reform the matrix
-        // explicitly which is why the following may seem kind of spagettish.
-
-        gtwrk[1] =
-                padfGT2[1] * padfGT1[1]
-                        + padfGT2[2] * padfGT1[4];
-        gtwrk[2] =
-                padfGT2[1] * padfGT1[2]
-                        + padfGT2[2] * padfGT1[5];
-        gtwrk[0] =
-                padfGT2[1] * padfGT1[0]
-                        + padfGT2[2] * padfGT1[3]
-                        + padfGT2[0] * 1.0;
-
-        gtwrk[4] =
-                padfGT2[4] * padfGT1[1]
-                        + padfGT2[5] * padfGT1[4];
-        gtwrk[5] =
-                padfGT2[4] * padfGT1[2]
-                        + padfGT2[5] * padfGT1[5];
-        gtwrk[3] =
-                padfGT2[4] * padfGT1[0]
-                        + padfGT2[5] * padfGT1[3]
-                        + padfGT2[3] * 1.0;
-
-        System.arraycopy(gtwrk, 0, padfGTOut, 0, gtwrk.length);
-        //memcpy(padfGTOut, gtwrk, sizeof(gtwrk));
-    }
-
-    private static void gdalApplyGeoTransform(double[] padfGeoTransform,
-                                              double dfPixel, double dfLine,
-                                              DirectPosition2D pdfGeo) {
-        pdfGeo.x = padfGeoTransform[0] + dfPixel * padfGeoTransform[1]
-                + dfLine * padfGeoTransform[2];
-        pdfGeo.y = padfGeoTransform[3] + dfPixel * padfGeoTransform[4]
-                + dfLine * padfGeoTransform[5];
     }
 
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
@@ -777,9 +652,9 @@ public final class OziMapFileReader {
 
     private static final class CalibrationPoint {
         private final Point pixelLine;
-        private final DirectPosition2D xy;
+        private final Point.Double xy;
 
-        public CalibrationPoint(Point pixelLine, DirectPosition2D xy) {
+        public CalibrationPoint(Point pixelLine, Point.Double xy) {
             this.pixelLine = pixelLine;
             this.xy = xy;
         }
@@ -788,7 +663,7 @@ public final class OziMapFileReader {
             return pixelLine;
         }
 
-        public DirectPosition2D getXy() {
+        public Point.Double getXy() {
             return xy;
         }
     }

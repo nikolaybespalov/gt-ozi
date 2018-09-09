@@ -26,15 +26,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@SuppressWarnings("WeakerAccess")
 public final class OziMapReader extends AbstractGridCoverage2DReader {
     private WorldImageReader worldImageReader;
 
-    @SuppressWarnings("WeakerAccess")
     public OziMapReader(Object input) throws IOException, FactoryException, TransformException {
         this(input, null);
     }
 
-    @SuppressWarnings("WeakerAccess")
     public OziMapReader(Object input, Hints uHints) throws IOException, FactoryException, TransformException {
         super(input, uHints);
 

@@ -8,7 +8,7 @@ import java.util.Collections;
 import static org.junit.Assert.*;
 
 public class OziMapFormatFactorySpiTest {
-    private GridFormatFactorySpi spi = new OziMapFormatFactorySpi();
+    private final GridFormatFactorySpi spi = new OziMapFormatFactorySpi();
 
     @Test
     public void testCreateFormat() {

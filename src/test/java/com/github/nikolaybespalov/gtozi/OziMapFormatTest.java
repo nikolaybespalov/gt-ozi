@@ -1,18 +1,14 @@
 package com.github.nikolaybespalov.gtozi;
 
 import org.geotools.coverage.grid.io.AbstractGridFormat;
-import org.geotools.data.DataSourceException;
 import org.geotools.factory.GeoTools;
 import org.junit.Test;
-import org.junit.jupiter.api.Assertions;
-
-import java.io.IOException;
 
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OziMapFormatTest {
-    private AbstractGridFormat format = new OziMapFormat();
+    private final AbstractGridFormat format = new OziMapFormat();
 
     @Test
     public void testDescription() {

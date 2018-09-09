@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 import static org.geotools.util.logging.Logging.getLogger;
 
 @SuppressWarnings("WeakerAccess")
-public class OziMapFormat extends AbstractGridFormat implements Format {
+public final class OziMapFormat extends AbstractGridFormat implements Format {
     private static final Logger LOGGER = getLogger(OziMapFormat.class);
 
     public OziMapFormat() {

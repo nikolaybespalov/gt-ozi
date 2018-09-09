@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Map;
 
 @SuppressWarnings("unused")
-public class OziMapFormatFactorySpi implements GridFormatFactorySpi {
+public final class OziMapFormatFactorySpi implements GridFormatFactorySpi {
     @Override
     public AbstractGridFormat createFormat() {
         return new OziMapFormat();

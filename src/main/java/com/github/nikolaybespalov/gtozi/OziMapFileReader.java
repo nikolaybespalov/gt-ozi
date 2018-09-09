@@ -19,7 +19,6 @@ import org.geotools.referencing.operation.transform.ConcatenatedTransform;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CRSFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.datum.DatumFactory;
@@ -30,14 +29,14 @@ import org.opengis.referencing.operation.*;
 import javax.measure.unit.SI;
 import java.awt.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
 
-@SuppressWarnings("WeakerAccess")
-public final class OziMapFileReader {
+final class OziMapFileReader {
     private static final Ellipsoid AIRY_1830 = DefaultEllipsoid.createFlattenedSphere("Airy 1830", 6377563.396, 299.3249646, SI.METER);
     private static final Ellipsoid MODIFIED_AIRY = DefaultEllipsoid.createFlattenedSphere("Modified Airy", 6377340.189, 299.3249646, SI.METER);
     private static final Ellipsoid AUSTRALIAN_NATIONAL = DefaultEllipsoid.createFlattenedSphere("Australian National", 6378160.0, 298.25, SI.METER);
@@ -205,220 +204,77 @@ public final class OziMapFileReader {
     }};
 
     private CoordinateReferenceSystem crs;
-    private GeographicCRS geoCrs;
-    private String projectionName;
-    private MathTransform world2Crs;
     private MathTransform grid2Crs;
     private File imageFile;
 
-    public OziMapFileReader(File file) throws IOException, FactoryException, TransformException {
+    OziMapFileReader(File file) throws IOException, FactoryException, TransformException {
+        if (!file.exists()) {
+            throw new FileNotFoundException("File " + file.getAbsolutePath() + " does not exist.");
+        } else if (file.isDirectory()) {
+            throw new IOException("File " + file.getAbsolutePath() + " is a directory.");
+        } else if (!file.canRead()) {
+            throw new IOException("File " + file.getAbsolutePath() + " can not be read.");
+        }
+
+        //
+        // Read all lines of the file
+        //
+
         List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("windows-1251"));
 
-        if (lines.size() < 40) {
-            throw new IOException("too few lines!");
+        //
+        // Parse and validate file header
+        //
+
+        String header = parseHeader(lines);
+
+        if (!StringUtils.startsWith(header, "OziExplorer Map Data File")) {
+            throw new FileNotFoundException("File " + file.getAbsolutePath() + " does not a OziExplorer map data file.");
         }
 
-        Collections.swap(lines, 9, 39);
+        //
+        // Parse and validate image filename
+        //
 
-        List<CalibrationPoint> calibrationPoints = new ArrayList<>();
+        String imageFilename = parseImageFilename(lines);
 
-        for (int lineIndex = 0; lineIndex < lines.size(); ++lineIndex) {
-            String line = lines.get(lineIndex);
-
-            if (line.isEmpty()) {
-                continue;
-            }
-
-            String[] values = Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
-
-            String v0 = values[0];
-            String v1 = values.length > 1 ? values[1] : "";
-            String v2 = values.length > 2 ? values[2] : "";
-            String v3 = values.length > 3 ? values[3] : "";
-            String v4 = values.length > 4 ? values[4] : "";
-            String v5 = values.length > 5 ? values[5] : "";
-            String v6 = values.length > 6 ? values[6] : "";
-            String v7 = values.length > 7 ? values[7] : "";
-            String v8 = values.length > 8 ? values[8] : "";
-            String v9 = values.length > 9 ? values[9] : "";
-            String v10 = values.length > 10 ? values[10] : "";
-            String v11 = values.length > 11 ? values[11] : "";
-            String v14 = values.length > 14 ? values[14] : "";
-            String v15 = values.length > 15 ? values[15] : "";
-
-            switch (lineIndex) {
-                case 2:
-                    imageFile = new File(v0);
-
-                    // TODO: check windows path on linux
-                    // E:\Gpsmap\B3release\Maps\Demo1.bmp
-
-                    if (!imageFile.exists()) {
-                        imageFile = new File(file.getParent(), imageFile.getName());
-
-                        if (!imageFile.exists()) {
-                            throw new IOException("File not found: " + imageFile);
-                        }
-                    }
-                    break;
-                case 4:
-                    if (values.length < 5) {
-                        return;
-                    }
-
-                    GeodeticDatum datum = DATUMS.get(v0);
-
-                    if (datum == null) {
-                        return;
-                    }
-
-                    CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
-                    geoCrs = crsFactory.createGeographicCRS(Collections.singletonMap("name", v0), datum, DefaultEllipsoidalCS.GEODETIC_2D);
-                    break;
-                default: {
-                    if (v0.startsWith("Map Projection")) {
-                        if (StringUtils.isEmpty(v1)) {
-                            return;
-                        }
-
-                        projectionName = v1;
-                    } else if (v0.startsWith("Projection Setup")) {
-                        if (StringUtils.isEmpty(projectionName)) {
-                            return;
-                        }
-
-                        try {
-                            switch (projectionName) {
-                                case "Latitude/Longitude": {
-                                    this.crs = this.geoCrs;
-                                    break;
-                                }
-                                case "Mercator": {
-                                    if (values.length < 6) {
-                                        return;
-                                    }
-
-                                    MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
-                                    ParameterValueGroup parameters = mtFactory.getDefaultParameters("Mercator_1SP");
-
-                                    if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
-                                        parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
-                                    }
-
-                                    if (NumberUtils.isCreatable(v2)) {
-                                        parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
-                                    }
-
-                                    if (NumberUtils.isCreatable(v3)) {
-                                        parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
-                                    }
-
-                                    if (NumberUtils.isCreatable(v4)) {
-                                        parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
-                                    }
-
-                                    if (NumberUtils.isCreatable(v5)) {
-                                        parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
-                                    }
-
-                                    Conversion conversion = new DefiningConversion("Mercator_1SP", parameters);
-
-                                    crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
-
-                                    Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
-
-                                    this.crs = crsFactory.createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.PROJECTED);
-
-                                    break;
-                                }
-                                case "Transverse Mercator": {
-                                    if (values.length < 6) {
-                                        return;
-                                    }
-
-                                    MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
-                                    ParameterValueGroup parameters = mtFactory.getDefaultParameters("Transverse_Mercator");
-
-                                    if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
-                                        parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
-                                    }
-
-                                    if (NumberUtils.isCreatable(v2)) {
-                                        parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
-                                    }
-
-                                    if (NumberUtils.isCreatable(v3)) {
-                                        parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
-                                    }
-
-                                    if (NumberUtils.isCreatable(v4)) {
-                                        parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
-                                    }
-
-                                    if (NumberUtils.isCreatable(v5)) {
-                                        parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
-                                    }
-
-                                    Conversion conversion = new DefiningConversion("Transverse_Mercator", parameters);
-
-                                    crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
-
-                                    Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
-
-                                    this.crs = crsFactory.createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.PROJECTED);
-
-                                    break;
-                                }
-                                default:
-                                    break;
-                            }
-
-
-                            world2Crs = CRS.findMathTransform(geoCrs, this.crs, false);
-                        } catch (FactoryException e) {
-                            return;
-                        }
-                    } else if (v0.startsWith("Point")) {
-                        Point pixelLine = null;
-
-                        if (NumberUtils.isCreatable(v2) && NumberUtils.isCreatable(v3)) {
-                            pixelLine = new Point(NumberUtils.toInt(v2), NumberUtils.toInt(v3));
-                        }
-
-                        DirectPosition2D xy = null;
-
-                        if (NumberUtils.isCreatable(v6) && NumberUtils.isCreatable(v7) &&
-                                NumberUtils.isCreatable(v9) && NumberUtils.isCreatable(v10)) {
-                            DirectPosition2D latLon = new DirectPosition2D(DefaultGeographicCRS.WGS84,
-                                    NumberUtils.toDouble(v9) + NumberUtils.toDouble(v10) / 60.0,
-                                    NumberUtils.toDouble(v6) + NumberUtils.toDouble(v7) / 60.0);
-
-                            if ("W".equals(v11)) {
-                                latLon.x = -latLon.x;
-                            }
-
-                            if ("S".equals(v8)) {
-                                latLon.y = -latLon.y;
-                            }
-
-                            DirectPosition2D p = new DirectPosition2D(crs);
-
-                            MapProjection.SKIP_SANITY_CHECKS = true;
-
-                            if (world2Crs.transform(latLon, p) != null) {
-                                xy = p;
-                            }
-                        } else if (NumberUtils.isCreatable(v14) && NumberUtils.isCreatable(v15)) {
-                            xy = new DirectPosition2D(crs, NumberUtils.toDouble(v14), NumberUtils.toDouble(v15));
-                        }
-
-                        if (pixelLine != null && xy != null) {
-                            calibrationPoints.add(new CalibrationPoint(pixelLine, xy));
-                        }
-                    }
-                }
-            }
+        if (imageFilename == null) {
+            throw new IOException("Map file does not contain an image filename");
         }
+
+        imageFile = new File(imageFilename);
+
+        if (!imageFile.exists()) {
+            imageFile = new File(file.getParent(), imageFile.getName());
+        }
+
+        if (!imageFile.exists()) {
+            throw new FileNotFoundException("Image file " + imageFile.getAbsolutePath() + " does not exist.");
+        } else if (imageFile.isDirectory()) {
+            throw new IOException("Image file " + imageFile.getAbsolutePath() + " is a directory.");
+        } else if (!imageFile.canRead()) {
+            throw new IOException("Image file " + imageFile.getAbsolutePath() + " can not be read.");
+        }
+
+        //
+        // Parse datum
+        //
+
+        GeodeticDatum datum = parseDatum(lines);
+
+        GeographicCRS geoCrs = ReferencingFactoryFinder.getCRSFactory(null).createGeographicCRS(Collections.singletonMap("name", datum.getName().getCode()), datum, DefaultEllipsoidalCS.GEODETIC_2D);
+
+        //
+        // Parse projection
+        //
+
+        String projectionName = parseMapProjection(lines);
+
+        crs = parseProjectionSetup(lines, projectionName, geoCrs);
+
+        MathTransform world2Crs = CRS.findMathTransform(geoCrs, crs, true);
+
+        List<CalibrationPoint> calibrationPoints = parseCalibrationPoints(lines, world2Crs);
 
         if (calibrationPoints.size() < 2) {
             throw new IOException("too few calibration points!");
@@ -439,7 +295,7 @@ public final class OziMapFileReader {
             yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
 
             grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
-        } else if (calibrationPoints.size() > 2) {
+        } else {
             int nGCPCount = calibrationPoints.size();
             //throw new IOException("Too much calibration points (TEMP)");
             CalibrationPoint cp0 = calibrationPoints.get(0);
@@ -607,21 +463,261 @@ public final class OziMapFileReader {
             MathTransform gt1p2 = ConcatenatedTransform.create(pl_normalize2, gt_normalized2);
 
             grid2Crs = ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
-        } else {
-            throw new IOException("Too few calibration points");
         }
     }
 
-    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
+    CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return crs;
     }
 
-    public MathTransform getGrid2Crs() {
+    MathTransform getGrid2Crs() {
         return grid2Crs;
     }
 
-    public File getImageFile() {
+    File getImageFile() {
         return imageFile;
+    }
+
+    private String parseHeader(List<String> lines) throws IOException {
+        if (lines.isEmpty()) {
+            throw new IOException("Not enough data");
+        }
+
+        return lines.get(0);
+    }
+
+    private String parseImageFilename(List<String> lines) throws IOException {
+        if (lines.size() < 3) {
+            throw new IOException("Not enough data");
+        }
+
+        return lines.get(2);
+    }
+
+    private GeodeticDatum parseDatum(List<String> lines) throws IOException {
+        if (lines.size() < 5) {
+            throw new IOException("Not enough data");
+        }
+
+        String[] values = lineValues(lines.get(4));
+
+        if (values.length == 0) {
+            throw new IOException("Not enough data");
+        }
+
+        String datumName = values[0];
+
+        GeodeticDatum datum = DATUMS.get(datumName);
+
+        if (datum == null) {
+            throw new IOException("Unknown datum: " + datumName);
+        }
+
+        return datum;
+    }
+
+    private String parseMapProjection(List<String> lines) throws IOException {
+        String projectionName = null;
+
+        for (String line : lines) {
+            if (StringUtils.startsWith(line, "Map Projection")) {
+                String[] values = lineValues(line);
+
+                if (values.length < 2) {
+                    throw new IOException("Not enough data");
+                }
+
+                projectionName = values[1];
+            }
+        }
+
+        return projectionName;
+    }
+
+    private CoordinateReferenceSystem parseProjectionSetup(List<String> lines, String projectionName, GeographicCRS geoCrs) throws IOException, FactoryException {
+        CoordinateReferenceSystem crs = null;
+
+        //  Parameters:
+        //    1. Latitude Origin
+        //    2. Longitude Origin
+        //    3. K Factor
+        //    4. False Easting
+        //    5. False Northing
+        //    6. Latitude 1
+        //    7. Latitude 2
+        //    8. Height - used in the Vertical Near-Sided Perspective Projection
+        //    9. Sat - not used
+        //    10. Path - not used
+
+        String[] values = null;
+
+        for (String line : lines) {
+            if (StringUtils.startsWith(line, "Projection Setup")) {
+                values = lineValues(line);
+            }
+        }
+
+        if (values == null) {
+            throw new IOException("Not enough data");
+        }
+
+        switch (projectionName) {
+            case "Latitude/Longitude": {
+                crs = geoCrs;
+                break;
+            }
+            case "Mercator": {
+                if (values.length < 6) {
+                    throw new IOException("Not enough data");
+                }
+
+                String v1 = values[1];
+                String v2 = values[2];
+                String v3 = values[3];
+                String v4 = values[4];
+                String v5 = values[5];
+
+                MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+                ParameterValueGroup parameters = mtFactory.getDefaultParameters("Mercator_1SP");
+
+                if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
+                    parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
+                }
+
+                if (NumberUtils.isCreatable(v2)) {
+                    parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
+                }
+
+                if (NumberUtils.isCreatable(v3)) {
+                    parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
+                }
+
+                if (NumberUtils.isCreatable(v4)) {
+                    parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
+                }
+
+                if (NumberUtils.isCreatable(v5)) {
+                    parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
+                }
+
+                Conversion conversion = new DefiningConversion("Mercator_1SP", parameters);
+
+                Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
+
+                crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.PROJECTED);
+
+                break;
+            }
+            case "Transverse Mercator": {
+                if (values.length < 6) {
+                    throw new IOException("Not enough data");
+                }
+
+                String v1 = values[1];
+                String v2 = values[2];
+                String v3 = values[3];
+                String v4 = values[4];
+                String v5 = values[5];
+
+                MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+                ParameterValueGroup parameters = mtFactory.getDefaultParameters("Transverse_Mercator");
+
+                if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
+                    parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
+                }
+
+                if (NumberUtils.isCreatable(v2)) {
+                    parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
+                }
+
+                if (NumberUtils.isCreatable(v3)) {
+                    parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
+                }
+
+                if (NumberUtils.isCreatable(v4)) {
+                    parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
+                }
+
+                if (NumberUtils.isCreatable(v5)) {
+                    parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
+                }
+
+                Conversion conversion = new DefiningConversion("Transverse_Mercator", parameters);
+
+                Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
+
+                crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.PROJECTED);
+            }
+            default:
+                break;
+        }
+
+        return crs;
+    }
+
+    private List<CalibrationPoint> parseCalibrationPoints(List<String> lines, MathTransform world2Crs) throws TransformException {
+        List<CalibrationPoint> calibrationPoints = new ArrayList<>();
+
+        for (String line : lines) {
+            if (!StringUtils.startsWith(line, "Point")) {
+                continue;
+            }
+
+            String[] values = lineValues(line);
+
+            String v0 = values[0];
+            String v2 = values.length > 2 ? values[2] : "";
+            String v3 = values.length > 3 ? values[3] : "";
+            String v6 = values.length > 6 ? values[6] : "";
+            String v7 = values.length > 7 ? values[7] : "";
+            String v8 = values.length > 8 ? values[8] : "";
+            String v9 = values.length > 9 ? values[9] : "";
+            String v10 = values.length > 10 ? values[10] : "";
+            String v11 = values.length > 11 ? values[11] : "";
+            String v14 = values.length > 14 ? values[14] : "";
+            String v15 = values.length > 15 ? values[15] : "";
+
+            if (v0.startsWith("Point")) {
+                Point pixelLine = null;
+
+                if (NumberUtils.isCreatable(v2) && NumberUtils.isCreatable(v3)) {
+                    pixelLine = new Point(NumberUtils.toInt(v2), NumberUtils.toInt(v3));
+                }
+
+                DirectPosition2D xy = null;
+
+                if (NumberUtils.isCreatable(v6) && NumberUtils.isCreatable(v7) &&
+                        NumberUtils.isCreatable(v9) && NumberUtils.isCreatable(v10)) {
+                    DirectPosition2D latLon = new DirectPosition2D(DefaultGeographicCRS.WGS84,
+                            NumberUtils.toDouble(v9) + NumberUtils.toDouble(v10) / 60.0,
+                            NumberUtils.toDouble(v6) + NumberUtils.toDouble(v7) / 60.0);
+
+                    if ("W".equals(v11)) {
+                        latLon.x = -latLon.x;
+                    }
+
+                    if ("S".equals(v8)) {
+                        latLon.y = -latLon.y;
+                    }
+
+                    DirectPosition2D p = new DirectPosition2D(crs);
+
+                    MapProjection.SKIP_SANITY_CHECKS = true;
+
+                    if (world2Crs.transform(latLon, p) != null) {
+                        xy = p;
+                    }
+                } else if (NumberUtils.isCreatable(v14) && NumberUtils.isCreatable(v15)) {
+                    xy = new DirectPosition2D(crs, NumberUtils.toDouble(v14), NumberUtils.toDouble(v15));
+                }
+
+                if (pixelLine != null && xy != null) {
+                    calibrationPoints.add(new CalibrationPoint(pixelLine, xy));
+                }
+            }
+        }
+
+        return calibrationPoints;
     }
 
     private static GeodeticDatum createGeodeticDatum(String name, Ellipsoid ellipsoid, double dx, double dy, double dz) {
@@ -644,27 +740,29 @@ public final class OziMapFileReader {
         try {
             return datumFactory.createGeodeticDatum(map, ellipsoid, DefaultPrimeMeridian.GREENWICH);
         } catch (FactoryException e) {
-            // TODO: implement
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
 
     private static final class CalibrationPoint {
         private final Point pixelLine;
         private final Point.Double xy;
 
-        public CalibrationPoint(Point pixelLine, Point.Double xy) {
+        CalibrationPoint(Point pixelLine, Point.Double xy) {
             this.pixelLine = pixelLine;
             this.xy = xy;
         }
 
-        public Point getPixelLine() {
+        Point getPixelLine() {
             return pixelLine;
         }
 
-        public Point.Double getXy() {
+        Point.Double getXy() {
             return xy;
         }
+    }
+
+    private static String[] lineValues(String line) {
+        return Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
     }
 }

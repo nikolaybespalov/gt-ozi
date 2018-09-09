@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
 
+@SuppressWarnings("WeakerAccess")
 final class OziMapFileReader {
     private static final Ellipsoid AIRY_1830 = DefaultEllipsoid.createFlattenedSphere("Airy 1830", 6377563.396, 299.3249646, SI.METER);
     private static final Ellipsoid MODIFIED_AIRY = DefaultEllipsoid.createFlattenedSphere("Modified Airy", 6377340.189, 299.3249646, SI.METER);
@@ -207,7 +208,7 @@ final class OziMapFileReader {
     private MathTransform grid2Crs;
     private File imageFile;
 
-    OziMapFileReader(File file) throws IOException, FactoryException, TransformException {
+    public OziMapFileReader(File file) throws IOException, FactoryException, TransformException {
         if (!file.exists()) {
             throw new FileNotFoundException("File " + file.getAbsolutePath() + " does not exist.");
         } else if (file.isDirectory()) {
@@ -466,15 +467,15 @@ final class OziMapFileReader {
         }
     }
 
-    CoordinateReferenceSystem getCoordinateReferenceSystem() {
+    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return crs;
     }
 
-    MathTransform getGrid2Crs() {
+    public MathTransform getGrid2Crs() {
         return grid2Crs;
     }
 
-    File getImageFile() {
+    public File getImageFile() {
         return imageFile;
     }
 
@@ -748,16 +749,16 @@ final class OziMapFileReader {
         private final Point pixelLine;
         private final Point.Double xy;
 
-        CalibrationPoint(Point pixelLine, Point.Double xy) {
+        public CalibrationPoint(Point pixelLine, Point.Double xy) {
             this.pixelLine = pixelLine;
             this.xy = xy;
         }
 
-        Point getPixelLine() {
+        public Point getPixelLine() {
             return pixelLine;
         }
 
-        Point.Double getXy() {
+        public Point.Double getXy() {
             return xy;
         }
     }

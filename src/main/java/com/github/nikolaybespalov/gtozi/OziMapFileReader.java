@@ -13,6 +13,7 @@ import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.geotools.referencing.datum.DefaultGeodeticDatum;
 import org.geotools.referencing.datum.DefaultPrimeMeridian;
 import org.geotools.referencing.operation.DefiningConversion;
+import org.geotools.referencing.operation.projection.MapProjection;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
@@ -401,7 +402,9 @@ public final class OziMapFileReader {
                                 latLon.y = -latLon.y;
                             }
 
-                            DirectPosition2D p = new DirectPosition2D();
+                            DirectPosition2D p = new DirectPosition2D(crs);
+
+                            MapProjection.SKIP_SANITY_CHECKS = true;
 
                             if (world2Crs.transform(latLon, p) != null) {
                                 xy = p;
@@ -632,7 +635,7 @@ public final class OziMapFileReader {
 //            xULC = cp0.getXy().x - cp0.getPixelLine().x * xPixelSize;
 //            yULC = cp0.getXy().y - cp0.getPixelLine().y * yPixelSize;
 
-            grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
+            grid2Crs = new AffineTransform2D(xPixelSize, padfGeoTransform[2], padfGeoTransform[4], yPixelSize, xULC, yULC);
         } else {
             throw new IOException("Too few calibration points");
         }

@@ -8,13 +8,13 @@ Reserved 2
 Magnetic Variation,,,E
 Map Projection,Transverse Mercator,PolyCal,No,AutoCalOnly,No,BSBUseWPX,No
 Point01,xy,    0,    0,in, deg,  34, 31.2708,N,  69, 46.1460,W, grid,   ,    1871085,     693307,N
-Point02,xy,   60,    0,in, deg,  34, 29.6245,N,  69, 36.6659,W, grid,   ,    1886560,     693307,N
-Point03,xy,  120,    0,in, deg,  34, 27.9672,N,  69, 27.1985,W, grid,   ,    1902035,     693307,N
-Point04,xy,    0,   60,in, deg,  34, 23.4175,N,  69, 48.1218,W, grid,   ,    1871085,     677832,N
-Point05,xy,   60,   60,in, deg,  34, 21.7793,N,  69, 38.6544,W, grid,   ,    1886560,     677832,N
-Point06,xy,  120,   60,in, deg,  34, 20.1300,N,  69, 29.1997,W, grid,   ,    1902035,     677832,N
-Point07,xy,    0,  120,in, deg,  34, 15.5625,N,  69, 50.0849,W, grid,   ,    1871085,     662357,N
-Point08,xy,   60,  120,in, deg,  34, 13.9322,N,  69, 40.6301,W, grid,   ,    1886560,     662357,N
+Point02,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point03,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point04,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point05,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point06,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point07,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point08,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point09,xy,  120,  120,in, deg,  34, 12.2909,N,  69, 31.1881,W, grid,   ,    1902035,     662357,N
 Point10,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point11,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N

@@ -174,7 +174,7 @@ public class OziMapReaderTest {
         System.out.println(r2.getOriginalEnvelope());
 
         assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.1, false));
+        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 10.0, false));
     }
 
 //    @Test

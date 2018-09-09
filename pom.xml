@@ -87,6 +87,11 @@
             <version>${org.geotools.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-epsg-hsql</artifactId>
+            <version>${org.geotools.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.nikolaybespalov</groupId>
             <artifactId>imageio-ozf</artifactId>
             <version>0.1.4</version>
@@ -102,21 +107,17 @@
             <artifactId>commons-io</artifactId>
             <version>1.3.2</version>
         </dependency>
-        <dependency> <!-- TODO: only for ImmutableMap -->
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>25.1-jre</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-geotiff</artifactId>
             <version>${org.geotools.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-epsg-hsql</artifactId>
-            <version>${org.geotools.version}</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

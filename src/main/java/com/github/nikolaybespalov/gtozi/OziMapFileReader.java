@@ -1,6 +1,5 @@
 package com.github.nikolaybespalov.gtozi;
 
-import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.geotools.geometry.DirectPosition2D;
@@ -274,7 +273,7 @@ public final class OziMapFileReader {
                     }
 
                     CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
-                    geoCrs = crsFactory.createGeographicCRS(ImmutableMap.of("name", v0), datum, DefaultEllipsoidalCS.GEODETIC_2D);
+                    geoCrs = crsFactory.createGeographicCRS(Collections.singletonMap("name", v0), datum, DefaultEllipsoidalCS.GEODETIC_2D);
                     break;
                 default: {
                     if (v0.startsWith("Map Projection")) {
@@ -328,7 +327,7 @@ public final class OziMapFileReader {
 
                                     Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
 
-                                    this.crs = crsFactory.createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
+                                    this.crs = crsFactory.createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.PROJECTED);
 
                                     break;
                                 }

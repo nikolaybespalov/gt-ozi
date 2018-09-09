@@ -7,6 +7,7 @@ import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.junit.Before;
 import org.junit.Test;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.referencing.FactoryException;
@@ -20,6 +21,11 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 public class OziMapReaderTest {
+    @Before
+    public void setUp() {
+        System.setProperty(GeoTiffReader.OVERRIDE_CRS_SWITCH, "True");
+        System.setProperty("org.geotools.referencing.forceXY", "true");
+    }
 
     @Test
     public void testDemo1() throws IOException, FactoryException, TransformException {
@@ -138,10 +144,16 @@ public class OziMapReaderTest {
     @Test
     public void testMer() throws IOException, FactoryException, TransformException {
         File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.tiff");
+        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff");
 
         AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
         AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
+
+        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
+        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
+
+        System.out.println(r1.getOriginalEnvelope());
+        System.out.println(r2.getOriginalEnvelope());
 
         assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
         assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.1, false));

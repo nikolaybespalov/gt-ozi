@@ -331,6 +331,44 @@ public final class OziMapFileReader {
 
                                     break;
                                 }
+                                case "Transverse Mercator": {
+                                    if (values.length < 6) {
+                                        return;
+                                    }
+
+                                    MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+                                    ParameterValueGroup parameters = mtFactory.getDefaultParameters("Transverse_Mercator");
+
+                                    if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
+                                        parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
+                                    }
+
+                                    if (NumberUtils.isCreatable(v2)) {
+                                        parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
+                                    }
+
+                                    if (NumberUtils.isCreatable(v3)) {
+                                        parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
+                                    }
+
+                                    if (NumberUtils.isCreatable(v4)) {
+                                        parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
+                                    }
+
+                                    if (NumberUtils.isCreatable(v5)) {
+                                        parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
+                                    }
+
+                                    Conversion conversion = new DefiningConversion("Transverse_Mercator", parameters);
+
+                                    crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+
+                                    Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
+
+                                    this.crs = crsFactory.createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.PROJECTED);
+
+                                    break;
+                                }
                                 default:
                                     break;
                             }

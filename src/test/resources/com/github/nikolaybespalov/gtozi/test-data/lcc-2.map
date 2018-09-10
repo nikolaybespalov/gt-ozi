@@ -1,0 +1,56 @@
+OziExplorer Map Data File Version 2.1
+lcc-2
+lcc-2.jpg
+1 ,Map Code,
+NAD27 Central,WGS 84,   0.0000,   0.0000,WGS 84
+Reserved 1
+Reserved 2
+Magnetic Variation,,,E
+Map Projection,Lambert Conformal Conic,PolyCal,No,AutoCalOnly,No,BSBUseWPX,No
+Point01,xy,    0,    0,in, deg,   0,  7.0802,N, 117, 35.4958,W, grid,   ,     -15313,      15350,N
+Point02,xy,   60,    0,in, deg,   0,  7.0842,N, 117, 28.4097,W, grid,   ,        137,      15350,N
+Point03,xy,  120,    0,in, deg,   0,  7.0800,N, 117, 21.3235,W, grid,   ,      15587,      15350,N
+Point04,xy,    0,   60,in, deg,   0,  0.0502,S, 117, 35.4878,W, grid,   ,     -15313,       -100,N
+Point05,xy,   60,   60,in, deg,   0,  0.0461,S, 117, 28.4097,W, grid,   ,        137,       -100,N
+Point06,xy,  120,   60,in, deg,   0,  0.0503,S, 117, 21.3317,W, grid,   ,      15587,       -100,N
+Point07,xy,    0,  120,in, deg,   0,  7.1723,S, 117, 35.4798,W, grid,   ,     -15313,     -15550,N
+Point08,xy,   60,  120,in, deg,   0,  7.1683,S, 117, 28.4098,W, grid,   ,        137,     -15550,N
+Point09,xy,  120,  120,in, deg,   0,  7.1725,S, 117, 21.3399,W, grid,   ,      15587,     -15550,N
+Point10,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point11,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point12,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point13,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point14,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point15,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point16,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point17,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point18,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point19,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point20,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point21,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point22,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point23,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point24,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point25,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point26,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point27,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point28,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point29,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point30,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Projection Setup, 0.0000000000, -117.47454,, 0.0000000000, 0.0000000000, 33.903634, 33.625290,,
+Map Feature = MF ; Map Comment = MC     These follow if they exist
+Track File = TF      These follow if they exist
+Moving Map Parameters = MM?    These follow if they exist
+MM0,Yes
+MMPNUM,4
+MMPXY,1,0,0
+MMPXY,2,120,0
+MMPXY,3,120,120
+MMPXY,4,0,120
+MMPLL, 1, -117.591597,   0.118003
+MMPLL, 2, -117.355392,   0.118001
+MMPLL, 3, -117.355664,  -0.119541
+MMPLL, 4, -117.591330,  -0.119539
+MM1B,218.870134
+MOP,Map Open Position,0,0
+IWH,Map Image Width/Height,120,120

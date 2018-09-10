@@ -496,9 +496,7 @@ final class OziMapFileReader {
 
                 Conversion conversion = new DefiningConversion("Mercator_1SP", parameters);
 
-                Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
-
-                crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.PROJECTED);
+                crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(Collections.singletonMap("name", "unnamed"), geoCrs, conversion, DefaultCartesianCS.PROJECTED);
 
                 break;
             }

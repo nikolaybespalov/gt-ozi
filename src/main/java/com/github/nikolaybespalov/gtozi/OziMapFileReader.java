@@ -50,7 +50,7 @@ final class OziMapFileReader {
         // Read ozi_datum.csv and ozi_ellips.csv
         //
 
-        try (CSVParser csvParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("ozi_ellips.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
+        try (CSVParser csvParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_ellips.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
             for (CSVRecord csvRecord : csvParser) {
                 String ellipsoidCode = csvRecord.get("ELLIPSOID_CODE");
                 String name = csvRecord.get("NAME");
@@ -65,7 +65,7 @@ final class OziMapFileReader {
             throw new ExceptionInInitializerError(e);
         }
 
-        try (CSVParser csvParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("ozi_datum.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
+        try (CSVParser csvParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_datum.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
             for (CSVRecord csvRecord : csvParser) {
                 // Accessing Values by Column Index
                 String name = csvRecord.get("NAME");

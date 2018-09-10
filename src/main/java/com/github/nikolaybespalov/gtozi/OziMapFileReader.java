@@ -15,6 +15,7 @@ import org.geotools.referencing.datum.BursaWolfParameters;
 import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.geotools.referencing.datum.DefaultGeodeticDatum;
 import org.geotools.referencing.datum.DefaultPrimeMeridian;
+import org.geotools.referencing.operation.DefaultMathTransformFactory;
 import org.geotools.referencing.operation.DefiningConversion;
 import org.geotools.referencing.operation.projection.MapProjection;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
@@ -22,12 +23,16 @@ import org.geotools.referencing.operation.transform.ConcatenatedTransform;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.NoSuchIdentifierException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.datum.DatumFactory;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.GeodeticDatum;
-import org.opengis.referencing.operation.*;
+import org.opengis.referencing.operation.Conversion;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.MathTransform2D;
+import org.opengis.referencing.operation.TransformException;
 
 import javax.measure.unit.SI;
 import java.awt.*;
@@ -455,92 +460,28 @@ final class OziMapFileReader {
             throw new IOException("'Projection Setup' is required");
         }
 
+        Conversion conversion = null;
+
         switch (projectionName) {
             case "Latitude/Longitude": {
                 crs = geoCrs;
                 break;
             }
             case "Mercator": {
-                if (values.length < 6) {
-                    throw new IOException("Not enough data");
-                }
-
-                String v1 = values[1];
-                String v2 = values[2];
-                String v3 = values[3];
-                String v4 = values[4];
-                String v5 = values[5];
-
-                MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
-                ParameterValueGroup parameters = mtFactory.getDefaultParameters("Mercator_1SP");
-
-                if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
-                    parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
-                }
-
-                if (NumberUtils.isCreatable(v2)) {
-                    parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
-                }
-
-                if (NumberUtils.isCreatable(v3)) {
-                    parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
-                }
-
-                if (NumberUtils.isCreatable(v4)) {
-                    parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
-                }
-
-                if (NumberUtils.isCreatable(v5)) {
-                    parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
-                }
-
-                Conversion conversion = new DefiningConversion("Mercator_1SP", parameters);
-
-                crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(Collections.singletonMap("name", "unnamed"), geoCrs, conversion, DefaultCartesianCS.PROJECTED);
-
+                conversion = asd("Mercator_1SP", values);
                 break;
             }
             case "Transverse Mercator": {
-                if (values.length < 6) {
-                    throw new IOException("Not enough data");
-                }
-
-                String v1 = values[1];
-                String v2 = values[2];
-                String v3 = values[3];
-                String v4 = values[4];
-                String v5 = values[5];
-
-                ParameterValueGroup parameters = ReferencingFactoryFinder.getMathTransformFactory(null).getDefaultParameters("Transverse_Mercator");
-
-                if (NumberUtils.isCreatable(v1)) {
-                    parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
-                }
-
-                if (NumberUtils.isCreatable(v2)) {
-                    parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
-                }
-
-                if (NumberUtils.isCreatable(v3)) {
-                    parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
-                }
-
-                if (NumberUtils.isCreatable(v4)) {
-                    parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
-                }
-
-                if (NumberUtils.isCreatable(v5)) {
-                    parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
-                }
-
-                Conversion conversion = new DefiningConversion("Transverse_Mercator", parameters);
-
-                Map<String, ?> properties = Collections.singletonMap("name", "unnamed");
-
-                crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(properties, geoCrs, conversion, DefaultCartesianCS.PROJECTED);
+                conversion = asd("Transverse_Mercator", values);
+                break;
             }
             default:
-                break;
+                // быть может засунуть все это в OziMapReader и кидать DataSourceException в случае ошибок "приложения" типа вот хз что делать с проекцией
+                throw new IOException("Unsupported projection: " + projectionName);
+        }
+
+        if (conversion != null) {
+            crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(Collections.singletonMap("name", "unnamed"), geoCrs, conversion, DefaultCartesianCS.PROJECTED);
         }
 
         return crs;
@@ -612,9 +553,9 @@ final class OziMapFileReader {
     }
 
     private static GeodeticDatum createGeodeticDatum(String name, Ellipsoid ellipsoid, double dx, double dy, double dz) throws FactoryException {
-        Map<String, Object> map = new HashMap<>();
+        Map<String, Object> parameters = new HashMap<>();
 
-        map.put("name", name);
+        parameters.put("name", name);
 
         final BursaWolfParameters bursaWolfParameters = new BursaWolfParameters(DefaultGeodeticDatum.WGS84);
 
@@ -623,12 +564,12 @@ final class OziMapFileReader {
         bursaWolfParameters.dz = dz;
 
         if (!bursaWolfParameters.isIdentity()) {
-            map.put(DefaultGeodeticDatum.BURSA_WOLF_KEY, bursaWolfParameters);
+            parameters.put(DefaultGeodeticDatum.BURSA_WOLF_KEY, bursaWolfParameters);
         }
 
         DatumFactory datumFactory = ReferencingFactoryFinder.getDatumFactory(null);
 
-        return datumFactory.createGeodeticDatum(map, ellipsoid, DefaultPrimeMeridian.GREENWICH);
+        return datumFactory.createGeodeticDatum(parameters, ellipsoid, DefaultPrimeMeridian.GREENWICH);
     }
 
     private static final class CalibrationPoint {
@@ -651,5 +592,42 @@ final class OziMapFileReader {
 
     private static String[] lineValues(String line) {
         return Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
+    }
+
+    private static Conversion asd(String methodName, String[] values) throws IOException, NoSuchIdentifierException {
+        if (values.length < 6) {
+            throw new IOException("Not enough data");
+        }
+
+        String v1 = values[1];
+        String v2 = values[2];
+        String v3 = values[3];
+        String v4 = values[4];
+        String v5 = values[5];
+
+        DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
+        ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
+
+        if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
+            parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
+        }
+
+        if (NumberUtils.isCreatable(v2)) {
+            parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
+        }
+
+        if (NumberUtils.isCreatable(v3)) {
+            parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
+        }
+
+        if (NumberUtils.isCreatable(v4)) {
+            parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
+        }
+
+        if (NumberUtils.isCreatable(v5)) {
+            parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
+        }
+
+        return new DefiningConversion(methodName, parameters);
     }
 }

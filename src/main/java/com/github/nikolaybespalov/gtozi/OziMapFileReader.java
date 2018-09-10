@@ -513,8 +513,7 @@ final class OziMapFileReader {
                 String v4 = values[4];
                 String v5 = values[5];
 
-                MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
-                ParameterValueGroup parameters = mtFactory.getDefaultParameters("Transverse_Mercator");
+                ParameterValueGroup parameters = ReferencingFactoryFinder.getMathTransformFactory(null).getDefaultParameters("Transverse_Mercator");
 
                 if (NumberUtils.isCreatable(v1)) {
                     parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));

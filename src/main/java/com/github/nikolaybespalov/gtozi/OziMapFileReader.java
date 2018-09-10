@@ -452,7 +452,7 @@ final class OziMapFileReader {
         }
 
         if (values == null) {
-            throw new IOException("Not enough data");
+            throw new IOException("'Projection Setup' is required");
         }
 
         switch (projectionName) {
@@ -516,7 +516,7 @@ final class OziMapFileReader {
                 MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
                 ParameterValueGroup parameters = mtFactory.getDefaultParameters("Transverse_Mercator");
 
-                if (NumberUtils.isCreatable(v1) && NumberUtils.toDouble(v1) != 0) {
+                if (NumberUtils.isCreatable(v1)) {
                     parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
                 }
 

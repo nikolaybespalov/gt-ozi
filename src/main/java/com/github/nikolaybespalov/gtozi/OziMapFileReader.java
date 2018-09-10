@@ -639,6 +639,9 @@ final class OziMapFileReader {
     // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
     // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
     private static Conversion createConversion(String methodName, String[] values) throws IOException, NoSuchIdentifierException {
+        DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
+        ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
+
         if (values.length < 6) {
             throw new IOException("Not enough data");
         }
@@ -649,8 +652,7 @@ final class OziMapFileReader {
         String v4 = values[4];
         String v5 = values[5];
 
-        DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
-        ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
+
 
         if (NumberUtils.isCreatable(v1)) {
             parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));

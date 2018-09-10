@@ -468,11 +468,11 @@ final class OziMapFileReader {
                 break;
             }
             case "Mercator": {
-                conversion = asd("Mercator_1SP", values);
+                conversion = createConversion("Mercator_1SP", values);
                 break;
             }
             case "Transverse Mercator": {
-                conversion = asd("Transverse_Mercator", values);
+                conversion = createConversion("Transverse_Mercator", values);
                 break;
             }
             default:
@@ -594,7 +594,7 @@ final class OziMapFileReader {
         return Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
     }
 
-    private static Conversion asd(String methodName, String[] values) throws IOException, NoSuchIdentifierException {
+    private static Conversion createConversion(String methodName, String[] values) throws IOException, NoSuchIdentifierException {
         if (values.length < 6) {
             throw new IOException("Not enough data");
         }

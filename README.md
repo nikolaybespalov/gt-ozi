@@ -12,7 +12,7 @@ The main idea is to parse the projection parameters from .MAP file and provide t
 ## Supported projections
 - Latitude/Longitude
 - Mercator
-- ~~Transverse Mercator~~
+- Transverse Mercator
 - ~~Lambert Conformal Conic~~
 - ~~Sinusoidal~~
 - ~~Albers Equal Area~~

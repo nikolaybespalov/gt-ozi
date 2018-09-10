@@ -138,7 +138,7 @@ public class OziMapReaderTest {
         expectedOriginalEnvelope.add(new DirectPosition2D(3209132.19552484, 8125562.398880421));
         expectedOriginalEnvelope.add(new DirectPosition2D(3209132.19552484 + 440277.2874353309, 8125562.398880421 + 374235.69432003144));
 
-        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.01, false));
+        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 1.0, true));
     }
 
     @Test
@@ -156,7 +156,7 @@ public class OziMapReaderTest {
         System.out.println(r2.getOriginalEnvelope());
 
         assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.1, false));
+        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 10.0, true));
     }
 
     @Test
@@ -174,7 +174,7 @@ public class OziMapReaderTest {
         System.out.println(r2.getOriginalEnvelope());
 
         assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 10.0, false));
+        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
     }
 
     @Test
@@ -192,7 +192,26 @@ public class OziMapReaderTest {
         System.out.println(r2.getOriginalEnvelope());
 
         assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 1.0, false));
+        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 1.0, true));
+    }
+
+    @Test
+    public void testGauss_() throws IOException, FactoryException, TransformException {
+        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/gauss_.map");
+        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/gauss_.map.tiff");
+
+        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
+        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
+
+        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
+        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
+
+        System.out.println(r1.getOriginalEnvelope());
+        System.out.println(r2.getOriginalEnvelope());
+        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
+        assertTrue(CRS.equalsIgnoreMetadata(CRS.decode("EPSG:28405", true), r2.getCoordinateReferenceSystem()));
+        assertEquals(28405,  CRS.lookupEpsgCode(r2.getCoordinateReferenceSystem(), false).intValue());
+        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
     }
 
 //    @Test

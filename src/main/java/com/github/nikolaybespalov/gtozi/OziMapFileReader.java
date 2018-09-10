@@ -352,7 +352,7 @@ final class OziMapFileReader {
                     + sum_Laty * (nGCPCount * sum_xx - sum_x * sum_x))
                     / divisor;
 
-            AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], gt_normalized[4], gt_normalized[5], gt_normalized[0], gt_normalized[3]);
+            AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], 0, 0, gt_normalized[0], gt_normalized[3]);
 
             /* -------------------------------------------------------------------- */
             /*      Compose the resulting transformation with the normalization     */
@@ -651,7 +651,6 @@ final class OziMapFileReader {
         String v3 = values[3];
         String v4 = values[4];
         String v5 = values[5];
-
 
 
         if (NumberUtils.isCreatable(v1)) {

@@ -636,6 +636,8 @@ final class OziMapFileReader {
         return Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
     }
 
+    // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
+    // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
     private static Conversion createConversion(String methodName, String[] values) throws IOException, NoSuchIdentifierException {
         if (values.length < 6) {
             throw new IOException("Not enough data");

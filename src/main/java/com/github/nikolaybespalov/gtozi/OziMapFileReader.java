@@ -84,7 +84,7 @@ final class OziMapFileReader {
                     Ellipsoid ellipsoid = ellips.get(ellipsoidCode);
 
                     if (ellipsoid == null) {
-                        throw new RuntimeException("Unknown 'ELLIPSOID_CODE': " + ellipsoidCode);
+                        throw new ExceptionInInitializerError("Unknown 'ELLIPSOID_CODE': " + ellipsoidCode);
                     }
 
                     datum = createGeodeticDatum(name, ellipsoid, NumberUtils.toDouble(dx), NumberUtils.toDouble(dy), NumberUtils.toDouble(dz));

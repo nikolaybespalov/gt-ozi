@@ -617,10 +617,8 @@ final class OziMapFileReader {
             parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
         }
 
-        if ("Mercator".equals(projectionName) || "Transverse Mercator".equals(projectionName)) {
-            if (NumberUtils.isCreatable(values[3])) {
-                parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
-            }
+        if (("Mercator".equals(projectionName) || "Transverse Mercator".equals(projectionName)) && NumberUtils.isCreatable(values[3])) {
+            parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
         }
 
         if ("Lambert Conformal Conic".equals(projectionName)) {

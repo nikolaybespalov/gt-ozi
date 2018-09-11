@@ -581,19 +581,7 @@ final class OziMapFileReader {
     // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
     // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
     private static Conversion createConversion(String projectionName, String[] values) throws IOException, NoSuchIdentifierException {
-        if (values.length < 6) {
-            throw new IOException("Not enough data");
-        }
-
         final String methodName;
-
-        String v1 = values[1];
-        String v2 = values[2];
-        String v3 = values[3];
-        String v4 = values[4];
-        String v5 = values[5];
-        String v6 = null;
-        String v7 = null;
 
         switch (projectionName) {
             case "Latitude/Longitude":
@@ -606,11 +594,6 @@ final class OziMapFileReader {
                 break;
             case "Lambert Conformal Conic":
                 methodName = "Lambert_Conformal_Conic_2SP";
-                if (values.length < 8) {
-                    throw new IOException("Not enough data");
-                }
-                v6 = values[7];
-                v7 = values[6];
                 break;
             default:
                 throw new IOException("Unknown projection: " + projectionName);
@@ -619,36 +602,44 @@ final class OziMapFileReader {
         DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
         ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
 
-        if (NumberUtils.isCreatable(v1)) {
-            parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
+        if (values.length < 6) {
+            throw new IOException("Not enough data");
         }
 
-        if (NumberUtils.isCreatable(v2)) {
-            parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
+        if (NumberUtils.isCreatable(values[1])) {
+            parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(values[1]));
+        }
+
+        if (NumberUtils.isCreatable(values[2])) {
+            parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(values[2]));
         }
 
 
-        if (NumberUtils.isCreatable(v4)) {
-            parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
+        if (NumberUtils.isCreatable(values[4])) {
+            parameters.parameter("false_easting").setValue(NumberUtils.toDouble(values[4]));
         }
 
-        if (NumberUtils.isCreatable(v5)) {
-            parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
+        if (NumberUtils.isCreatable(values[5])) {
+            parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
         }
 
         if (projectionName.equals("Mercator") || projectionName.equals("Transverse Mercator")) {
-            if (NumberUtils.isCreatable(v3)) {
-                parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
+            if (NumberUtils.isCreatable(values[3])) {
+                parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
             }
         }
 
         if (projectionName.equals("Lambert Conformal Conic")) {
-            if (NumberUtils.isCreatable(v6)) {
-                parameters.parameter("standard_parallel_1").setValue(NumberUtils.toDouble(v6));
+            if (values.length < 8) {
+                throw new IOException("Not enough data");
             }
 
-            if (NumberUtils.isCreatable(v7)) {
-                parameters.parameter("standard_parallel_2").setValue(NumberUtils.toDouble(v7));
+            if (NumberUtils.isCreatable(values[6])) {
+                parameters.parameter("standard_parallel_1").setValue(NumberUtils.toDouble(values[6]));
+            }
+
+            if (NumberUtils.isCreatable(values[7])) {
+                parameters.parameter("standard_parallel_2").setValue(NumberUtils.toDouble(values[7]));
             }
         }
 

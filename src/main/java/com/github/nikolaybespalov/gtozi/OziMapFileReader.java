@@ -434,7 +434,7 @@ final class OziMapFileReader {
     }
 
     private CoordinateReferenceSystem parseProjectionSetup(List<String> lines, String projectionName, GeographicCRS geoCrs) throws IOException, FactoryException {
-        CoordinateReferenceSystem crs = null;
+        CoordinateReferenceSystem crs;
 
         //  Parameters:
         //    1. Latitude Origin
@@ -460,70 +460,12 @@ final class OziMapFileReader {
             throw new IOException("'Projection Setup' is required");
         }
 
-        Conversion conversion = null;
-
-        switch (projectionName) {
-            case "Latitude/Longitude": {
-                crs = geoCrs;
-                break;
-            }
-            case "Mercator": {
-                conversion = createConversion("Mercator_1SP", values);
-                break;
-            }
-            case "Transverse Mercator": {
-                conversion = createConversion("Transverse_Mercator", values);
-                break;
-            }
-            case "Lambert Conformal Conic": {
-                if (values.length < 8) {
-                    throw new IOException("Not enough data");
-                }
-
-                String v1 = values[1];
-                String v2 = values[2];
-                String v4 = values[4];
-                String v5 = values[5];
-                String v6 = values[6];
-                String v7 = values[7];
-
-                DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
-                ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters("Lambert_Conformal_Conic_2SP");
-
-                if (NumberUtils.isCreatable(v1)) {
-                    parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
-                }
-
-                if (NumberUtils.isCreatable(v2)) {
-                    parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
-                }
-
-                if (NumberUtils.isCreatable(v4)) {
-                    parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
-                }
-
-                if (NumberUtils.isCreatable(v5)) {
-                    parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
-                }
-
-                if (NumberUtils.isCreatable(v6)) {
-                    parameters.parameter("standard_parallel_1").setValue(NumberUtils.toDouble(v6));
-                }
-
-                if (NumberUtils.isCreatable(v7)) {
-                    parameters.parameter("standard_parallel_2").setValue(NumberUtils.toDouble(v7));
-                }
-
-                conversion = new DefiningConversion("Lambert_Conformal_Conic_2SP", parameters);
-                break;
-            }
-            default:
-                // быть может засунуть все это в OziMapReader и кидать DataSourceException в случае ошибок "приложения" типа вот хз что делать с проекцией
-                throw new IOException("Unsupported projection: " + projectionName);
-        }
+        Conversion conversion = createConversion(projectionName, values);
 
         if (conversion != null) {
             crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(Collections.singletonMap("name", "unnamed"), geoCrs, conversion, DefaultCartesianCS.PROJECTED);
+        } else {
+            crs = geoCrs;
         }
 
         return crs;
@@ -638,20 +580,44 @@ final class OziMapFileReader {
 
     // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
     // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
-    private static Conversion createConversion(String methodName, String[] values) throws IOException, NoSuchIdentifierException {
-        DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
-        ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
-
+    private static Conversion createConversion(String projectionName, String[] values) throws IOException, NoSuchIdentifierException {
         if (values.length < 6) {
             throw new IOException("Not enough data");
         }
+
+        final String methodName;
 
         String v1 = values[1];
         String v2 = values[2];
         String v3 = values[3];
         String v4 = values[4];
         String v5 = values[5];
+        String v6 = null;
+        String v7 = null;
 
+        switch (projectionName) {
+            case "Latitude/Longitude":
+                return null;
+            case "Mercator":
+                methodName = "Mercator_1SP";
+                break;
+            case "Transverse Mercator":
+                methodName = "Transverse_Mercator";
+                break;
+            case "Lambert Conformal Conic":
+                methodName = "Lambert_Conformal_Conic_2SP";
+                if (values.length < 8) {
+                    throw new IOException("Not enough data");
+                }
+                v6 = values[7];
+                v7 = values[6];
+                break;
+            default:
+                throw new IOException("Unknown projection: " + projectionName);
+        }
+
+        DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
+        ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
 
         if (NumberUtils.isCreatable(v1)) {
             parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(v1));
@@ -661,9 +627,6 @@ final class OziMapFileReader {
             parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(v2));
         }
 
-        if (NumberUtils.isCreatable(v3)) {
-            parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
-        }
 
         if (NumberUtils.isCreatable(v4)) {
             parameters.parameter("false_easting").setValue(NumberUtils.toDouble(v4));
@@ -671,6 +634,22 @@ final class OziMapFileReader {
 
         if (NumberUtils.isCreatable(v5)) {
             parameters.parameter("false_northing").setValue(NumberUtils.toDouble(v5));
+        }
+
+        if (projectionName.equals("Mercator") || projectionName.equals("Transverse Mercator")) {
+            if (NumberUtils.isCreatable(v3)) {
+                parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(v3));
+            }
+        }
+
+        if (projectionName.equals("Lambert Conformal Conic")) {
+            if (NumberUtils.isCreatable(v6)) {
+                parameters.parameter("standard_parallel_1").setValue(NumberUtils.toDouble(v6));
+            }
+
+            if (NumberUtils.isCreatable(v7)) {
+                parameters.parameter("standard_parallel_2").setValue(NumberUtils.toDouble(v7));
+            }
         }
 
         return new DefiningConversion(methodName, parameters);

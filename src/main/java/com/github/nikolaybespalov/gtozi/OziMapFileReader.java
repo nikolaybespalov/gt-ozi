@@ -615,9 +615,7 @@ final class OziMapFileReader {
 
         if (("Mercator".equals(projectionName) || "Transverse Mercator".equals(projectionName)) && NumberUtils.isCreatable(values[3])) {
             parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
-        }
-
-        if ("Lambert Conformal Conic".equals(projectionName)) {
+        } else {
             if (values.length < 8) {
                 throw new IOException("Not enough data");
             }

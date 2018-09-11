@@ -581,23 +581,17 @@ final class OziMapFileReader {
     // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
     // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
     private static Conversion createConversion(String projectionName, String[] values) throws IOException, NoSuchIdentifierException {
-        final String methodName;
-
-        switch (projectionName) {
-            case "Latitude/Longitude":
-                return null;
-            case "Mercator":
-                methodName = "Mercator_1SP";
-                break;
-            case "Transverse Mercator":
-                methodName = "Transverse_Mercator";
-                break;
-            case "Lambert Conformal Conic":
-                methodName = "Lambert_Conformal_Conic_2SP";
-                break;
-            default:
-                throw new IOException("Unknown projection: " + projectionName);
+        if ("Latitude/Longitude".equals(projectionName)) {
+            return null;
         }
+
+        Map<String, String> asd = new HashMap<>();
+
+        asd.put("Mercator", "Mercator_1SP");
+        asd.put("Transverse Mercator", "Transverse_Mercator");
+        asd.put("Lambert Conformal Conic", "Lambert_Conformal_Conic_2SP");
+
+        final String methodName = asd.get(projectionName);
 
         DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
         ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
@@ -623,13 +617,13 @@ final class OziMapFileReader {
             parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
         }
 
-        if (projectionName.equals("Mercator") || projectionName.equals("Transverse Mercator")) {
+        if ("Mercator".equals(projectionName) || "Transverse Mercator".equals(projectionName)) {
             if (NumberUtils.isCreatable(values[3])) {
                 parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
             }
         }
 
-        if (projectionName.equals("Lambert Conformal Conic")) {
+        if ("Lambert Conformal Conic".equals(projectionName)) {
             if (values.length < 8) {
                 throw new IOException("Not enough data");
             }

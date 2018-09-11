@@ -7,7 +7,6 @@ import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.junit.Before;
 import org.junit.Test;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.referencing.FactoryException;
@@ -21,9 +20,8 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 public class OziMapReaderTest {
-    @Before
-    public void setUp() {
-        System.setProperty(GeoTiffReader.OVERRIDE_CRS_SWITCH, "True");
+    static {
+        System.setProperty(GeoTiffReader.OVERRIDE_CRS_SWITCH, "true");
         System.setProperty("org.geotools.referencing.forceXY", "true");
     }
 
@@ -192,7 +190,7 @@ public class OziMapReaderTest {
         System.out.println(r2.getOriginalEnvelope());
 
         assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 1.0, true));
+        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
     }
 
     @Test
@@ -210,7 +208,7 @@ public class OziMapReaderTest {
         System.out.println(r2.getOriginalEnvelope());
         assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
         assertTrue(CRS.equalsIgnoreMetadata(CRS.decode("EPSG:28405", true), r2.getCoordinateReferenceSystem()));
-        assertEquals(28405,  CRS.lookupEpsgCode(r2.getCoordinateReferenceSystem(), false).intValue());
+        assertEquals(28405, CRS.lookupEpsgCode(r2.getCoordinateReferenceSystem(), false).intValue());
         assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
     }
 

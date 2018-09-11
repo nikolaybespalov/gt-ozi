@@ -8,13 +8,13 @@ Reserved 2
 Magnetic Variation,,,E
 Map Projection,Lambert Conformal Conic,PolyCal,No,AutoCalOnly,No,BSBUseWPX,No
 Point01,xy,    0,    0,in, deg,   0,  7.0802,N, 117, 35.4958,W, grid,   ,     -15313,      15350,N
-Point02,xy,   60,    0,in, deg,   0,  7.0842,N, 117, 28.4097,W, grid,   ,        137,      15350,N
-Point03,xy,  120,    0,in, deg,   0,  7.0800,N, 117, 21.3235,W, grid,   ,      15587,      15350,N
-Point04,xy,    0,   60,in, deg,   0,  0.0502,S, 117, 35.4878,W, grid,   ,     -15313,       -100,N
-Point05,xy,   60,   60,in, deg,   0,  0.0461,S, 117, 28.4097,W, grid,   ,        137,       -100,N
-Point06,xy,  120,   60,in, deg,   0,  0.0503,S, 117, 21.3317,W, grid,   ,      15587,       -100,N
-Point07,xy,    0,  120,in, deg,   0,  7.1723,S, 117, 35.4798,W, grid,   ,     -15313,     -15550,N
-Point08,xy,   60,  120,in, deg,   0,  7.1683,S, 117, 28.4098,W, grid,   ,        137,     -15550,N
+Point02,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point03,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point04,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point05,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point06,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point07,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point08,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point09,xy,  120,  120,in, deg,   0,  7.1725,S, 117, 21.3399,W, grid,   ,      15587,     -15550,N
 Point10,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point11,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N

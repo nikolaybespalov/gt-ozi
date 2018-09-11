@@ -460,12 +460,12 @@ final class OziMapFileReader {
             throw new IOException("'Projection Setup' is required");
         }
 
-        Conversion conversion = createConversion(projectionName, values);
-
-        if (conversion != null) {
-            crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(Collections.singletonMap("name", "unnamed"), geoCrs, conversion, DefaultCartesianCS.PROJECTED);
-        } else {
+        if ("Latitude/Longitude".equals(projectionName)) {
             crs = geoCrs;
+        } else {
+            Conversion conversion = createConversion(projectionName, values);
+
+            crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(Collections.singletonMap("name", "unnamed"), geoCrs, conversion, DefaultCartesianCS.PROJECTED);
         }
 
         return crs;
@@ -581,10 +581,6 @@ final class OziMapFileReader {
     // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
     // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
     private static Conversion createConversion(String projectionName, String[] values) throws IOException, NoSuchIdentifierException {
-        if ("Latitude/Longitude".equals(projectionName)) {
-            return null;
-        }
-
         Map<String, String> asd = new HashMap<>();
 
         asd.put("Mercator", "Mercator_1SP");

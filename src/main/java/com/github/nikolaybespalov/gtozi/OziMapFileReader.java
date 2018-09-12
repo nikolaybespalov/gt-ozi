@@ -72,7 +72,6 @@ final class OziMapFileReader {
 
         try (CSVParser csvParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_datum.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
             for (CSVRecord csvRecord : csvParser) {
-                // Accessing Values by Column Index
                 String name = csvRecord.get("NAME");
                 String epsgDatumCode = csvRecord.get("EPSG_DATUM_CODE");
                 String ellipsoidCode = csvRecord.get("ELLIPSOID_CODE");
@@ -168,6 +167,10 @@ final class OziMapFileReader {
         //
 
         String projectionName = parseMapProjection(lines);
+
+        if ("Albers Equal Area".equals(projectionName)) {
+            geoCrs = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null).createGeographicCRS("NAD27");
+        }
 
         crs = parseProjectionSetup(lines, projectionName, geoCrs);
 

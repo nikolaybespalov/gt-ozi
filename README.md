@@ -15,7 +15,7 @@ The main idea is to parse the projection parameters from .MAP file and provide t
 - Transverse Mercator
 - Lambert Conformal Conic
 - ~~Sinusoidal~~
-- ~~Albers Equal Area~~
+- Albers Equal Area
 - ~~(UTM) Universal Transverse Mercator~~
 
 ## Supported datums

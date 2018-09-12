@@ -586,6 +586,8 @@ final class OziMapFileReader {
         asd.put("Mercator", "Mercator_1SP");
         asd.put("Transverse Mercator", "Transverse_Mercator");
         asd.put("Lambert Conformal Conic", "Lambert_Conformal_Conic_2SP");
+        asd.put("Sinusoidal", "Sinusoidal");
+        asd.put("Albers Equal Area", "Albers_Conic_Equal_Area");
 
         final String methodName = asd.get(projectionName);
 
@@ -596,22 +598,24 @@ final class OziMapFileReader {
             throw new IOException("Not enough data");
         }
 
-        //if (NumberUtils.isCreatable(values[1])) {
+        if (!"Sinusoidal".equals(projectionName)) {
+            //if (NumberUtils.isCreatable(values[1])) {
             parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(values[1]));
-       ////// }
+        }
+        ////// }
 
-    //    if (NumberUtils.isCreatable(values[2])) {
-            parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(values[2]));
-    ////    }
+        //    if (NumberUtils.isCreatable(values[2])) {
+        parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(values[2]));
+        ////    }
 
 
-   //     if (NumberUtils.isCreatable(values[4])) {
-            parameters.parameter("false_easting").setValue(NumberUtils.toDouble(values[4]));
-    ////    }
+        //     if (NumberUtils.isCreatable(values[4])) {
+        parameters.parameter("false_easting").setValue(NumberUtils.toDouble(values[4]));
+        ////    }
 
-     //   if (NumberUtils.isCreatable(values[5])) {
-            parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
-     //   }
+        //   if (NumberUtils.isCreatable(values[5])) {
+        parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
+        //   }
 
         if (("Mercator".equals(projectionName) || "Transverse Mercator".equals(projectionName)) && NumberUtils.isCreatable(values[3])) {
             parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
@@ -620,6 +624,7 @@ final class OziMapFileReader {
 //                throw new IOException("Not enough data");
 //            }
 
+        if ("Lambert Conformal Conic".equals(projectionName) || "Albers Equal Area".equals(projectionName)) {
             if (values.length > 6 && NumberUtils.isCreatable(values[6])) {
                 parameters.parameter("standard_parallel_1").setValue(NumberUtils.toDouble(values[6]));
             }
@@ -627,7 +632,8 @@ final class OziMapFileReader {
             if (values.length > 7 && NumberUtils.isCreatable(values[7])) {
                 parameters.parameter("standard_parallel_2").setValue(NumberUtils.toDouble(values[7]));
             }
-   //     }
+            //     }
+        }
 
         return new DefiningConversion(methodName, parameters);
     }

@@ -47,14 +47,21 @@ import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 final class OziMapFileReader {
-    private static final Map<String, Ellipsoid> ellips = new HashMap<>();
-    private static final Map<String, GeodeticDatum> datums = new HashMap<>();
+    public static final Map<String, String> OZI_PROJECTION_NAME_TO_GEOTOOLS = new HashMap<>();
+    private static final Map<String, Ellipsoid> ELLIPS = new HashMap<>();
+    private static final Map<String, GeodeticDatum> DATUMS = new HashMap<>();
 
     static {
         System.setProperty("org.geotools.referencing.forceXY", "true");
     }
 
     static {
+        OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Mercator", "Mercator_1SP");
+        OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Transverse Mercator", "Transverse_Mercator");
+        OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Lambert Conformal Conic", "Lambert_Conformal_Conic_2SP");
+        OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Sinusoidal", "Sinusoidal");
+        OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Albers Equal Area", "Albers_Conic_Equal_Area");
+
         //
         // Read ozi_datum.csv and ozi_ellips.csv
         //
@@ -68,7 +75,7 @@ final class OziMapFileReader {
 
                 Ellipsoid ellipsoid = DefaultEllipsoid.createFlattenedSphere(name, NumberUtils.toDouble(a), NumberUtils.toDouble(invf), SI.METER);
 
-                ellips.put(ellipsoidCode, ellipsoid);
+                ELLIPS.put(ellipsoidCode, ellipsoid);
             }
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
@@ -89,12 +96,12 @@ final class OziMapFileReader {
                     GeographicCRS geoCrs = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null).createGeographicCRS(epsgDatumCode);
                     datum = geoCrs.getDatum();
                 } else {
-                    Ellipsoid ellipsoid = ellips.get(ellipsoidCode);
+                    Ellipsoid ellipsoid = ELLIPS.get(ellipsoidCode);
 
                     datum = createGeodeticDatum(name, ellipsoid, NumberUtils.toDouble(dx), NumberUtils.toDouble(dy), NumberUtils.toDouble(dz));
                 }
 
-                datums.put(name, datum);
+                DATUMS.put(name, datum);
             }
         } catch (IOException | FactoryException e) {
             throw new ExceptionInInitializerError(e);
@@ -134,7 +141,7 @@ final class OziMapFileReader {
             String imageFilename = parseImageFilename(lines);
 
             if (StringUtils.isEmpty(imageFilename)) {
-                throw new IOException("Map file does not contain an image filename");
+                throw new DataSourceException("Map file does not contain an image filename");
             }
 
             imageFile = new File(imageFilename);
@@ -144,7 +151,7 @@ final class OziMapFileReader {
             }
 
             if (!Files.isReadable(imageFile.toPath())) {
-                throw new IOException("Image file " + file.getAbsolutePath() + " can not be read.");
+                throw new DataSourceException("Image file " + file.getAbsolutePath() + " can not be read.");
             }
 
             //
@@ -172,7 +179,7 @@ final class OziMapFileReader {
             List<CalibrationPoint> calibrationPoints = parseCalibrationPoints(lines, world2Crs);
 
             if (calibrationPoints.size() < 2) {
-                throw new IOException("too few calibration points!");
+                throw new DataSourceException("Too few calibration points!");
             }
 
             double xPixelSize;
@@ -223,7 +230,7 @@ final class OziMapFileReader {
                         || Math.abs(max_line - min_line) < EPS
                         || Math.abs(max_geox - min_geox) < EPS
                         || Math.abs(max_geoy - min_geoy) < EPS) {
-                    throw new IOException("Degenerate in at least one dimension");
+                    throw new DataSourceException("Degenerate in at least one dimension");
                 }
 
                 double pl_normalize[] = new double[6];
@@ -303,7 +310,7 @@ final class OziMapFileReader {
                 /*      If the divisor is zero, there is no valid solution.             */
                 /* -------------------------------------------------------------------- */
                 if (divisor == 0.0) {
-                    throw new IOException("Divisor is zero, there is no valid solution");
+                    throw new DataSourceException("Divisor is zero, there is no valid solution");
                 }
 
 
@@ -405,7 +412,7 @@ final class OziMapFileReader {
 
         String datumName = values[0];
 
-        GeodeticDatum datum = datums.get(datumName);
+        GeodeticDatum datum = DATUMS.get(datumName);
 
         if (datum == null) {
             throw new IOException("Unknown datum: " + datumName);
@@ -580,15 +587,7 @@ final class OziMapFileReader {
     // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
     // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
     private static Conversion createConversion(String projectionName, String[] values) throws IOException, NoSuchIdentifierException {
-        Map<String, String> asd = new HashMap<>();
-
-        asd.put("Mercator", "Mercator_1SP");
-        asd.put("Transverse Mercator", "Transverse_Mercator");
-        asd.put("Lambert Conformal Conic", "Lambert_Conformal_Conic_2SP");
-        asd.put("Sinusoidal", "Sinusoidal");
-        asd.put("Albers Equal Area", "Albers_Conic_Equal_Area");
-
-        final String methodName = asd.get(projectionName);
+        final String methodName = OZI_PROJECTION_NAME_TO_GEOTOOLS.get(projectionName);
 
         DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
         ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
@@ -600,6 +599,7 @@ final class OziMapFileReader {
         if (!"Sinusoidal".equals(projectionName)) {
             parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(values[1]));
         }
+
         parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(values[2]));
         parameters.parameter("false_easting").setValue(NumberUtils.toDouble(values[4]));
         parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));

@@ -115,7 +115,7 @@ final class OziMapFileReader {
     public OziMapFileReader(File file) throws DataSourceException {
         try {
             if (!Files.isReadable(file.toPath())) {
-                throw new IOException("File " + file.getAbsolutePath() + " can not be read.");
+                throw new DataSourceException("File " + file.getAbsolutePath() + " can not be read.");
             }
 
             //
@@ -383,45 +383,41 @@ final class OziMapFileReader {
         return imageFile;
     }
 
-    private String parseHeader(List<String> lines) throws IOException {
+    private String parseHeader(List<String> lines) throws DataSourceException {
         if (lines.isEmpty()) {
-            throw new IOException("Not enough data");
+            throw new DataSourceException("Not enough data");
         }
 
         return lines.get(0);
     }
 
-    private String parseImageFilename(List<String> lines) throws IOException {
+    private String parseImageFilename(List<String> lines) throws DataSourceException {
         if (lines.size() < 3) {
-            throw new IOException("Not enough data");
+            throw new DataSourceException("Not enough data");
         }
 
         return lines.get(2);
     }
 
-    private GeodeticDatum parseDatum(List<String> lines) throws IOException {
+    private GeodeticDatum parseDatum(List<String> lines) throws DataSourceException {
         if (lines.size() < 5) {
-            throw new IOException("Not enough data");
+            throw new DataSourceException("Not enough data");
         }
 
         String[] values = lineValues(lines.get(4));
-
-        if (values.length == 0) {
-            throw new IOException("Not enough data");
-        }
 
         String datumName = values[0];
 
         GeodeticDatum datum = DATUMS.get(datumName);
 
         if (datum == null) {
-            throw new IOException("Unknown datum: " + datumName);
+            throw new DataSourceException("Unknown datum: " + datumName);
         }
 
         return datum;
     }
 
-    private String parseMapProjection(List<String> lines) throws IOException {
+    private String parseMapProjection(List<String> lines) throws DataSourceException {
         String projectionName = null;
 
         for (String line : lines) {
@@ -429,7 +425,7 @@ final class OziMapFileReader {
                 String[] values = lineValues(line);
 
                 if (values.length < 2) {
-                    throw new IOException("Not enough data");
+                    throw new DataSourceException("Not enough data");
                 }
 
                 projectionName = values[1];
@@ -439,7 +435,7 @@ final class OziMapFileReader {
         return projectionName;
     }
 
-    private CoordinateReferenceSystem parseProjectionSetup(List<String> lines, String projectionName, GeographicCRS geoCrs) throws IOException, FactoryException {
+    private CoordinateReferenceSystem parseProjectionSetup(List<String> lines, String projectionName, GeographicCRS geoCrs) throws DataSourceException, FactoryException {
         CoordinateReferenceSystem crs;
 
         //  Parameters:
@@ -466,7 +462,7 @@ final class OziMapFileReader {
             }
 
             if (values == null) {
-                throw new IOException("'Projection Setup' is required");
+                throw new DataSourceException("'Projection Setup' is required");
             }
 
             Conversion conversion = createConversion(projectionName, values);
@@ -586,14 +582,14 @@ final class OziMapFileReader {
 
     // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
     // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
-    private static Conversion createConversion(String projectionName, String[] values) throws IOException, NoSuchIdentifierException {
+    private static Conversion createConversion(String projectionName, String[] values) throws DataSourceException, NoSuchIdentifierException {
         final String methodName = OZI_PROJECTION_NAME_TO_GEOTOOLS.get(projectionName);
 
         DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
         ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
 
         if (values.length < 6) {
-            throw new IOException("Not enough data");
+            throw new DataSourceException("Not enough data");
         }
 
         if (!"Sinusoidal".equals(projectionName)) {

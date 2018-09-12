@@ -236,6 +236,9 @@ public class OziMapReaderTest {
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noheader.map")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile.map")));
+        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/nodatum.map")));
+        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/nodatumparameters.map")));
+        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/unknowndatum.map")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noprojection.map")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noprojectionsetup.map")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noprojectionsetupparameters.map")));

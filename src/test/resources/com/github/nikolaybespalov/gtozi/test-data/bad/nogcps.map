@@ -1,13 +1,13 @@
 OziExplorer Map Data File Version 2.1
-ace
-ace.jpg
+nogcps
+../mer.jpg
 1 ,Map Code,
 NAD27 Central,WGS 84,   0.0000,   0.0000,WGS 84
 Reserved 1
 Reserved 2
 Magnetic Variation,,,E
-Map Projection,Albers Equal Area,PolyCal,No,AutoCalOnly,No,BSBUseWPX,No
-Point01,xy,    0,    0,in, deg,  33, 54.1646,N, 117, 38.4061,W, grid,   ,     -15313,      15350,N
+Map Projection,Mercator,PolyCal,No,AutoCalOnly,No,BSBUseWPX,No
+Point01,xy,    0,    0,in, deg,   7, 32.0062,N,  69, 44.8373,W, grid,   ,    1871085,     693307,N
 Point02,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point03,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point04,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
@@ -15,7 +15,7 @@ Point05,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,       
 Point06,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point07,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point08,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
-Point09,xy,  120,  120,in, deg,  33, 37.4489,N, 117, 18.3938,W, grid,   ,      15587,     -15550,N
+Point09,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point10,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point11,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point12,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
@@ -37,7 +37,7 @@ Point27,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,       
 Point28,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point29,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point30,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
-Projection Setup, 33.764462, -117.47454,, 0.0000000000, 0.0000000000, 33.903634, 33.625290,,
+Projection Setup, 0.0000000000, -90.000000,0.829916312080482, 0.001, 0.002,,,,
 Map Feature = MF ; Map Comment = MC     These follow if they exist
 Track File = TF      These follow if they exist
 Moving Map Parameters = MM?    These follow if they exist
@@ -47,10 +47,10 @@ MMPXY,1,0,0
 MMPXY,2,120,0
 MMPXY,3,120,120
 MMPXY,4,0,120
-MMPLL, 1, -117.640102,  33.902744
-MMPLL, 2, -117.306019,  33.902740
-MMPLL, 3, -117.306563,  33.624149
-MMPLL, 4, -117.639567,  33.624153
-MM1B,257.500756
+MMPLL, 1, -69.747289,   7.533436
+MMPLL, 2, -69.412284,   7.533436
+MMPLL, 3, -69.412284,   7.198970
+MMPLL, 4, -69.747289,   7.198970
+MM1B,308.226548
 MOP,Map Open Position,0,0
 IWH,Map Image Width/Height,120,120

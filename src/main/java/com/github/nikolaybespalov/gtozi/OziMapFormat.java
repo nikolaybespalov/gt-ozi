@@ -3,14 +3,12 @@ package com.github.nikolaybespalov.gtozi;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
+import org.geotools.data.DataSourceException;
 import org.geotools.factory.GeoTools;
 import org.geotools.factory.Hints;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,7 +67,7 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
 
         try {
             return new OziMapReader(source);
-        } catch (IOException | FactoryException | TransformException e) {
+        } catch (DataSourceException e) {
             if (LOGGER.isLoggable(Level.SEVERE)) {
                 LOGGER.log(Level.SEVERE, e.getLocalizedMessage(), e);
             }

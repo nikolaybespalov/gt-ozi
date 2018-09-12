@@ -5,6 +5,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.geotools.data.DataSourceException;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
@@ -51,6 +52,10 @@ final class OziMapFileReader {
     private static final Map<String, GeodeticDatum> datums = new HashMap<>();
 
     static {
+        System.setProperty("org.geotools.referencing.forceXY", "true");
+    }
+
+    static {
         //
         // Read ozi_datum.csv and ozi_ellips.csv
         //
@@ -87,10 +92,6 @@ final class OziMapFileReader {
                 } else {
                     Ellipsoid ellipsoid = ellips.get(ellipsoidCode);
 
-                    if (ellipsoid == null) {
-                        throw new ExceptionInInitializerError("Unknown 'ELLIPSOID_CODE': " + ellipsoidCode);
-                    }
-
                     datum = createGeodeticDatum(name, ellipsoid, NumberUtils.toDouble(dx), NumberUtils.toDouble(dy), NumberUtils.toDouble(dz));
                 }
 
@@ -105,266 +106,270 @@ final class OziMapFileReader {
     private MathTransform grid2Crs;
     private File imageFile;
 
-    public OziMapFileReader(File file) throws IOException, FactoryException, TransformException {
-        if (!file.exists()) {
-            throw new FileNotFoundException("File " + file.getAbsolutePath() + " does not exist.");
-        } else if (file.isDirectory()) {
-            throw new IOException("File " + file.getAbsolutePath() + " is a directory.");
-        } else if (!file.canRead()) {
-            throw new IOException("File " + file.getAbsolutePath() + " can not be read.");
-        }
-
-        //
-        // Read all lines of the file
-        //
-
-        List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("windows-1251"));
-
-        //
-        // Parse and validate file header
-        //
-
-        String header = parseHeader(lines);
-
-        if (!StringUtils.startsWith(header, "OziExplorer Map Data File")) {
-            throw new FileNotFoundException("File " + file.getAbsolutePath() + " does not a OziExplorer map data file.");
-        }
-
-        //
-        // Parse and validate image filename
-        //
-
-        String imageFilename = parseImageFilename(lines);
-
-        if (imageFilename == null) {
-            throw new IOException("Map file does not contain an image filename");
-        }
-
-        imageFile = new File(imageFilename);
-
-        if (!imageFile.exists()) {
-            imageFile = new File(file.getParent(), imageFile.getName());
-        }
-
-        if (!imageFile.exists()) {
-            throw new FileNotFoundException("Image file " + imageFile.getAbsolutePath() + " does not exist.");
-        } else if (imageFile.isDirectory()) {
-            throw new IOException("Image file " + imageFile.getAbsolutePath() + " is a directory.");
-        } else if (!imageFile.canRead()) {
-            throw new IOException("Image file " + imageFile.getAbsolutePath() + " can not be read.");
-        }
-
-        //
-        // Parse datum
-        //
-
-        GeodeticDatum datum = parseDatum(lines);
-
-        GeographicCRS geoCrs = ReferencingFactoryFinder.getCRSFactory(null).createGeographicCRS(Collections.singletonMap("name", datum.getName().getCode()), datum, DefaultEllipsoidalCS.GEODETIC_2D);
-
-        //
-        // Parse projection
-        //
-
-        String projectionName = parseMapProjection(lines);
-
-        if ("Albers Equal Area".equals(projectionName)) {
-            geoCrs = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null).createGeographicCRS("NAD27");
-        }
-
-        crs = parseProjectionSetup(lines, projectionName, geoCrs);
-
-        MathTransform world2Crs = CRS.findMathTransform(geoCrs, crs, true);
-
-        List<CalibrationPoint> calibrationPoints = parseCalibrationPoints(lines, world2Crs);
-
-        if (calibrationPoints.size() < 2) {
-            throw new IOException("too few calibration points!");
-        }
-
-        double xPixelSize;
-        double yPixelSize;
-        double xULC;
-        double yULC;
-
-        if (calibrationPoints.size() == 2) {
-            CalibrationPoint cp1 = calibrationPoints.get(calibrationPoints.size() - 1);
-            CalibrationPoint cp0 = calibrationPoints.get(0);
-
-            xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
-            yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
-            xULC = cp0.getXy().x - (double) cp0.getPixelLine().x * xPixelSize;
-            yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
-
-            grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
-        } else {
-            int nGCPCount = calibrationPoints.size();
-            //throw new IOException("Too much calibration points (TEMP)");
-            CalibrationPoint cp0 = calibrationPoints.get(0);
-
-            double min_pixel = cp0.pixelLine.x;
-            double max_pixel = cp0.pixelLine.x;
-            double min_line = cp0.pixelLine.y;
-            double max_line = cp0.pixelLine.y;
-            double min_geox = cp0.xy.x;
-            double max_geox = cp0.xy.x;
-            double min_geoy = cp0.xy.y;
-            double max_geoy = cp0.xy.y;
-
-            for (int i = 1; i < calibrationPoints.size(); ++i) {
-                CalibrationPoint cp = calibrationPoints.get(i);
-
-                min_pixel = Math.min(min_pixel, cp.pixelLine.x);
-                max_pixel = Math.max(max_pixel, cp.pixelLine.x);
-                min_line = Math.min(min_line, cp.pixelLine.y);
-                max_line = Math.max(max_line, cp.pixelLine.y);
-                min_geox = Math.min(min_geox, cp.xy.x);
-                max_geox = Math.max(max_geox, cp.xy.x);
-                min_geoy = Math.min(min_geoy, cp.xy.y);
-                max_geoy = Math.max(max_geoy, cp.xy.y);
+    public OziMapFileReader(File file) throws DataSourceException {
+        try {
+            if (!file.exists()) {
+                throw new FileNotFoundException("File " + file.getAbsolutePath() + " does not exist.");
+            } else if (file.isDirectory()) {
+                throw new IOException("File " + file.getAbsolutePath() + " is a directory.");
+            } else if (!file.canRead()) {
+                throw new IOException("File " + file.getAbsolutePath() + " can not be read.");
             }
 
-            double EPS = 1.0e-12;
+            //
+            // Read all lines of the file
+            //
 
-            if (Math.abs(max_pixel - min_pixel) < EPS
-                    || Math.abs(max_line - min_line) < EPS
-                    || Math.abs(max_geox - min_geox) < EPS
-                    || Math.abs(max_geoy - min_geoy) < EPS) {
-                throw new IOException("Degenerate in at least one dimension");
+            List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("windows-1251"));
+
+            //
+            // Parse and validate file header
+            //
+
+            String header = parseHeader(lines);
+
+            if (!StringUtils.startsWith(header, "OziExplorer Map Data File")) {
+                throw new DataSourceException("File " + file.getAbsolutePath() + " does not a OziExplorer map data file.");
             }
 
-            double pl_normalize[] = new double[6];
-            double geo_normalize[] = new double[6];
+            //
+            // Parse and validate image filename
+            //
 
-            pl_normalize[0] = -min_pixel / (max_pixel - min_pixel);
-            pl_normalize[1] = 1.0 / (max_pixel - min_pixel);
-            pl_normalize[2] = 0.0;
-            pl_normalize[3] = -min_line / (max_line - min_line);
-            pl_normalize[4] = 0.0;
-            pl_normalize[5] = 1.0 / (max_line - min_line);
+            String imageFilename = parseImageFilename(lines);
 
-            AffineTransform2D pl_normalize2 = new AffineTransform2D(pl_normalize[1], pl_normalize[2], pl_normalize[4], pl_normalize[5], pl_normalize[0], pl_normalize[3]);
-
-            geo_normalize[0] = -min_geox / (max_geox - min_geox);
-            geo_normalize[1] = 1.0 / (max_geox - min_geox);
-            geo_normalize[2] = 0.0;
-            geo_normalize[3] = -min_geoy / (max_geoy - min_geoy);
-            geo_normalize[4] = 0.0;
-            geo_normalize[5] = 1.0 / (max_geoy - min_geoy);
-
-            AffineTransform2D geo_normalize2 = new AffineTransform2D(geo_normalize[1], geo_normalize[2], geo_normalize[4], geo_normalize[5], geo_normalize[0], geo_normalize[3]);
-
-
-            /* -------------------------------------------------------------------- */
-            /* In the general case, do a least squares error approximation by       */
-            /* solving the equation Sum[(A - B*x + C*y - Lon)^2] = minimum          */
-            /* -------------------------------------------------------------------- */
-
-            double sum_x = 0.0;
-            double sum_y = 0.0;
-            double sum_xy = 0.0;
-            double sum_xx = 0.0;
-            double sum_yy = 0.0;
-            double sum_Lon = 0.0;
-            double sum_Lonx = 0.0;
-            double sum_Lony = 0.0;
-            double sum_Lat = 0.0;
-            double sum_Latx = 0.0;
-            double sum_Laty = 0.0;
-
-
-            for (CalibrationPoint cp : calibrationPoints) {
-                DirectPosition2D pixelLine = new DirectPosition2D();
-
-                pl_normalize2.transform(cp.pixelLine, pixelLine);
-
-                double pixel = pixelLine.x;
-                double line = pixelLine.y;
-
-                DirectPosition2D xy = new DirectPosition2D();
-
-                geo_normalize2.transform((DirectPosition) cp.xy, xy);
-
-                double geox = xy.x;
-                double geoy = xy.y;
-
-                sum_x += pixel;
-                sum_y += line;
-                sum_xy += pixel * line;
-                sum_xx += pixel * pixel;
-                sum_yy += line * line;
-                sum_Lon += geox;
-                sum_Lonx += geox * pixel;
-                sum_Lony += geox * line;
-                sum_Lat += geoy;
-                sum_Latx += geoy * pixel;
-                sum_Laty += geoy * line;
+            if (StringUtils.isEmpty(imageFilename)) {
+                throw new IOException("Map file does not contain an image filename");
             }
 
-            double divisor =
-                    nGCPCount * (sum_xx * sum_yy - sum_xy * sum_xy)
-                            + 2 * sum_x * sum_y * sum_xy - sum_y * sum_y * sum_xx
-                            - sum_x * sum_x * sum_yy;
+            imageFile = new File(imageFilename);
 
-            /* -------------------------------------------------------------------- */
-            /*      If the divisor is zero, there is no valid solution.             */
-            /* -------------------------------------------------------------------- */
-            if (divisor == 0.0) {
-                throw new IOException("Divisor is zero, there is no valid solution");
+            if (!imageFile.exists()) {
+                imageFile = new File(file.getParent(), imageFilename);
             }
 
+            if (!imageFile.exists()) {
+                throw new FileNotFoundException("Image file " + imageFile.getAbsolutePath() + " does not exist.");
+            } else if (imageFile.isDirectory()) {
+                throw new IOException("Image file " + imageFile.getAbsolutePath() + " is a directory.");
+            } else if (!imageFile.canRead()) {
+                throw new IOException("Image file " + imageFile.getAbsolutePath() + " can not be read.");
+            }
 
-            /* -------------------------------------------------------------------- */
-            /*      Compute top/left origin.                                        */
-            /* -------------------------------------------------------------------- */
-            double gt_normalized[] = new double[]{0, 0, 0, 0, 0, 0};
+            //
+            // Parse datum
+            //
 
-            gt_normalized[0] = (sum_Lon * (sum_xx * sum_yy - sum_xy * sum_xy)
-                    + sum_Lonx * (sum_y * sum_xy - sum_x * sum_yy)
-                    + sum_Lony * (sum_x * sum_xy - sum_y * sum_xx))
-                    / divisor;
+            GeodeticDatum datum = parseDatum(lines);
 
-            gt_normalized[3] = (sum_Lat * (sum_xx * sum_yy - sum_xy * sum_xy)
-                    + sum_Latx * (sum_y * sum_xy - sum_x * sum_yy)
-                    + sum_Laty * (sum_x * sum_xy - sum_y * sum_xx))
-                    / divisor;
+            GeographicCRS geoCrs = ReferencingFactoryFinder.getCRSFactory(null).createGeographicCRS(Collections.singletonMap("name", datum.getName().getCode()), datum, DefaultEllipsoidalCS.GEODETIC_2D);
 
-            /* -------------------------------------------------------------------- */
-            /*      Compute X related coefficients.                                 */
-            /* -------------------------------------------------------------------- */
-            gt_normalized[1] = (sum_Lon * (sum_y * sum_xy - sum_x * sum_yy)
-                    + sum_Lonx * (nGCPCount * sum_yy - sum_y * sum_y)
-                    + sum_Lony * (sum_x * sum_y - sum_xy * nGCPCount))
-                    / divisor;
+            //
+            // Parse projection
+            //
 
-            gt_normalized[2] = (sum_Lon * (sum_x * sum_xy - sum_y * sum_xx)
-                    + sum_Lonx * (sum_x * sum_y - nGCPCount * sum_xy)
-                    + sum_Lony * (nGCPCount * sum_xx - sum_x * sum_x))
-                    / divisor;
+            String projectionName = parseMapProjection(lines);
 
-            /* -------------------------------------------------------------------- */
-            /*      Compute Y related coefficients.                                 */
-            /* -------------------------------------------------------------------- */
-            gt_normalized[4] = (sum_Lat * (sum_y * sum_xy - sum_x * sum_yy)
-                    + sum_Latx * (nGCPCount * sum_yy - sum_y * sum_y)
-                    + sum_Laty * (sum_x * sum_y - sum_xy * nGCPCount))
-                    / divisor;
+            if ("Albers Equal Area".equals(projectionName)) {
+                geoCrs = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null).createGeographicCRS("NAD27");
+            }
 
-            gt_normalized[5] = (sum_Lat * (sum_x * sum_xy - sum_y * sum_xx)
-                    + sum_Latx * (sum_x * sum_y - nGCPCount * sum_xy)
-                    + sum_Laty * (nGCPCount * sum_xx - sum_x * sum_x))
-                    / divisor;
+            crs = parseProjectionSetup(lines, projectionName, geoCrs);
 
-            AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], 0, 0, gt_normalized[0], gt_normalized[3]);
+            MathTransform world2Crs = CRS.findMathTransform(geoCrs, crs, true);
 
-            /* -------------------------------------------------------------------- */
-            /*      Compose the resulting transformation with the normalization     */
-            /*      geotransformations.                                             */
-            /* -------------------------------------------------------------------- */
-            MathTransform2D inv_geo_normalize2 = geo_normalize2.inverse();
-            MathTransform gt1p2 = ConcatenatedTransform.create(pl_normalize2, gt_normalized2);
+            List<CalibrationPoint> calibrationPoints = parseCalibrationPoints(lines, world2Crs);
 
-            grid2Crs = ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
+            if (calibrationPoints.size() < 2) {
+                throw new IOException("too few calibration points!");
+            }
+
+            double xPixelSize;
+            double yPixelSize;
+            double xULC;
+            double yULC;
+
+            if (calibrationPoints.size() == 2) {
+                CalibrationPoint cp1 = calibrationPoints.get(calibrationPoints.size() - 1);
+                CalibrationPoint cp0 = calibrationPoints.get(0);
+
+                xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
+                yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
+                xULC = cp0.getXy().x - (double) cp0.getPixelLine().x * xPixelSize;
+                yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
+
+                grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
+            } else {
+                int nGCPCount = calibrationPoints.size();
+                //throw new IOException("Too much calibration points (TEMP)");
+                CalibrationPoint cp0 = calibrationPoints.get(0);
+
+                double min_pixel = cp0.pixelLine.x;
+                double max_pixel = cp0.pixelLine.x;
+                double min_line = cp0.pixelLine.y;
+                double max_line = cp0.pixelLine.y;
+                double min_geox = cp0.xy.x;
+                double max_geox = cp0.xy.x;
+                double min_geoy = cp0.xy.y;
+                double max_geoy = cp0.xy.y;
+
+                for (int i = 1; i < calibrationPoints.size(); ++i) {
+                    CalibrationPoint cp = calibrationPoints.get(i);
+
+                    min_pixel = Math.min(min_pixel, cp.pixelLine.x);
+                    max_pixel = Math.max(max_pixel, cp.pixelLine.x);
+                    min_line = Math.min(min_line, cp.pixelLine.y);
+                    max_line = Math.max(max_line, cp.pixelLine.y);
+                    min_geox = Math.min(min_geox, cp.xy.x);
+                    max_geox = Math.max(max_geox, cp.xy.x);
+                    min_geoy = Math.min(min_geoy, cp.xy.y);
+                    max_geoy = Math.max(max_geoy, cp.xy.y);
+                }
+
+                double EPS = 1.0e-12;
+
+                if (Math.abs(max_pixel - min_pixel) < EPS
+                        || Math.abs(max_line - min_line) < EPS
+                        || Math.abs(max_geox - min_geox) < EPS
+                        || Math.abs(max_geoy - min_geoy) < EPS) {
+                    throw new IOException("Degenerate in at least one dimension");
+                }
+
+                double pl_normalize[] = new double[6];
+                double geo_normalize[] = new double[6];
+
+                pl_normalize[0] = -min_pixel / (max_pixel - min_pixel);
+                pl_normalize[1] = 1.0 / (max_pixel - min_pixel);
+                pl_normalize[2] = 0.0;
+                pl_normalize[3] = -min_line / (max_line - min_line);
+                pl_normalize[4] = 0.0;
+                pl_normalize[5] = 1.0 / (max_line - min_line);
+
+                AffineTransform2D pl_normalize2 = new AffineTransform2D(pl_normalize[1], pl_normalize[2], pl_normalize[4], pl_normalize[5], pl_normalize[0], pl_normalize[3]);
+
+                geo_normalize[0] = -min_geox / (max_geox - min_geox);
+                geo_normalize[1] = 1.0 / (max_geox - min_geox);
+                geo_normalize[2] = 0.0;
+                geo_normalize[3] = -min_geoy / (max_geoy - min_geoy);
+                geo_normalize[4] = 0.0;
+                geo_normalize[5] = 1.0 / (max_geoy - min_geoy);
+
+                AffineTransform2D geo_normalize2 = new AffineTransform2D(geo_normalize[1], geo_normalize[2], geo_normalize[4], geo_normalize[5], geo_normalize[0], geo_normalize[3]);
+
+
+                /* -------------------------------------------------------------------- */
+                /* In the general case, do a least squares error approximation by       */
+                /* solving the equation Sum[(A - B*x + C*y - Lon)^2] = minimum          */
+                /* -------------------------------------------------------------------- */
+
+                double sum_x = 0.0;
+                double sum_y = 0.0;
+                double sum_xy = 0.0;
+                double sum_xx = 0.0;
+                double sum_yy = 0.0;
+                double sum_Lon = 0.0;
+                double sum_Lonx = 0.0;
+                double sum_Lony = 0.0;
+                double sum_Lat = 0.0;
+                double sum_Latx = 0.0;
+                double sum_Laty = 0.0;
+
+
+                for (CalibrationPoint cp : calibrationPoints) {
+                    DirectPosition2D pixelLine = new DirectPosition2D();
+
+                    pl_normalize2.transform(cp.pixelLine, pixelLine);
+
+                    double pixel = pixelLine.x;
+                    double line = pixelLine.y;
+
+                    DirectPosition2D xy = new DirectPosition2D();
+
+                    geo_normalize2.transform((DirectPosition) cp.xy, xy);
+
+                    double geox = xy.x;
+                    double geoy = xy.y;
+
+                    sum_x += pixel;
+                    sum_y += line;
+                    sum_xy += pixel * line;
+                    sum_xx += pixel * pixel;
+                    sum_yy += line * line;
+                    sum_Lon += geox;
+                    sum_Lonx += geox * pixel;
+                    sum_Lony += geox * line;
+                    sum_Lat += geoy;
+                    sum_Latx += geoy * pixel;
+                    sum_Laty += geoy * line;
+                }
+
+                double divisor =
+                        nGCPCount * (sum_xx * sum_yy - sum_xy * sum_xy)
+                                + 2 * sum_x * sum_y * sum_xy - sum_y * sum_y * sum_xx
+                                - sum_x * sum_x * sum_yy;
+
+                /* -------------------------------------------------------------------- */
+                /*      If the divisor is zero, there is no valid solution.             */
+                /* -------------------------------------------------------------------- */
+                if (divisor == 0.0) {
+                    throw new IOException("Divisor is zero, there is no valid solution");
+                }
+
+
+                /* -------------------------------------------------------------------- */
+                /*      Compute top/left origin.                                        */
+                /* -------------------------------------------------------------------- */
+                double gt_normalized[] = new double[]{0, 0, 0, 0, 0, 0};
+
+                gt_normalized[0] = (sum_Lon * (sum_xx * sum_yy - sum_xy * sum_xy)
+                        + sum_Lonx * (sum_y * sum_xy - sum_x * sum_yy)
+                        + sum_Lony * (sum_x * sum_xy - sum_y * sum_xx))
+                        / divisor;
+
+                gt_normalized[3] = (sum_Lat * (sum_xx * sum_yy - sum_xy * sum_xy)
+                        + sum_Latx * (sum_y * sum_xy - sum_x * sum_yy)
+                        + sum_Laty * (sum_x * sum_xy - sum_y * sum_xx))
+                        / divisor;
+
+                /* -------------------------------------------------------------------- */
+                /*      Compute X related coefficients.                                 */
+                /* -------------------------------------------------------------------- */
+                gt_normalized[1] = (sum_Lon * (sum_y * sum_xy - sum_x * sum_yy)
+                        + sum_Lonx * (nGCPCount * sum_yy - sum_y * sum_y)
+                        + sum_Lony * (sum_x * sum_y - sum_xy * nGCPCount))
+                        / divisor;
+
+                gt_normalized[2] = (sum_Lon * (sum_x * sum_xy - sum_y * sum_xx)
+                        + sum_Lonx * (sum_x * sum_y - nGCPCount * sum_xy)
+                        + sum_Lony * (nGCPCount * sum_xx - sum_x * sum_x))
+                        / divisor;
+
+                /* -------------------------------------------------------------------- */
+                /*      Compute Y related coefficients.                                 */
+                /* -------------------------------------------------------------------- */
+                gt_normalized[4] = (sum_Lat * (sum_y * sum_xy - sum_x * sum_yy)
+                        + sum_Latx * (nGCPCount * sum_yy - sum_y * sum_y)
+                        + sum_Laty * (sum_x * sum_y - sum_xy * nGCPCount))
+                        / divisor;
+
+                gt_normalized[5] = (sum_Lat * (sum_x * sum_xy - sum_y * sum_xx)
+                        + sum_Latx * (sum_x * sum_y - nGCPCount * sum_xy)
+                        + sum_Laty * (nGCPCount * sum_xx - sum_x * sum_x))
+                        / divisor;
+
+                AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], 0, 0, gt_normalized[0], gt_normalized[3]);
+
+                /* -------------------------------------------------------------------- */
+                /*      Compose the resulting transformation with the normalization     */
+                /*      geotransformations.                                             */
+                /* -------------------------------------------------------------------- */
+                MathTransform2D inv_geo_normalize2 = geo_normalize2.inverse();
+                MathTransform gt1p2 = ConcatenatedTransform.create(pl_normalize2, gt_normalized2);
+
+                grid2Crs = ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
+            }
+        } catch (IOException | FactoryException | TransformException e) {
+            throw new DataSourceException(e);
         }
     }
 
@@ -451,21 +456,21 @@ final class OziMapFileReader {
         //    9. Sat - not used
         //    10. Path - not used
 
-        String[] values = null;
-
-        for (String line : lines) {
-            if (StringUtils.startsWith(line, "Projection Setup")) {
-                values = lineValues(line);
-            }
-        }
-
-        if (values == null) {
-            throw new IOException("'Projection Setup' is required");
-        }
-
         if ("Latitude/Longitude".equals(projectionName)) {
             crs = geoCrs;
         } else {
+            String[] values = null;
+
+            for (String line : lines) {
+                if (StringUtils.startsWith(line, "Projection Setup")) {
+                    values = lineValues(line);
+                }
+            }
+
+            if (values == null) {
+                throw new IOException("'Projection Setup' is required");
+            }
+
             Conversion conversion = createConversion(projectionName, values);
 
             crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(Collections.singletonMap("name", "unnamed"), geoCrs, conversion, DefaultCartesianCS.PROJECTED);

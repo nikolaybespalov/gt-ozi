@@ -38,7 +38,6 @@ import org.opengis.referencing.operation.TransformException;
 import javax.measure.unit.SI;
 import java.awt.*;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -108,11 +107,7 @@ final class OziMapFileReader {
 
     public OziMapFileReader(File file) throws DataSourceException {
         try {
-            if (!file.exists()) {
-                throw new FileNotFoundException("File " + file.getAbsolutePath() + " does not exist.");
-            } else if (file.isDirectory()) {
-                throw new IOException("File " + file.getAbsolutePath() + " is a directory.");
-            } else if (!file.canRead()) {
+            if (!Files.isReadable(file.toPath())) {
                 throw new IOException("File " + file.getAbsolutePath() + " can not be read.");
             }
 
@@ -148,12 +143,8 @@ final class OziMapFileReader {
                 imageFile = new File(file.getParent(), imageFilename);
             }
 
-            if (!imageFile.exists()) {
-                throw new FileNotFoundException("Image file " + imageFile.getAbsolutePath() + " does not exist.");
-            } else if (imageFile.isDirectory()) {
-                throw new IOException("Image file " + imageFile.getAbsolutePath() + " is a directory.");
-            } else if (!imageFile.canRead()) {
-                throw new IOException("Image file " + imageFile.getAbsolutePath() + " can not be read.");
+            if (!Files.isReadable(imageFile.toPath())) {
+                throw new IOException("Image file " + file.getAbsolutePath() + " can not be read.");
             }
 
             //
@@ -607,32 +598,15 @@ final class OziMapFileReader {
         }
 
         if (!"Sinusoidal".equals(projectionName)) {
-            //if (NumberUtils.isCreatable(values[1])) {
             parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(values[1]));
         }
-        ////// }
-
-        //    if (NumberUtils.isCreatable(values[2])) {
         parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(values[2]));
-        ////    }
-
-
-        //     if (NumberUtils.isCreatable(values[4])) {
         parameters.parameter("false_easting").setValue(NumberUtils.toDouble(values[4]));
-        ////    }
-
-        //   if (NumberUtils.isCreatable(values[5])) {
         parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
-        //   }
 
         if (("Mercator".equals(projectionName) || "Transverse Mercator".equals(projectionName)) && NumberUtils.isCreatable(values[3])) {
             parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
-        } //else {
-//            if (values.length < 8) {
-//                throw new IOException("Not enough data");
-//            }
-
-        if ("Lambert Conformal Conic".equals(projectionName) || "Albers Equal Area".equals(projectionName)) {
+        } else if ("Lambert Conformal Conic".equals(projectionName) || "Albers Equal Area".equals(projectionName)) {
             if (values.length > 6 && NumberUtils.isCreatable(values[6])) {
                 parameters.parameter("standard_parallel_1").setValue(NumberUtils.toDouble(values[6]));
             }
@@ -640,7 +614,6 @@ final class OziMapFileReader {
             if (values.length > 7 && NumberUtils.isCreatable(values[7])) {
                 parameters.parameter("standard_parallel_2").setValue(NumberUtils.toDouble(values[7]));
             }
-            //     }
         }
 
         return new DefiningConversion(methodName, parameters);

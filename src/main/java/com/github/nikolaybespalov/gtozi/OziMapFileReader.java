@@ -124,6 +124,10 @@ final class OziMapFileReader {
 
             List<String> lines = Files.readAllLines(file.toPath(), Charset.forName("windows-1251"));
 
+            if (lines.size() < 5) {
+                throw new DataSourceException("Not enough data");
+            }
+
             //
             // Parse and validate file header
             //
@@ -199,7 +203,7 @@ final class OziMapFileReader {
                 grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
             } else {
                 int nGCPCount = calibrationPoints.size();
-                //throw new IOException("Too much calibration points (TEMP)");
+
                 CalibrationPoint cp0 = calibrationPoints.get(0);
 
                 double min_pixel = cp0.pixelLine.x;
@@ -383,27 +387,15 @@ final class OziMapFileReader {
         return imageFile;
     }
 
-    private String parseHeader(List<String> lines) throws DataSourceException {
-        if (lines.isEmpty()) {
-            throw new DataSourceException("Not enough data");
-        }
-
+    private String parseHeader(List<String> lines) {
         return lines.get(0);
     }
 
-    private String parseImageFilename(List<String> lines) throws DataSourceException {
-        if (lines.size() < 3) {
-            throw new DataSourceException("Not enough data");
-        }
-
+    private String parseImageFilename(List<String> lines) {
         return lines.get(2);
     }
 
     private GeodeticDatum parseDatum(List<String> lines) throws DataSourceException {
-        if (lines.size() < 5) {
-            throw new DataSourceException("Not enough data");
-        }
-
         String[] values = lineValues(lines.get(4));
 
         String datumName = values[0];

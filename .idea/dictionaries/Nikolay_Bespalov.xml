@@ -8,6 +8,7 @@
       <w>amrican</w>
       <w>arbia</w>
       <w>astro</w>
+      <w>badgcps</w>
       <w>batavia</w>
       <w>bcamp</w>
       <w>bellevue</w>
@@ -54,6 +55,7 @@
       <w>hong</w>
       <w>hough</w>
       <w>ilnd</w>
+      <w>imageio</w>
       <w>inchauspe</w>
       <w>invf</w>
       <w>ists</w>
@@ -86,10 +88,13 @@
       <w>naparima</w>
       <w>nikolay</w>
       <w>nikolaybespalov</w>
+      <w>nodatumparameters</w>
       <w>nogcps</w>
       <w>noheader</w>
       <w>noimagefile</w>
+      <w>nolines</w>
       <w>noprojectionsetup</w>
+      <w>noprojectionsetupparameters</w>
       <w>norsk</w>
       <w>northing</w>
       <w>nzgd</w>

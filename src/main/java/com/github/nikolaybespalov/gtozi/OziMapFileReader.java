@@ -475,56 +475,55 @@ final class OziMapFileReader {
 
             String[] values = lineValues(line);
 
-            String v0 = values[0];
-            String v2 = values.length > 2 ? values[2] : "";
-            String v3 = values.length > 3 ? values[3] : "";
-            String v6 = values.length > 6 ? values[6] : "";
-            String v7 = values.length > 7 ? values[7] : "";
-            String v8 = values.length > 8 ? values[8] : "";
-            String v9 = values.length > 9 ? values[9] : "";
-            String v10 = values.length > 10 ? values[10] : "";
-            String v11 = values.length > 11 ? values[11] : "";
-            String v14 = values.length > 14 ? values[14] : "";
-            String v15 = values.length > 15 ? values[15] : "";
-
-            if (v0.startsWith("Point")) {
-                Point pixelLine = null;
-
-                if (NumberUtils.isCreatable(v2) && NumberUtils.isCreatable(v3)) {
-                    pixelLine = new Point(NumberUtils.toInt(v2), NumberUtils.toInt(v3));
-                }
-
-                DirectPosition2D xy = null;
-
-                if (NumberUtils.isCreatable(v6) && NumberUtils.isCreatable(v7) &&
-                        NumberUtils.isCreatable(v9) && NumberUtils.isCreatable(v10)) {
-                    DirectPosition2D latLon = new DirectPosition2D(DefaultGeographicCRS.WGS84,
-                            NumberUtils.toDouble(v9) + NumberUtils.toDouble(v10) / 60.0,
-                            NumberUtils.toDouble(v6) + NumberUtils.toDouble(v7) / 60.0);
-
-                    if ("W".equals(v11)) {
-                        latLon.x = -latLon.x;
-                    }
-
-                    if ("S".equals(v8)) {
-                        latLon.y = -latLon.y;
-                    }
-
-                    DirectPosition2D p = new DirectPosition2D(crs);
-
-                    MapProjection.SKIP_SANITY_CHECKS = true;
-
-                    if (world2Crs.transform(latLon, p) != null) {
-                        xy = p;
-                    }
-                } else if (NumberUtils.isCreatable(v14) && NumberUtils.isCreatable(v15)) {
-                    xy = new DirectPosition2D(crs, NumberUtils.toDouble(v14), NumberUtils.toDouble(v15));
-                }
-
-                if (pixelLine != null && xy != null) {
-                    calibrationPoints.add(new CalibrationPoint(pixelLine, xy));
-                }
+            if (values.length < 16) {
+                continue;
             }
+
+            String v2 = values[2];
+            String v3 = values[3];
+            String v6 = values[6];
+            String v7 = values[7];
+            String v8 = values[8];
+            String v9 = values[9];
+            String v10 = values[10];
+            String v11 = values[11];
+            String v14 = values[14];
+            String v15 = values[15];
+
+            Point pixelLine;
+
+            if (NumberUtils.isCreatable(v2) && NumberUtils.isCreatable(v3)) {
+                pixelLine = new Point(NumberUtils.toInt(v2), NumberUtils.toInt(v3));
+            } else {
+                continue;
+            }
+
+            DirectPosition2D xy = new DirectPosition2D();
+
+            if (NumberUtils.isCreatable(v6) && NumberUtils.isCreatable(v7) &&
+                    NumberUtils.isCreatable(v9) && NumberUtils.isCreatable(v10)) {
+                DirectPosition2D latLon = new DirectPosition2D(DefaultGeographicCRS.WGS84,
+                        NumberUtils.toDouble(v9) + NumberUtils.toDouble(v10) / 60.0,
+                        NumberUtils.toDouble(v6) + NumberUtils.toDouble(v7) / 60.0);
+
+                if ("W".equals(v11)) {
+                    latLon.x = -latLon.x;
+                }
+
+                if ("S".equals(v8)) {
+                    latLon.y = -latLon.y;
+                }
+
+                MapProjection.SKIP_SANITY_CHECKS = true;
+
+                world2Crs.transform(latLon, xy);
+            } else if (NumberUtils.isCreatable(v14) && NumberUtils.isCreatable(v15)) {
+                xy = new DirectPosition2D(crs, NumberUtils.toDouble(v14), NumberUtils.toDouble(v15));
+            } else {
+                continue;
+            }
+
+            calibrationPoints.add(new CalibrationPoint(pixelLine, xy));
         }
 
         return calibrationPoints;

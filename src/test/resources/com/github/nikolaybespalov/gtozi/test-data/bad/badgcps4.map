@@ -1,5 +1,5 @@
 OziExplorer Map Data File Version 2.1
-badgcps1
+badgcps4
 ../mer.jpg
 1 ,Map Code,
 WGS 84,WGS 84,   0.0000,   0.0000,WGS 84
@@ -8,14 +8,14 @@ Reserved 2
 Magnetic Variation,,,E
 Map Projection,Latitude/Longitude,PolyCal,No,AutoCalOnly,No,BSBUseWPX,No
 Point01,xy,    0,    0,in, deg, -3579, -8.3648,S, -3579, -8.3648,E, grid,   ,           ,           ,N
-Point02,xy,     ,     ,in, deg, -3579, -8.3648,S, -3579, -8.3648,E, grid,   ,           ,           ,N
-Point03,xy,     ,     ,in, deg, -3579, -8.3648,N, -3579, -8.3648,W, grid,   ,           ,           ,N
-Point04,xy,     ,    0,in, deg, -3579, -8.3648,N, -3579, -8.3648,W, grid,   ,           ,           ,N
-Point05,xy,    0,     ,in, deg, -3579, -8.3648,N, -3579, -8.3648,E, grid,   ,           ,           ,N
-Point06,xy,    0,    0,in, deg,      , -8.3648,N, -3579, -8.3648,W, grid,   ,           ,           ,N
-Point07,xy,    0,    0,in, deg, -3579,        ,N, -3579, -8.3648,W, grid,   ,          1,           ,N
-Point08,xy,    0,    0,in, deg, -3579, -8.3648,N,      , -8.3648,E, grid,   ,           ,          2,N
-Point09,xy,    0,    0,in, deg, -3579, -8.3648,S, -3579,        ,W, grid,   ,           ,           ,N
+Point02,xy,    0,    0,in, deg, -3579, -8.3648,S, -3579, -8.3648,E, grid,   ,           ,           ,N
+Point03,xy,    0,    0,in, deg, -3579, -8.3648,S, -3579, -8.3648,E, grid,   ,           ,           ,N
+Point04,xy,     ,     ,in, deg,      ,        ,N,      ,        ,W, grid,   ,           ,           ,N
+Point05,xy,     ,     ,in, deg,      ,        ,N,      ,        ,E, grid,   ,           ,           ,N
+Point06,xy,     ,     ,in, deg,      ,        ,N,      ,        ,W, grid,   ,           ,           ,N
+Point07,xy,     ,     ,in, deg,      ,        ,N,      ,        ,W, grid,   ,          1,           ,N
+Point08,xy,     ,     ,in, deg,      ,        ,N,      ,        ,E, grid,   ,           ,          2,N
+Point09,xy,     ,     ,in, deg,      ,        ,S,      ,        ,W, grid,   ,           ,           ,N
 Point10,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point11,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point12,xy,     ,     ,in, deg,    ,        ,N,    ,        ,W, grid,   ,           ,           ,N

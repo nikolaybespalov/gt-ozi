@@ -2,23 +2,13 @@ package com.github.nikolaybespalov.gtozi;
 
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.factory.GeoTools;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.util.logging.Level;
-
-import static org.geotools.util.logging.Logging.getLogger;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OziMapFormatTest {
     private final AbstractGridFormat format = new OziMapFormat();
-
-    @Before
-    public void setUp() {
-        // for discover all branches
-        getLogger(AbstractGridFormat.class.getName()).setLevel(Level.ALL);
-    }
 
     @Test
     public void testDescription() {

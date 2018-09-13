@@ -45,9 +45,7 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
                 return true;
             }
         } catch (Throwable t) {
-            if (LOGGER.isLoggable(Level.FINE)) {
-                LOGGER.log(Level.FINE, t.getLocalizedMessage(), t);
-            }
+            LOGGER.log(Level.SEVERE, t.getLocalizedMessage(), t);
         }
 
         return false;
@@ -68,12 +66,10 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
         try {
             return new OziMapReader(source);
         } catch (DataSourceException e) {
-            if (LOGGER.isLoggable(Level.SEVERE)) {
-                LOGGER.log(Level.SEVERE, e.getLocalizedMessage(), e);
-            }
-
-            return null;
+            LOGGER.log(Level.SEVERE, e.getLocalizedMessage(), e);
         }
+
+        return null;
     }
 
     @Override

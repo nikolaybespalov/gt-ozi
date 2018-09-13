@@ -245,6 +245,8 @@ public class OziMapReaderTest {
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/nogcps.map")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/badgcps1.map")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/badgcps2.map")));
+        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/badgcps3.map")));
+        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/badgcps4.map")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/nolines.map")));
     }
 

@@ -1,12 +1,12 @@
 OziExplorer Map Data File Version 2.1
-badgcps2
+badgcps3
 ../mer.jpg
 1 ,Map Code,
 WGS 84,WGS 84,   0.0000,   0.0000,WGS 84
 Reserved 1
 Reserved 2
 Magnetic Variation,,,E
-Map Projection,Latitude/Longitude,PolyCal,No,AutoCalOnly,No,BSBUseWPX,No
+Map Projection,Mercator,PolyCal,No,AutoCalOnly,No,BSBUseWPX,No
 Point01,xy,    0,    0,in, deg, -3579, -8.3648,N, -3579, -8.3648,W, grid,   ,           ,
 Point02,xy,    0,    0,in, deg, -3579, -8.3648,N, -3579, -8.3648,W, grid,   ,
 Point03,xy,    0,    0,in, deg, -3579, -8.3648,N, -3579, -8.3648,W, grid,
@@ -16,7 +16,7 @@ Point06,xy,    0,    0,in, deg, -3579, -8.3648,N, -3579,
 Point07,xy,    0,    0,in, deg, -3579, -8.3648,N
 Point08,xy,    0,    0,in, deg, -3579, -8.3648,N, -3579, -8.3648,W, grid,   ,           ,           ,N
 Point09,xy,    1,    1,in, deg, -3571, -8.3641,N, -3571, -8.3648,W, grid,   ,           ,           ,N
-Point10,xy,     ,     ,in, deg,      ,        ,N,    ,        ,W, grid,   ,           ,           ,N
+Point10,xy,    1,    1,in, deg, -3571123123, -8123123.3641,N, -3571, -8.3648,W, grid,   ,           ,           ,N
 Point11,xy,     ,     ,in, deg,      ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point12,xy,     ,     ,in, deg,      ,        ,N,    ,        ,W, grid,   ,           ,           ,N
 Point13,xy,     ,     ,in, deg,      ,        ,N,    ,        ,W, grid,   ,           ,           ,N

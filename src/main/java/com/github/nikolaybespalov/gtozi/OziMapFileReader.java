@@ -30,10 +30,7 @@ import org.opengis.referencing.crs.GeographicCRS;
 import org.opengis.referencing.datum.DatumFactory;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.GeodeticDatum;
-import org.opengis.referencing.operation.Conversion;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.MathTransform2D;
-import org.opengis.referencing.operation.TransformException;
+import org.opengis.referencing.operation.*;
 
 import javax.measure.unit.SI;
 import java.awt.*;
@@ -182,194 +179,7 @@ final class OziMapFileReader {
 
             List<CalibrationPoint> calibrationPoints = parseCalibrationPoints(lines, world2Crs);
 
-            if (calibrationPoints.size() < 2) {
-                throw new DataSourceException("Too few calibration points!");
-            }
-
-            double xPixelSize;
-            double yPixelSize;
-            double xULC;
-            double yULC;
-
-            if (calibrationPoints.size() == 2) {
-                CalibrationPoint cp1 = calibrationPoints.get(calibrationPoints.size() - 1);
-                CalibrationPoint cp0 = calibrationPoints.get(0);
-
-                xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
-                yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
-                xULC = cp0.getXy().x - (double) cp0.getPixelLine().x * xPixelSize;
-                yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
-
-                grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
-            } else {
-                int nGCPCount = calibrationPoints.size();
-
-                CalibrationPoint cp0 = calibrationPoints.get(0);
-
-                double min_pixel = cp0.pixelLine.x;
-                double max_pixel = cp0.pixelLine.x;
-                double min_line = cp0.pixelLine.y;
-                double max_line = cp0.pixelLine.y;
-                double min_geox = cp0.xy.x;
-                double max_geox = cp0.xy.x;
-                double min_geoy = cp0.xy.y;
-                double max_geoy = cp0.xy.y;
-
-                for (int i = 1; i < calibrationPoints.size(); ++i) {
-                    CalibrationPoint cp = calibrationPoints.get(i);
-
-                    min_pixel = Math.min(min_pixel, cp.pixelLine.x);
-                    max_pixel = Math.max(max_pixel, cp.pixelLine.x);
-                    min_line = Math.min(min_line, cp.pixelLine.y);
-                    max_line = Math.max(max_line, cp.pixelLine.y);
-                    min_geox = Math.min(min_geox, cp.xy.x);
-                    max_geox = Math.max(max_geox, cp.xy.x);
-                    min_geoy = Math.min(min_geoy, cp.xy.y);
-                    max_geoy = Math.max(max_geoy, cp.xy.y);
-                }
-
-                double EPS = 1.0e-12;
-
-                if (Math.abs(max_pixel - min_pixel) < EPS
-                        || Math.abs(max_line - min_line) < EPS
-                        || Math.abs(max_geox - min_geox) < EPS
-                        || Math.abs(max_geoy - min_geoy) < EPS) {
-                    throw new DataSourceException("Degenerate in at least one dimension");
-                }
-
-                double pl_normalize[] = new double[6];
-                double geo_normalize[] = new double[6];
-
-                pl_normalize[0] = -min_pixel / (max_pixel - min_pixel);
-                pl_normalize[1] = 1.0 / (max_pixel - min_pixel);
-                pl_normalize[2] = 0.0;
-                pl_normalize[3] = -min_line / (max_line - min_line);
-                pl_normalize[4] = 0.0;
-                pl_normalize[5] = 1.0 / (max_line - min_line);
-
-                AffineTransform2D pl_normalize2 = new AffineTransform2D(pl_normalize[1], pl_normalize[2], pl_normalize[4], pl_normalize[5], pl_normalize[0], pl_normalize[3]);
-
-                geo_normalize[0] = -min_geox / (max_geox - min_geox);
-                geo_normalize[1] = 1.0 / (max_geox - min_geox);
-                geo_normalize[2] = 0.0;
-                geo_normalize[3] = -min_geoy / (max_geoy - min_geoy);
-                geo_normalize[4] = 0.0;
-                geo_normalize[5] = 1.0 / (max_geoy - min_geoy);
-
-                AffineTransform2D geo_normalize2 = new AffineTransform2D(geo_normalize[1], geo_normalize[2], geo_normalize[4], geo_normalize[5], geo_normalize[0], geo_normalize[3]);
-
-
-                /* -------------------------------------------------------------------- */
-                /* In the general case, do a least squares error approximation by       */
-                /* solving the equation Sum[(A - B*x + C*y - Lon)^2] = minimum          */
-                /* -------------------------------------------------------------------- */
-
-                double sum_x = 0.0;
-                double sum_y = 0.0;
-                double sum_xy = 0.0;
-                double sum_xx = 0.0;
-                double sum_yy = 0.0;
-                double sum_Lon = 0.0;
-                double sum_Lonx = 0.0;
-                double sum_Lony = 0.0;
-                double sum_Lat = 0.0;
-                double sum_Latx = 0.0;
-                double sum_Laty = 0.0;
-
-
-                for (CalibrationPoint cp : calibrationPoints) {
-                    DirectPosition2D pixelLine = new DirectPosition2D();
-
-                    pl_normalize2.transform(cp.pixelLine, pixelLine);
-
-                    double pixel = pixelLine.x;
-                    double line = pixelLine.y;
-
-                    DirectPosition2D xy = new DirectPosition2D();
-
-                    geo_normalize2.transform((DirectPosition) cp.xy, xy);
-
-                    double geox = xy.x;
-                    double geoy = xy.y;
-
-                    sum_x += pixel;
-                    sum_y += line;
-                    sum_xy += pixel * line;
-                    sum_xx += pixel * pixel;
-                    sum_yy += line * line;
-                    sum_Lon += geox;
-                    sum_Lonx += geox * pixel;
-                    sum_Lony += geox * line;
-                    sum_Lat += geoy;
-                    sum_Latx += geoy * pixel;
-                    sum_Laty += geoy * line;
-                }
-
-                double divisor =
-                        nGCPCount * (sum_xx * sum_yy - sum_xy * sum_xy)
-                                + 2 * sum_x * sum_y * sum_xy - sum_y * sum_y * sum_xx
-                                - sum_x * sum_x * sum_yy;
-
-                /* -------------------------------------------------------------------- */
-                /*      If the divisor is zero, there is no valid solution.             */
-                /* -------------------------------------------------------------------- */
-                if (divisor == 0.0) {
-                    throw new DataSourceException("Divisor is zero, there is no valid solution");
-                }
-
-
-                /* -------------------------------------------------------------------- */
-                /*      Compute top/left origin.                                        */
-                /* -------------------------------------------------------------------- */
-                double gt_normalized[] = new double[]{0, 0, 0, 0, 0, 0};
-
-                gt_normalized[0] = (sum_Lon * (sum_xx * sum_yy - sum_xy * sum_xy)
-                        + sum_Lonx * (sum_y * sum_xy - sum_x * sum_yy)
-                        + sum_Lony * (sum_x * sum_xy - sum_y * sum_xx))
-                        / divisor;
-
-                gt_normalized[3] = (sum_Lat * (sum_xx * sum_yy - sum_xy * sum_xy)
-                        + sum_Latx * (sum_y * sum_xy - sum_x * sum_yy)
-                        + sum_Laty * (sum_x * sum_xy - sum_y * sum_xx))
-                        / divisor;
-
-                /* -------------------------------------------------------------------- */
-                /*      Compute X related coefficients.                                 */
-                /* -------------------------------------------------------------------- */
-                gt_normalized[1] = (sum_Lon * (sum_y * sum_xy - sum_x * sum_yy)
-                        + sum_Lonx * (nGCPCount * sum_yy - sum_y * sum_y)
-                        + sum_Lony * (sum_x * sum_y - sum_xy * nGCPCount))
-                        / divisor;
-
-                gt_normalized[2] = (sum_Lon * (sum_x * sum_xy - sum_y * sum_xx)
-                        + sum_Lonx * (sum_x * sum_y - nGCPCount * sum_xy)
-                        + sum_Lony * (nGCPCount * sum_xx - sum_x * sum_x))
-                        / divisor;
-
-                /* -------------------------------------------------------------------- */
-                /*      Compute Y related coefficients.                                 */
-                /* -------------------------------------------------------------------- */
-                gt_normalized[4] = (sum_Lat * (sum_y * sum_xy - sum_x * sum_yy)
-                        + sum_Latx * (nGCPCount * sum_yy - sum_y * sum_y)
-                        + sum_Laty * (sum_x * sum_y - sum_xy * nGCPCount))
-                        / divisor;
-
-                gt_normalized[5] = (sum_Lat * (sum_x * sum_xy - sum_y * sum_xx)
-                        + sum_Latx * (sum_x * sum_y - nGCPCount * sum_xy)
-                        + sum_Laty * (nGCPCount * sum_xx - sum_x * sum_x))
-                        / divisor;
-
-                AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], 0, 0, gt_normalized[0], gt_normalized[3]);
-
-                /* -------------------------------------------------------------------- */
-                /*      Compose the resulting transformation with the normalization     */
-                /*      geotransformations.                                             */
-                /* -------------------------------------------------------------------- */
-                MathTransform2D inv_geo_normalize2 = geo_normalize2.inverse();
-                MathTransform gt1p2 = ConcatenatedTransform.create(pl_normalize2, gt_normalized2);
-
-                grid2Crs = ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
-            }
+            grid2Crs = createGrid2Crs(calibrationPoints);
         } catch (IOException | FactoryException | TransformException e) {
             throw new DataSourceException(e);
         }
@@ -604,5 +414,200 @@ final class OziMapFileReader {
         }
 
         return new DefiningConversion(methodName, parameters);
+    }
+
+    private MathTransform createGrid2Crs(List<CalibrationPoint> calibrationPoints) throws DataSourceException, NoninvertibleTransformException {
+        if (calibrationPoints.size() < 2) {
+            throw new DataSourceException("Too few calibration points!");
+        }
+
+        MathTransform grid2Crs;
+
+        double xPixelSize;
+        double yPixelSize;
+        double xULC;
+        double yULC;
+
+        if (calibrationPoints.size() == 2) {
+            CalibrationPoint cp1 = calibrationPoints.get(calibrationPoints.size() - 1);
+            CalibrationPoint cp0 = calibrationPoints.get(0);
+
+            xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
+            yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
+            xULC = cp0.getXy().x - (double) cp0.getPixelLine().x * xPixelSize;
+            yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
+
+            grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
+        } else {
+            int nGCPCount = calibrationPoints.size();
+
+            CalibrationPoint cp0 = calibrationPoints.get(0);
+
+            double min_pixel = cp0.pixelLine.x;
+            double max_pixel = cp0.pixelLine.x;
+            double min_line = cp0.pixelLine.y;
+            double max_line = cp0.pixelLine.y;
+            double min_geox = cp0.xy.x;
+            double max_geox = cp0.xy.x;
+            double min_geoy = cp0.xy.y;
+            double max_geoy = cp0.xy.y;
+
+            for (int i = 1; i < calibrationPoints.size(); ++i) {
+                CalibrationPoint cp = calibrationPoints.get(i);
+
+                min_pixel = Math.min(min_pixel, cp.pixelLine.x);
+                max_pixel = Math.max(max_pixel, cp.pixelLine.x);
+                min_line = Math.min(min_line, cp.pixelLine.y);
+                max_line = Math.max(max_line, cp.pixelLine.y);
+                min_geox = Math.min(min_geox, cp.xy.x);
+                max_geox = Math.max(max_geox, cp.xy.x);
+                min_geoy = Math.min(min_geoy, cp.xy.y);
+                max_geoy = Math.max(max_geoy, cp.xy.y);
+            }
+
+            double EPS = 1.0e-12;
+
+            if (Math.abs(max_pixel - min_pixel) < EPS
+                    || Math.abs(max_line - min_line) < EPS
+                    || Math.abs(max_geox - min_geox) < EPS
+                    || Math.abs(max_geoy - min_geoy) < EPS) {
+                throw new DataSourceException("Degenerate in at least one dimension");
+            }
+
+            double pl_normalize[] = new double[6];
+            double geo_normalize[] = new double[6];
+
+            pl_normalize[0] = -min_pixel / (max_pixel - min_pixel);
+            pl_normalize[1] = 1.0 / (max_pixel - min_pixel);
+            pl_normalize[2] = 0.0;
+            pl_normalize[3] = -min_line / (max_line - min_line);
+            pl_normalize[4] = 0.0;
+            pl_normalize[5] = 1.0 / (max_line - min_line);
+
+            AffineTransform2D pl_normalize2 = new AffineTransform2D(pl_normalize[1], pl_normalize[2], pl_normalize[4], pl_normalize[5], pl_normalize[0], pl_normalize[3]);
+
+            geo_normalize[0] = -min_geox / (max_geox - min_geox);
+            geo_normalize[1] = 1.0 / (max_geox - min_geox);
+            geo_normalize[2] = 0.0;
+            geo_normalize[3] = -min_geoy / (max_geoy - min_geoy);
+            geo_normalize[4] = 0.0;
+            geo_normalize[5] = 1.0 / (max_geoy - min_geoy);
+
+            AffineTransform2D geo_normalize2 = new AffineTransform2D(geo_normalize[1], geo_normalize[2], geo_normalize[4], geo_normalize[5], geo_normalize[0], geo_normalize[3]);
+
+
+            /* -------------------------------------------------------------------- */
+            /* In the general case, do a least squares error approximation by       */
+            /* solving the equation Sum[(A - B*x + C*y - Lon)^2] = minimum          */
+            /* -------------------------------------------------------------------- */
+
+            double sum_x = 0.0;
+            double sum_y = 0.0;
+            double sum_xy = 0.0;
+            double sum_xx = 0.0;
+            double sum_yy = 0.0;
+            double sum_Lon = 0.0;
+            double sum_Lonx = 0.0;
+            double sum_Lony = 0.0;
+            double sum_Lat = 0.0;
+            double sum_Latx = 0.0;
+            double sum_Laty = 0.0;
+
+
+            for (CalibrationPoint cp : calibrationPoints) {
+                DirectPosition2D pixelLine = new DirectPosition2D();
+
+                pl_normalize2.transform(cp.pixelLine, pixelLine);
+
+                double pixel = pixelLine.x;
+                double line = pixelLine.y;
+
+                DirectPosition2D xy = new DirectPosition2D();
+
+                geo_normalize2.transform((DirectPosition) cp.xy, xy);
+
+                double geox = xy.x;
+                double geoy = xy.y;
+
+                sum_x += pixel;
+                sum_y += line;
+                sum_xy += pixel * line;
+                sum_xx += pixel * pixel;
+                sum_yy += line * line;
+                sum_Lon += geox;
+                sum_Lonx += geox * pixel;
+                sum_Lony += geox * line;
+                sum_Lat += geoy;
+                sum_Latx += geoy * pixel;
+                sum_Laty += geoy * line;
+            }
+
+            double divisor =
+                    nGCPCount * (sum_xx * sum_yy - sum_xy * sum_xy)
+                            + 2 * sum_x * sum_y * sum_xy - sum_y * sum_y * sum_xx
+                            - sum_x * sum_x * sum_yy;
+
+            /* -------------------------------------------------------------------- */
+            /*      If the divisor is zero, there is no valid solution.             */
+            /* -------------------------------------------------------------------- */
+            if (divisor == 0.0) {
+                throw new DataSourceException("Divisor is zero, there is no valid solution");
+            }
+
+
+            /* -------------------------------------------------------------------- */
+            /*      Compute top/left origin.                                        */
+            /* -------------------------------------------------------------------- */
+            double gt_normalized[] = new double[]{0, 0, 0, 0, 0, 0};
+
+            gt_normalized[0] = (sum_Lon * (sum_xx * sum_yy - sum_xy * sum_xy)
+                    + sum_Lonx * (sum_y * sum_xy - sum_x * sum_yy)
+                    + sum_Lony * (sum_x * sum_xy - sum_y * sum_xx))
+                    / divisor;
+
+            gt_normalized[3] = (sum_Lat * (sum_xx * sum_yy - sum_xy * sum_xy)
+                    + sum_Latx * (sum_y * sum_xy - sum_x * sum_yy)
+                    + sum_Laty * (sum_x * sum_xy - sum_y * sum_xx))
+                    / divisor;
+
+            /* -------------------------------------------------------------------- */
+            /*      Compute X related coefficients.                                 */
+            /* -------------------------------------------------------------------- */
+            gt_normalized[1] = (sum_Lon * (sum_y * sum_xy - sum_x * sum_yy)
+                    + sum_Lonx * (nGCPCount * sum_yy - sum_y * sum_y)
+                    + sum_Lony * (sum_x * sum_y - sum_xy * nGCPCount))
+                    / divisor;
+
+            gt_normalized[2] = (sum_Lon * (sum_x * sum_xy - sum_y * sum_xx)
+                    + sum_Lonx * (sum_x * sum_y - nGCPCount * sum_xy)
+                    + sum_Lony * (nGCPCount * sum_xx - sum_x * sum_x))
+                    / divisor;
+
+            /* -------------------------------------------------------------------- */
+            /*      Compute Y related coefficients.                                 */
+            /* -------------------------------------------------------------------- */
+            gt_normalized[4] = (sum_Lat * (sum_y * sum_xy - sum_x * sum_yy)
+                    + sum_Latx * (nGCPCount * sum_yy - sum_y * sum_y)
+                    + sum_Laty * (sum_x * sum_y - sum_xy * nGCPCount))
+                    / divisor;
+
+            gt_normalized[5] = (sum_Lat * (sum_x * sum_xy - sum_y * sum_xx)
+                    + sum_Latx * (sum_x * sum_y - nGCPCount * sum_xy)
+                    + sum_Laty * (nGCPCount * sum_xx - sum_x * sum_x))
+                    / divisor;
+
+            AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], 0, 0, gt_normalized[0], gt_normalized[3]);
+
+            /* -------------------------------------------------------------------- */
+            /*      Compose the resulting transformation with the normalization     */
+            /*      geotransformations.                                             */
+            /* -------------------------------------------------------------------- */
+            MathTransform2D inv_geo_normalize2 = geo_normalize2.inverse();
+            MathTransform gt1p2 = ConcatenatedTransform.create(pl_normalize2, gt_normalized2);
+
+            grid2Crs = ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
+        }
+
+        return grid2Crs;
     }
 }

@@ -6,8 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import static org.geotools.util.logging.Logging.getLogger;
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -17,7 +17,7 @@ public class OziMapFormatTest {
     @Before
     public void setUp() {
         // for discover all branches
-        Logger.getLogger(AbstractGridFormat.class.getName()).setLevel(Level.ALL);
+        getLogger(AbstractGridFormat.class.getName()).setLevel(Level.ALL);
     }
 
     @Test

@@ -206,17 +206,16 @@ final class OziMapFileReader {
     }
 
     private GeodeticDatum parseDatum(List<String> lines) throws DataSourceException {
-        String[] values = lineValues(lines.get(4));
+        // The line with the datum name can be not only on the fourth line
+        for (String line : lines) {
+            String[] values = lineValues(line);
 
-        String datumName = values[0];
-
-        GeodeticDatum datum = DATUMS.get(datumName);
-
-        if (datum == null) {
-            throw new DataSourceException("Unknown datum: " + datumName);
+            if (values.length != 0 && DATUMS.containsKey(values[0])) {
+                return DATUMS.get(values[0]);
+            }
         }
 
-        return datum;
+        throw new DataSourceException("Unknown datum");
     }
 
     private String parseMapProjection(List<String> lines) throws DataSourceException {

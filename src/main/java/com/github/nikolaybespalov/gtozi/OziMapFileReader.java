@@ -63,12 +63,12 @@ final class OziMapFileReader {
         // Read ozi_datum.csv and ozi_ellips.csv
         //
 
-        try (CSVParser csvParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_ellips.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
-            for (CSVRecord csvRecord : csvParser) {
-                String ellipsoidCode = csvRecord.get("ELLIPSOID_CODE");
-                String name = csvRecord.get("NAME");
-                String a = csvRecord.get("A");
-                String invf = csvRecord.get("INVF");
+        try (CSVParser ellipsParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_ellips.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
+            for (CSVRecord ellipsRecord : ellipsParser) {
+                String ellipsoidCode = ellipsRecord.get("ELLIPSOID_CODE");
+                String name = ellipsRecord.get("NAME");
+                String a = ellipsRecord.get("A");
+                String invf = ellipsRecord.get("INVF");
 
                 Ellipsoid ellipsoid = DefaultEllipsoid.createFlattenedSphere(name, NumberUtils.toDouble(a), NumberUtils.toDouble(invf), SI.METER);
 
@@ -78,14 +78,14 @@ final class OziMapFileReader {
             throw new ExceptionInInitializerError(e);
         }
 
-        try (CSVParser csvParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_datum.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
-            for (CSVRecord csvRecord : csvParser) {
-                String name = csvRecord.get("NAME");
-                String epsgDatumCode = csvRecord.get("EPSG_DATUM_CODE");
-                String ellipsoidCode = csvRecord.get("ELLIPSOID_CODE");
-                String dx = csvRecord.get("DELTAX");
-                String dy = csvRecord.get("DELTAY");
-                String dz = csvRecord.get("DELTAZ");
+        try (CSVParser datumParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_datum.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
+            for (CSVRecord datumRecord : datumParser) {
+                String name = datumRecord.get("NAME");
+                String epsgDatumCode = datumRecord.get("EPSG_DATUM_CODE");
+                String ellipsoidCode = datumRecord.get("ELLIPSOID_CODE");
+                String dx = datumRecord.get("DELTAX");
+                String dy = datumRecord.get("DELTAY");
+                String dz = datumRecord.get("DELTAZ");
 
                 GeodeticDatum datum;
 
@@ -421,23 +421,16 @@ final class OziMapFileReader {
             throw new DataSourceException("Too few calibration points!");
         }
 
-        MathTransform grid2Crs;
-
-        double xPixelSize;
-        double yPixelSize;
-        double xULC;
-        double yULC;
-
         if (calibrationPoints.size() == 2) {
             CalibrationPoint cp1 = calibrationPoints.get(calibrationPoints.size() - 1);
             CalibrationPoint cp0 = calibrationPoints.get(0);
 
-            xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
-            yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
-            xULC = cp0.getXy().x - (double) cp0.getPixelLine().x * xPixelSize;
-            yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
+            double xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
+            double yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
+            double xULC = cp0.getXy().x - (double) cp0.getPixelLine().x * xPixelSize;
+            double yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
 
-            grid2Crs = new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
+            return new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
         } else {
             int nGCPCount = calibrationPoints.size();
 
@@ -605,9 +598,7 @@ final class OziMapFileReader {
             MathTransform2D inv_geo_normalize2 = geo_normalize2.inverse();
             MathTransform gt1p2 = ConcatenatedTransform.create(pl_normalize2, gt_normalized2);
 
-            grid2Crs = ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
+            return ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
         }
-
-        return grid2Crs;
     }
 }

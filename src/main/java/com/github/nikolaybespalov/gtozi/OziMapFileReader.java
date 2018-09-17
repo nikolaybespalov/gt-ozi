@@ -55,6 +55,7 @@ final class OziMapFileReader {
     static {
         OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Mercator", "Mercator_1SP");
         OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Transverse Mercator", "Transverse_Mercator");
+        OZI_PROJECTION_NAME_TO_GEOTOOLS.put("(UTM) Universal Transverse Mercator", "Transverse_Mercator");
         OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Lambert Conformal Conic", "Lambert_Conformal_Conic_2SP");
         OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Sinusoidal", "Sinusoidal");
         OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Albers Equal Area", "Albers_Conic_Equal_Area");
@@ -255,6 +256,32 @@ final class OziMapFileReader {
 
         if ("Latitude/Longitude".equals(projectionName)) {
             crs = geoCrs;
+        } else if ("(UTM) Universal Transverse Mercator".equals(projectionName)) {
+            int zone = -1;
+            boolean north = true;
+
+            for (String line : lines) {
+                if (StringUtils.startsWith(line, "Point")) {
+                    String[] values = lineValues(line);
+
+                    if (values.length < 17 || StringUtils.isEmpty(values[13]) || StringUtils.isEmpty(values[16])) {
+                        continue;
+                    }
+
+                    zone = NumberUtils.toInt(values[13], -1);
+                    north = "N".equals(values[16]);
+                }
+            }
+
+            if (zone == -1) {
+                throw new DataSourceException("Unknown UTM Zone");
+            }
+
+            if (north) {
+                crs = CRS.decode("EPSG:267" + zone);
+            } else {
+                crs = CRS.decode("EPSG:267" + zone);
+            }
         } else {
             String[] values = null;
 

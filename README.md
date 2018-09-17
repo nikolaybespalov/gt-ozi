@@ -13,7 +13,7 @@ The main idea is to parse the projection parameters from .MAP file and provide t
 - Latitude/Longitude
 - Mercator
 - Transverse Mercator
-- ~~(UTM) Universal Transverse Mercator~~
+- (UTM) Universal Transverse Mercator
 - ~~(BNG) British National Grid~~
 - ~~(IG) Irish Grid~~
 - ~~(NZG) New Zealand Grid~~

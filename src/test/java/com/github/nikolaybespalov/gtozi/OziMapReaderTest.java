@@ -265,6 +265,24 @@ public class OziMapReaderTest {
     }
 
     @Test
+    public void testUtm112() throws DataSourceException, FactoryException {
+        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/utm11-2.map");
+        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/utm11-2.map.tiff");
+
+        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
+        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
+
+        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
+        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
+
+        System.out.println(r1.getOriginalEnvelope());
+        System.out.println(r2.getOriginalEnvelope());
+        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
+        assertEquals(26711, CRS.lookupEpsgCode(r2.getCoordinateReferenceSystem(), false).intValue());
+        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
+    }
+
+    @Test
     public void testBad() {
         assertThrows(DataSourceException.class, () -> new OziMapReader(new File("unknown.map")));
         assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad")));

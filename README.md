@@ -15,9 +15,10 @@ The main idea is to parse the projection parameters from .MAP file and provide t
 - Transverse Mercator
 - Lambert Conformal Conic
 - Sinusoidal
-- ~~Polyconic (American)~~
 - Albers Equal Area
 - ~~(UTM) Universal Transverse Mercator~~
+- ~~Polyconic (American)~~
+- Van Der Grinten
 
 ## Supported datums
 All datums from the [list](http://www.oziexplorer3.com/namesearch/datum_list.html) are supported.

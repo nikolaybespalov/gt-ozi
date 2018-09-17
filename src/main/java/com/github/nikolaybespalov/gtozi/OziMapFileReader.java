@@ -58,6 +58,8 @@ final class OziMapFileReader {
         OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Lambert Conformal Conic", "Lambert_Conformal_Conic_2SP");
         OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Sinusoidal", "Sinusoidal");
         OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Albers Equal Area", "Albers_Conic_Equal_Area");
+        OZI_PROJECTION_NAME_TO_GEOTOOLS.put("Van Der Grinten", "Van_der_Grinten_I");
+
 
         //
         // Read ozi_datum.csv and ozi_ellips.csv
@@ -392,7 +394,7 @@ final class OziMapFileReader {
             throw new DataSourceException("Not enough data");
         }
 
-        if (!"Sinusoidal".equals(projectionName)) {
+        if (!"Sinusoidal".equals(projectionName) && !"Van Der Grinten".equals(projectionName)) {
             parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(values[1]));
         }
 

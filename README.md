@@ -13,12 +13,34 @@ The main idea is to parse the projection parameters from .MAP file and provide t
 - Latitude/Longitude
 - Mercator
 - Transverse Mercator
-- Lambert Conformal Conic
-- Sinusoidal
-- Albers Equal Area
 - ~~(UTM) Universal Transverse Mercator~~
+- ~~(BNG) British National Grid~~
+- ~~(IG) Irish Grid~~
+- ~~(NZG) New Zealand Grid~~
+- ~~(NZTM2) New Zealand TM 2000~~
+- ~~(SG) Swedish Grid~~
+- ~~(SUI) Swiss Grid~~
+- ~~(I) France Zone I~~
+- ~~(II) France Zone II~~
+- ~~(III) France Zone III~~
+- ~~(IV) France Zone IV~~
+- Lambert Conformal Conic
+- ~~(A)Lambert Azimuthual Equal Area~~
+- ~~(EQC) Equidistant Conic~~
+- Sinusoidal
 - ~~Polyconic (American)~~
+- Albers Equal Area
 - Van Der Grinten
+- ~~Vertical Near-Sided Perspective~~
+- ~~(WIV) Wagner IV~~
+- ~~Bonne~~
+- ~~(MT0) Montana State Plane Zone 2500~~
+- ~~(ITA1) Italy Grid Zone 1~~
+- ~~(ITA2) Italy Grid Zone 2~~
+- ~~(VICMAP-TM) Victoria Aust.(pseudo AMG)~~
+- ~~(VICGRID) Victoria Australia~~
+- ~~(VG94) VICGRID94 Victoria Australia~~
+- ~~Gnomonic~~
 
 ## Supported datums
 All datums from the [list](http://www.oziexplorer3.com/namesearch/datum_list.html) are supported.

@@ -8,11 +8,14 @@
       <w>amrican</w>
       <w>arbia</w>
       <w>astro</w>
+      <w>aust</w>
+      <w>azimuthual</w>
       <w>badgcps</w>
       <w>batavia</w>
       <w>bcamp</w>
       <w>bellevue</w>
       <w>bespalov</w>
+      <w>bonne</w>
       <w>boorumba</w>
       <w>boznia</w>
       <w>brac</w>
@@ -44,6 +47,7 @@
       <w>geoy</w>
       <w>ggrs</w>
       <w>gizo</w>
+      <w>gnomonic</w>
       <w>graciosa</w>
       <w>grinten</w>
       <w>gtozi</w>
@@ -63,6 +67,7 @@
       <w>javadocs</w>
       <w>jima</w>
       <w>kandawala</w>
+      <w>karachev</w>
       <w>kerguelen</w>
       <w>kertau</w>
       <w>krassovsky</w>
@@ -89,21 +94,26 @@
       <w>naparima</w>
       <w>nikolay</w>
       <w>nikolaybespalov</w>
+      <w>nodatum</w>
       <w>nodatumparameters</w>
       <w>nogcps</w>
       <w>noheader</w>
       <w>noimagefile</w>
       <w>nolines</w>
+      <w>noprojection</w>
       <w>noprojectionsetup</w>
       <w>noprojectionsetupparameters</w>
       <w>norsk</w>
       <w>northing</w>
+      <w>noutmzone</w>
       <w>nzgd</w>
+      <w>nztm</w>
       <w>observatorio</w>
       <w>osgeo</w>
       <w>ossrh</w>
       <w>pico</w>
       <w>plessis</w>
+      <w>polyconic</w>
       <w>primem</w>
       <w>projcs</w>
       <w>psad</w>
@@ -126,7 +136,10 @@
       <w>tierra</w>
       <w>timbalai</w>
       <w>towgs</w>
+      <w>unknowndatum</w>
       <w>vandg</w>
+      <w>vicgrid</w>
+      <w>vicmap</w>
       <w>viti</w>
       <w>worldsinus</w>
       <w>yacare</w>

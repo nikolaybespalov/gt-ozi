@@ -23,27 +23,24 @@ public class OziMapFormatTest {
     public void testAccepts() {
         assertFalse(format.accepts(null));
         assertFalse(format.accepts("string"));
-        assertFalse(format.accepts(ResourceUtils.getResourceAsUrl("Maps/World.ozf2")));
-        assertTrue(format.accepts(ResourceUtils.getResourceAsFile(("Maps/World.map"))));
-        assertFalse(format.accepts(ResourceUtils.getResourceAsUrl("Maps/SeamlessMaps/SeamlessMap.map")));
+        assertFalse(format.accepts(ResourceUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff")));
+        assertTrue(format.accepts(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+        assertFalse(format.accepts(ResourceUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map")));
     }
 
     @Test
     public void testGetReader() {
         assertNull(format.getReader(null));
         assertThrows(IllegalArgumentException.class, () -> format.getReader("string"));
-        assertNotNull(format.getReader(ResourceUtils.getResourceAsUrl("Maps/World.map")));
-        assertNull(format.getReader(ResourceUtils.getResourceAsFile(("Maps/SeamlessMaps/SeamlessMap.map"))));
-        assertNotNull(format.getReader(ResourceUtils.getResourceAsFile(("Maps/World.map")), GeoTools.getDefaultHints()));
-        assertNull(format.getReader(ResourceUtils.getResourceAsFile(("Maps/SeamlessMaps/SeamlessMap.map")), GeoTools.getDefaultHints()));
+        assertNull(format.getReader(ResourceUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff")));
+        assertNotNull(format.getReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+        assertNull(format.getReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map"), GeoTools.getDefaultHints()));
     }
 
     @Test
     public void testGetWriter() {
-        assertNull(format.getWriter(ResourceUtils.getResourceAsFile(("Maps/World.map"))));
-        assertNull(format.getWriter(ResourceUtils.getResourceAsFile(("Maps/SeamlessMaps/SeamlessMap.map"))));
-        assertNull(format.getWriter(ResourceUtils.getResourceAsFile(("Maps/World.map")), GeoTools.getDefaultHints()));
-        assertNull(format.getWriter(ResourceUtils.getResourceAsFile(("Maps/SeamlessMaps/SeamlessMap.map")), GeoTools.getDefaultHints()));
+        assertNull(format.getWriter(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+        assertNull(format.getWriter(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"), GeoTools.getDefaultHints()));
     }
 
     @Test

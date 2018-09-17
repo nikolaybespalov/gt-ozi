@@ -1,317 +1,65 @@
 package com.github.nikolaybespalov.gtozi;
 
 import org.geotools.coverage.grid.GridEnvelope2D;
+import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
+import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.data.DataSourceException;
-import org.geotools.gce.geotiff.GeoTiffReader;
-import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.GeneralEnvelope;
-import org.geotools.referencing.CRS;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.junit.Before;
 import org.junit.Test;
-import org.opengis.coverage.grid.GridEnvelope;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.parameter.GeneralParameterValue;
+import org.opengis.parameter.ParameterValue;
 
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class OziMapReaderTest {
-    static {
-        System.setProperty(GeoTiffReader.OVERRIDE_CRS_SWITCH, "true");
-        System.setProperty("org.geotools.referencing.forceXY", "true");
+    private AbstractGridCoverage2DReader reader;
+
+    @Before
+    public void setUp() throws DataSourceException {
+        reader = new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"));
     }
 
     @Test
-    public void testDemo1() throws DataSourceException {
-        OziMapReader reader = new OziMapReader(ResourceUtils.getResourceAsFile(("Maps/Demo1.map")));
+    public void testRead() throws IOException {
+        // prepare to read a sub.sampled image
+        GeneralParameterValue[] params = new GeneralParameterValue[1];
+        // Define a GridGeometry in order to reduce the output
+        final ParameterValue<GridGeometry2D> gg =
+                AbstractGridFormat.READ_GRIDGEOMETRY2D.createValue();
+        final GeneralEnvelope envelope = reader.getOriginalEnvelope();
+        final Dimension dim = new Dimension();
+        dim.setSize(
+                reader.getOriginalGridRange().getSpan(0) / 4,
+                reader.getOriginalGridRange().getSpan(1) / 4);
+        final Rectangle rasterArea = ((GridEnvelope2D) reader.getOriginalGridRange());
+        rasterArea.setSize(dim);
+        final GridEnvelope2D range = new GridEnvelope2D(rasterArea);
+        gg.setValue(new GridGeometry2D(range, envelope));
+        params[0] = gg;
 
-        CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
-
-        assertNotNull(crs);
-        assertTrue(CRS.equalsIgnoreMetadata(DefaultGeographicCRS.WGS84, crs));
-
-        GridEnvelope originalGridRange = reader.getOriginalGridRange();
-
-        assertNotNull(originalGridRange);
-        assertEquals(new GridEnvelope2D(new Rectangle(0, 0, 1202, 778)), originalGridRange);
-
-        GeneralEnvelope originalEnvelope = reader.getOriginalEnvelope();
-
-        assertNotNull(originalEnvelope);
-
-        GeneralEnvelope expectedOriginalEnvelope = new GeneralEnvelope(DefaultGeographicCRS.WGS84);
-        expectedOriginalEnvelope.add(new DirectPosition2D(152.288056, -26.449320));
-        expectedOriginalEnvelope.add(new DirectPosition2D(152.991764, -26.449320));
-        expectedOriginalEnvelope.add(new DirectPosition2D(152.991764, -26.858472));
-        expectedOriginalEnvelope.add(new DirectPosition2D(152.288056, -26.858472));
-
-        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.001, false));
+        assertNotNull(reader.read(params));
     }
 
     @Test
-    public void testWorld() throws DataSourceException, FactoryException {
-        OziMapReader reader = new OziMapReader(ResourceUtils.getResourceAsFile(("Maps/World.map")));
-
-        CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
-
-        assertNotNull(crs);
-        CoordinateReferenceSystem expectedCrs = CRS.parseWKT("PROJCS[\"unnamed\",\n" +
-                "    GEOGCS[\"WGS 84\",\n" +
-                "        DATUM[\"WGS_1984\",\n" +
-                "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n" +
-                "                AUTHORITY[\"EPSG\",\"7030\"]],\n" +
-                "            AUTHORITY[\"EPSG\",\"6326\"]],\n" +
-                "        PRIMEM[\"Greenwich\",0,\n" +
-                "            AUTHORITY[\"EPSG\",\"8901\"]],\n" +
-                "        UNIT[\"degree\",0.0174532925199433,\n" +
-                "            AUTHORITY[\"EPSG\",\"9122\"]],\n" +
-                "        AUTHORITY[\"EPSG\",\"4326\"]],\n" +
-                "    PROJECTION[\"Mercator_1SP\"],\n" +
-                "    PARAMETER[\"central_meridian\",0],\n" +
-                "    PARAMETER[\"scale_factor\",1],\n" +
-                "    PARAMETER[\"false_easting\",0],\n" +
-                "    PARAMETER[\"false_northing\",0],\n" +
-                "    UNIT[\"Meter\",1]]");
-        assertTrue(CRS.equalsIgnoreMetadata(expectedCrs, crs));
-
-        GridEnvelope originalGridRange = reader.getOriginalGridRange();
-
-        assertNotNull(originalGridRange);
-        assertEquals(new GridEnvelope2D(new Rectangle(0, 0, 2108, 2048)), originalGridRange);
-
-        GeneralEnvelope originalEnvelope = reader.getOriginalEnvelope();
-
-        assertNotNull(originalEnvelope);
-
-        GeneralEnvelope expectedOriginalEnvelope = new GeneralEnvelope(expectedCrs);
-
-        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, -20551246.174));
-        expectedOriginalEnvelope.add(new DirectPosition2D(-20046458.654, -20551246.174));
-        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, 18365954.163));
-        expectedOriginalEnvelope.add(new DirectPosition2D(20046458.654, -20551246.174));
-
-        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 0.001, false));
+    public void testGetOriginalEnvelop() {
+        assertNotNull(reader.getOriginalEnvelope());
+        assertNotNull(reader.getOriginalEnvelope("mer"));
     }
 
     @Test
-    public void testSas() throws DataSourceException, FactoryException {
-        OziMapReader reader = new OziMapReader(ResourceUtils.getResourceAsFile(("Maps/testSAS.map")));
-
-        CoordinateReferenceSystem crs = reader.getCoordinateReferenceSystem();
-
-        assertNotNull(crs);
-        CoordinateReferenceSystem expectedCrs = CRS.parseWKT("PROJCS[\"unnamed\",\n" +
-                "    GEOGCS[\"WGS 84\",\n" +
-                "        DATUM[\"WGS_1984\",\n" +
-                "            SPHEROID[\"WGS 84\",6378137,298.257223563,\n" +
-                "                AUTHORITY[\"EPSG\",\"7030\"]],\n" +
-                "            AUTHORITY[\"EPSG\",\"6326\"]],\n" +
-                "        PRIMEM[\"Greenwich\",0,\n" +
-                "            AUTHORITY[\"EPSG\",\"8901\"]],\n" +
-                "        UNIT[\"degree\",0.0174532925199433,\n" +
-                "            AUTHORITY[\"EPSG\",\"9122\"]],\n" +
-                "        AUTHORITY[\"EPSG\",\"4326\"]],\n" +
-                "    PROJECTION[\"Mercator_1SP\"],\n" +
-                "    PARAMETER[\"central_meridian\",0],\n" +
-                "    PARAMETER[\"scale_factor\",1],\n" +
-                "    PARAMETER[\"false_easting\",0],\n" +
-                "    PARAMETER[\"false_northing\",0],\n" +
-                "    UNIT[\"Meter\",1]]");
-        assertTrue(CRS.equalsIgnoreMetadata(expectedCrs, crs));
-
-        GridEnvelope originalGridRange = reader.getOriginalGridRange();
-
-        assertNotNull(originalGridRange);
-        assertEquals(new GridEnvelope2D(new Rectangle(0, 0, 360, 306)), originalGridRange);
-
-        GeneralEnvelope originalEnvelope = reader.getOriginalEnvelope();
-
-        assertNotNull(originalEnvelope);
-
-        GeneralEnvelope expectedOriginalEnvelope = new GeneralEnvelope(expectedCrs);
-        expectedOriginalEnvelope.add(new DirectPosition2D(3209132.19552484, 8125562.398880421));
-        expectedOriginalEnvelope.add(new DirectPosition2D(3209132.19552484 + 440277.2874353309, 8125562.398880421 + 374235.69432003144));
-
-        assertTrue(expectedOriginalEnvelope.equals(originalEnvelope, 1.0, true));
+    public void testGetFormat() {
+        assertNotNull(reader.getFormat());
+        assertEquals(OziMapFormat.class, reader.getFormat().getClass());
     }
 
     @Test
-    public void testMer() throws DataSourceException {
-        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff");
-
-        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
-        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
-
-        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
-        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
-
-        System.out.println(r1.getOriginalEnvelope());
-        System.out.println(r2.getOriginalEnvelope());
-
-        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 10.0, true));
+    public void testGetOriginalGridRange() {
+        assertNotNull(reader.getOriginalGridRange());
     }
-
-    @Test
-    public void testTransMer() throws DataSourceException {
-        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/trans_mer.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/trans_mer.map.tiff");
-
-        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
-        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
-
-        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
-        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
-
-        System.out.println(r1.getOriginalEnvelope());
-        System.out.println(r2.getOriginalEnvelope());
-
-        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
-    }
-
-    @Test
-    public void testLcc2() throws DataSourceException {
-        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/lcc-2.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/lcc-2.map.tiff");
-
-        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
-        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
-
-        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
-        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
-
-        System.out.println(r1.getOriginalEnvelope());
-        System.out.println(r2.getOriginalEnvelope());
-
-        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
-    }
-
-    @Test
-    public void testGauss_() throws IOException, FactoryException {
-        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/gauss_.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/gauss_.map.tiff");
-
-        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
-        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
-
-        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
-        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
-
-        System.out.println(r1.getOriginalEnvelope());
-        System.out.println(r2.getOriginalEnvelope());
-        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(CRS.equalsIgnoreMetadata(CRS.decode("EPSG:28405", true), r2.getCoordinateReferenceSystem()));
-        assertEquals(28405, CRS.lookupEpsgCode(r2.getCoordinateReferenceSystem(), false).intValue());
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
-    }
-
-    @Test
-    public void testAce() throws DataSourceException {
-        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/ace.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/ace.map.tiff");
-
-        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
-        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
-
-        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
-        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
-
-        System.out.println(r1.getOriginalEnvelope());
-        System.out.println(r2.getOriginalEnvelope());
-        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
-    }
-
-    @Test
-    public void testWorldSinus() throws DataSourceException {
-        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/worldsinus.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/worldsinus.map.tiff");
-
-        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
-        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
-
-        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
-        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
-
-        System.out.println(r1.getOriginalEnvelope());
-        System.out.println(r2.getOriginalEnvelope());
-        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
-    }
-
-    @Test
-    public void testVandg() throws DataSourceException {
-        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/vandg.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/vandg.map.tiff");
-
-        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
-        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
-
-        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
-        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
-
-        System.out.println(r1.getOriginalEnvelope());
-        System.out.println(r2.getOriginalEnvelope());
-        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
-    }
-
-    @Test
-    public void testUtm112() throws DataSourceException, FactoryException {
-        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/utm11-2.map");
-        File merTif = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/utm11-2.map.tiff");
-
-        AbstractGridCoverage2DReader r1 = new GeoTiffReader(merTif);
-        AbstractGridCoverage2DReader r2 = new OziMapReader(merMap);
-
-        System.out.println(r1.getCoordinateReferenceSystem().toWKT());
-        System.out.println(r2.getCoordinateReferenceSystem().toWKT());
-
-        System.out.println(r1.getOriginalEnvelope());
-        System.out.println(r2.getOriginalEnvelope());
-        assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
-        assertEquals(26711, CRS.lookupEpsgCode(r2.getCoordinateReferenceSystem(), false).intValue());
-        assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
-    }
-
-    @Test
-    public void testBad() {
-        assertThrows(DataSourceException.class, () -> new OziMapReader(new File("unknown.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noheader.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/nodatum.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/nodatumparameters.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/unknowndatum.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noprojection.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noprojectionsetup.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noprojectionsetupparameters.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/nogcps.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/badgcps1.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/badgcps2.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/badgcps3.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/badgcps4.map")));
-        assertThrows(DataSourceException.class, () -> new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/nolines.map")));
-    }
-
-//    @Test
-//    public void testSas2()
-//            throws Exception {
-//        testMap(
-//                new BitmapOziMapRenderer(),
-//                testSasPath,
-//                "bitmap:map",
-//                "EPSG:3395",
-//                RendererTestUtils.EXTRACT_SRS,
-//                new Rectangle2D.Double(3209132.19552484, 8125562.398880421, 440277.2874353309, 374235.69432003144),
-//                RendererTestUtils.IS_NOT_OBJECT_INFO_SUPPORTED);
-//    }
 }

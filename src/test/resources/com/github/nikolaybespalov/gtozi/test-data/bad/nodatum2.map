@@ -1,8 +1,8 @@
 OziExplorer Map Data File Version 2.1
-noimagefile
-
+nodatum2
+../mer.jpg
 1 ,Map Code,
-NAD27 Central,WGS 84,   0.0000,   0.0000,WGS 84
+KARACHEV,WGS 84,   0.0000,   0.0000,WGS 84
 Reserved 1
 Reserved 2
 Magnetic Variation,,,E

@@ -1,6 +1,6 @@
 OziExplorer Map Data File Version 2.1
 vandg
-vandg.jpg
+${project.build.directory}/test-classes/com/github/nikolaybespalov/gtozi/test-data/vandg.jpg
 1 ,Map Code,
 WGS 84,WGS 84,   0.0000,   0.0000,WGS 84
 Reserved 1

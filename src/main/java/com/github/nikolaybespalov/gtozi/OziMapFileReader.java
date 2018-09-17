@@ -155,7 +155,7 @@ final class OziMapFileReader {
             }
 
             if (!Files.isReadable(imageFile.toPath())) {
-                throw new DataSourceException("Image file " + file.getAbsolutePath() + " can not be read.");
+                throw new DataSourceException("Image file " + imageFile.getAbsolutePath() + " can not be read.");
             }
 
             //
@@ -213,7 +213,7 @@ final class OziMapFileReader {
         for (String line : lines) {
             String[] values = lineValues(line);
 
-            if (values.length != 0 && DATUMS.containsKey(values[0])) {
+            if (DATUMS.containsKey(values[0])) {
                 return DATUMS.get(values[0]);
             }
         }
@@ -378,9 +378,7 @@ final class OziMapFileReader {
         bursaWolfParameters.dy = dy;
         bursaWolfParameters.dz = dz;
 
-        if (!bursaWolfParameters.isIdentity()) {
-            parameters.put(DefaultGeodeticDatum.BURSA_WOLF_KEY, bursaWolfParameters);
-        }
+        parameters.put(DefaultGeodeticDatum.BURSA_WOLF_KEY, bursaWolfParameters);
 
         DatumFactory datumFactory = ReferencingFactoryFinder.getDatumFactory(null);
 
@@ -405,6 +403,12 @@ final class OziMapFileReader {
         }
     }
 
+    /**
+     * Parse line values.
+     *
+     * @param line line of .MAP file
+     * @return non empty array
+     */
     private static String[] lineValues(String line) {
         return Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
     }
@@ -617,7 +621,7 @@ final class OziMapFileReader {
                     + sum_Laty * (nGCPCount * sum_xx - sum_x * sum_x))
                     / divisor;
 
-            AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], 0, 0, gt_normalized[0], gt_normalized[3]);
+            AffineTransform2D gt_normalized2 = new AffineTransform2D(gt_normalized[1], gt_normalized[2], gt_normalized[4], gt_normalized[5], gt_normalized[0], gt_normalized[3]);
 
             /* -------------------------------------------------------------------- */
             /*      Compose the resulting transformation with the normalization     */

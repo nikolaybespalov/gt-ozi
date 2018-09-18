@@ -41,6 +41,7 @@ The main idea is to parse the projection parameters from .MAP file and provide t
 - ~~(VICGRID) Victoria Australia~~
 - ~~(VG94) VICGRID94 Victoria Australia~~
 - ~~Gnomonic~~
+- ~~State Plane Coordinate System~~
 
 ## Supported datums
 All datums from the [list](http://www.oziexplorer3.com/namesearch/datum_list.html) are supported.

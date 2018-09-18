@@ -278,15 +278,23 @@ final class OziMapFileReader {
             }
 
             if (north) {
-                if ("NAD83".equals(geoCrs.getDatum().getName().getCode())) {
-                    crs = CRS.decode("EPSG:269" + zone);
-                } else if ("NAD27 Central".equals(geoCrs.getDatum().getName().getCode())) {
-                    crs = CRS.decode("EPSG:267" + zone);
-                } else if ("WGS 84".equals(geoCrs.getDatum().getName().getCode())) {
-                    crs = CRS.decode("EPSG:326" + zone);
-                } else {
-                    throw new DataSourceException("Unsupported UTM datum: " + geoCrs.getDatum().getName().getCode());
+                String datumName = geoCrs.getDatum().getName().getCode();
+                String epsgCode = "EPSG:";
+                switch (datumName) {
+                    case "NAD83":
+                        epsgCode += "269";
+                        break;
+                    case "NAD27 Central":
+                        epsgCode += "267";
+                        break;
+                    case "WGS 84":
+                        epsgCode += "326";
+                        break;
+                    default:
+                        throw new DataSourceException("Unsupported UTM datum: " + geoCrs.getDatum().getName().getCode());
                 }
+
+                crs = CRS.decode(epsgCode + zone);
             } else {
                 throw new DataSourceException("Southern hemisphere UTM not supported. Sorry. Contact me, please");
             }

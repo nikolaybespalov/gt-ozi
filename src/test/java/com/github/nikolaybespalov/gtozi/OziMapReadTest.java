@@ -3,16 +3,19 @@ package com.github.nikolaybespalov.gtozi;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.data.DataSourceException;
 import org.geotools.gce.geotiff.GeoTiffReader;
+import org.geotools.gce.image.WorldImageReader;
 import org.geotools.referencing.CRS;
 import org.junit.Test;
 import org.opengis.referencing.FactoryException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class OziMapReadTest {
     static {
@@ -160,6 +163,23 @@ public class OziMapReadTest {
         assertTrue(CRS.equalsIgnoreMetadata(r1.getCoordinateReferenceSystem(), r2.getCoordinateReferenceSystem()));
         assertEquals(26711, CRS.lookupEpsgCode(r2.getCoordinateReferenceSystem(), false).intValue());
         assertTrue(r1.getOriginalEnvelope().equals(r2.getOriginalEnvelope(), 0.001, true));
+    }
+
+    @Test
+    public void test() throws IOException {
+        File merMap = ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/utm11-2.map");
+
+        Files.walk(merMap.toPath().getParent()).filter(f -> f.getFileName().endsWith(".map")).forEach(f -> {
+            try {
+                AbstractGridCoverage2DReader oziMapReader = new OziMapReader(f);
+                AbstractGridCoverage2DReader worldImageReader = new WorldImageReader(f);
+
+                assertTrue(CRS.equalsIgnoreMetadata(oziMapReader.getCoordinateReferenceSystem(), worldImageReader.getCoordinateReferenceSystem()));
+            } catch (DataSourceException e) {
+                fail(e);
+            }
+
+        });
     }
 
     @Test

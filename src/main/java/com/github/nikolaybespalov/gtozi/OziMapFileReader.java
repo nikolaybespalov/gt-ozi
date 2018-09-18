@@ -33,7 +33,6 @@ import org.opengis.referencing.datum.GeodeticDatum;
 import org.opengis.referencing.operation.*;
 
 import javax.measure.unit.SI;
-import javax.xml.crypto.Data;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -281,14 +280,11 @@ final class OziMapFileReader {
             if (north) {
                 if ("NAD83".equals(geoCrs.getDatum().getName().getCode())) {
                     crs = CRS.decode("EPSG:269" + zone);
-                }
-                else if ("NAD27 Central".equals(geoCrs.getDatum().getName().getCode())) {
+                } else if ("NAD27 Central".equals(geoCrs.getDatum().getName().getCode())) {
                     crs = CRS.decode("EPSG:267" + zone);
-                }
-                else if ("WGS 84".equals(geoCrs.getDatum().getName().getCode())) {
+                } else if ("WGS 84".equals(geoCrs.getDatum().getName().getCode())) {
                     crs = CRS.decode("EPSG:326" + zone);
-                }
-                else {
+                } else {
                     throw new DataSourceException("Unsupported UTM datum: " + geoCrs.getDatum().getName().getCode());
                 }
             } else {

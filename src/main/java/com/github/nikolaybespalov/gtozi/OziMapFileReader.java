@@ -361,11 +361,11 @@ final class OziMapFileReader {
                         NumberUtils.toDouble(v6) + NumberUtils.toDouble(v7) / 60.0);
 
                 if ("W".equals(v11)) {
-                    latLon.x = -latLon.x;
+                    latLon.x = 180.0 + (180.0 - latLon.x);
                 }
 
                 if ("S".equals(v8)) {
-                    latLon.y = -latLon.y;
+                    latLon.y = 90.0 + (90.0 - latLon.y);
                 }
 
                 MapProjection.SKIP_SANITY_CHECKS = true;

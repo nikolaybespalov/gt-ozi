@@ -49,15 +49,6 @@ public class OziMapReaderTest {
     }
 
     @Test
-    public void testRead2() throws IOException {
-        AbstractGridCoverage2DReader reader = new OziMapReader(new File("c:\\Users\\Nikolay Bespalov\\AppData\\Roaming\\tmts\\maps\\OziMAP\\180\\180.map"));
-
-        System.out.println(reader.getOriginalEnvelope());
-
-        assertNotNull(reader.read(null));
-    }
-
-    @Test
     public void testGetOriginalEnvelop() {
         assertNotNull(reader.getOriginalEnvelope());
         assertNotNull(reader.getOriginalEnvelope("mer"));

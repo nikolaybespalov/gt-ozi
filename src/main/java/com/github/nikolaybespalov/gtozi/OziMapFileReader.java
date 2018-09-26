@@ -183,6 +183,8 @@ final class OziMapFileReader {
             List<CalibrationPoint> calibrationPoints = parseCalibrationPoints(lines, world2Crs);
 
             grid2Crs = createGrid2Crs(calibrationPoints);
+        } catch (DataSourceException e) {
+            throw e;
         } catch (IOException | FactoryException | TransformException e) {
             throw new DataSourceException(e);
         }
@@ -320,6 +322,30 @@ final class OziMapFileReader {
     }
 
     private List<CalibrationPoint> parseCalibrationPoints(List<String> lines, MathTransform world2Crs) throws TransformException {
+        // calc overlap 180
+        int mpli = 0;
+        double[] mpl = new double[4];
+
+        for (String line : lines) {
+            if (!StringUtils.startsWith(line, "MMPLL")) {
+                continue;
+            }
+
+            String[] values = lineValues(line);
+
+            if (values.length < 4) {
+                continue;
+            }
+
+            mpl[mpli++] = NumberUtils.toDouble(values[2]);
+        }
+
+        boolean asd = false;
+
+        if (mpli != 0 && mpl[1] < mpl[0] && mpl[2] < mpl[3]) {
+            asd = true;
+        }
+
         List<CalibrationPoint> calibrationPoints = new ArrayList<>();
 
         for (String line : lines) {
@@ -353,19 +379,24 @@ final class OziMapFileReader {
             }
 
             DirectPosition2D xy = new DirectPosition2D();
+            DirectPosition2D latLon;
 
             if (NumberUtils.isCreatable(v6) && NumberUtils.isCreatable(v7) &&
                     NumberUtils.isCreatable(v9) && NumberUtils.isCreatable(v10)) {
-                DirectPosition2D latLon = new DirectPosition2D(DefaultGeographicCRS.WGS84,
+                latLon = new DirectPosition2D(DefaultGeographicCRS.WGS84,
                         NumberUtils.toDouble(v9) + NumberUtils.toDouble(v10) / 60.0,
                         NumberUtils.toDouble(v6) + NumberUtils.toDouble(v7) / 60.0);
 
                 if ("W".equals(v11)) {
-                    latLon.x = 180.0 + (180.0 - latLon.x);
+                    latLon.x = -latLon.x;
+
+                    if (asd) {
+                        latLon.x = 360 + latLon.x;
+                    }
                 }
 
                 if ("S".equals(v8)) {
-                    latLon.y = 90.0 + (90.0 - latLon.y);
+                    latLon.y = -latLon.y;
                 }
 
                 MapProjection.SKIP_SANITY_CHECKS = true;
@@ -408,14 +439,6 @@ final class OziMapFileReader {
         public CalibrationPoint(Point pixelLine, Point.Double xy) {
             this.pixelLine = pixelLine;
             this.xy = xy;
-        }
-
-        public Point getPixelLine() {
-            return pixelLine;
-        }
-
-        public Point.Double getXy() {
-            return xy;
         }
     }
 
@@ -473,10 +496,10 @@ final class OziMapFileReader {
             CalibrationPoint cp1 = calibrationPoints.get(calibrationPoints.size() - 1);
             CalibrationPoint cp0 = calibrationPoints.get(0);
 
-            double xPixelSize = (cp1.getXy().x - cp0.getXy().x) / (double) (cp1.getPixelLine().x - cp0.getPixelLine().x);
-            double yPixelSize = (cp1.getXy().y - cp0.getXy().y) / (double) (cp1.getPixelLine().y - cp0.getPixelLine().y);
-            double xULC = cp0.getXy().x - (double) cp0.getPixelLine().x * xPixelSize;
-            double yULC = cp0.getXy().y - (double) cp0.getPixelLine().y * yPixelSize;
+            double xPixelSize = (cp1.xy.x - cp0.xy.x) / (double) (cp1.pixelLine.x - cp0.pixelLine.x);
+            double yPixelSize = (cp1.xy.y - cp0.xy.y) / (double) (cp1.pixelLine.y - cp0.pixelLine.y);
+            double xULC = cp0.xy.x - (double) cp0.pixelLine.x * xPixelSize;
+            double yULC = cp0.xy.y - (double) cp0.pixelLine.y * yPixelSize;
 
             return new AffineTransform2D(xPixelSize, 0, 0, yPixelSize, xULC, yULC);
         } else {
@@ -493,6 +516,9 @@ final class OziMapFileReader {
             double min_geoy = cp0.xy.y;
             double max_geoy = cp0.xy.y;
 
+//            CalibrationPoint minCp = cp0;
+//            CalibrationPoint maxCp = cp0;
+
             for (int i = 1; i < calibrationPoints.size(); ++i) {
                 CalibrationPoint cp = calibrationPoints.get(i);
 
@@ -505,6 +531,10 @@ final class OziMapFileReader {
                 min_geoy = Math.min(min_geoy, cp.xy.y);
                 max_geoy = Math.max(max_geoy, cp.xy.y);
             }
+
+//            if (max_geox < min_geox) {
+//                max_geox = maxCp.latLon.x;
+//            }
 
             double EPS = 1.0e-12;
 

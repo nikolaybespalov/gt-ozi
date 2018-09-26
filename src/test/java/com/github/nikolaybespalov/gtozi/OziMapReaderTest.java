@@ -6,12 +6,14 @@ import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.data.DataSourceException;
 import org.geotools.geometry.GeneralEnvelope;
+import org.geotools.referencing.CRS;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.parameter.ParameterValue;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +46,15 @@ public class OziMapReaderTest {
         params[0] = gg;
 
         assertNotNull(reader.read(params));
+    }
+
+    @Test
+    public void testRead2() throws IOException {
+        AbstractGridCoverage2DReader reader = new OziMapReader(new File("c:\\Users\\Nikolay Bespalov\\AppData\\Roaming\\tmts\\maps\\OziMAP\\180\\180.map"));
+
+        System.out.println(reader.getOriginalEnvelope());
+
+        assertNotNull(reader.read(null));
     }
 
     @Test

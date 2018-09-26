@@ -52,7 +52,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
             CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
             MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();
 
-            String baseName = FilenameUtils.removeExtension(inputFile.getAbsolutePath());
+            String baseName = FilenameUtils.removeExtension(oziMapFileReader.getImageFile().getAbsolutePath());
 
             Path wldPath = Paths.get(baseName + ".wld");
 
@@ -79,6 +79,8 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
             prjWriter.close();
 
             worldImageReader = new WorldImageReader(oziMapFileReader.getImageFile());
+        } catch (DataSourceException e) {
+            throw e;
         } catch (IOException e) {
             throw new DataSourceException(e);
         }

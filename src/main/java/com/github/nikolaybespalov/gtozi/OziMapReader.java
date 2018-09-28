@@ -4,6 +4,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.data.DataSourceException;
+import org.geotools.data.FileGroupProvider;
 import org.geotools.data.WorldFileWriter;
 import org.geotools.factory.Hints;
 import org.geotools.gce.image.WorldImageReader;
@@ -24,6 +25,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public final class OziMapReader extends AbstractGridCoverage2DReader {
@@ -31,6 +34,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
         System.setProperty("org.geotools.referencing.forceXY", "true");
     }
 
+    private OziMapFileReader oziMapFileReader;
     private WorldImageReader worldImageReader;
 
     public OziMapReader(Object input) throws DataSourceException {
@@ -47,7 +51,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
                 throw new IllegalArgumentException("No input stream for the provided source: " + source);
             }
 
-            OziMapFileReader oziMapFileReader = new OziMapFileReader(inputFile);
+            oziMapFileReader = new OziMapFileReader(inputFile);
 
             CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
             MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();
@@ -114,6 +118,17 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
     @Override
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return worldImageReader.getCoordinateReferenceSystem();
+    }
+
+    @Override
+    protected List<FileGroupProvider.FileGroup> getFiles() throws IOException {
+        List<FileGroupProvider.FileGroup> files = super.getFiles();
+
+        if (files.size() > 0) {
+            files.get(0).setSupportFiles(Collections.singletonList(oziMapFileReader.getImageFile()));
+        }
+
+        return files;
     }
 
     // TODO: определить остальные методы

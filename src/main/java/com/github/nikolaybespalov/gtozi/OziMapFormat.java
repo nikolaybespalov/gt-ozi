@@ -6,8 +6,11 @@ import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
 import org.geotools.data.DataSourceException;
 import org.geotools.factory.GeoTools;
 import org.geotools.factory.Hints;
+import org.geotools.parameter.DefaultParameterDescriptorGroup;
+import org.geotools.parameter.ParameterGroup;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
+import org.opengis.parameter.GeneralParameterDescriptor;
 
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -20,13 +23,14 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
     private static final Logger LOGGER = getLogger(OziMapFormat.class);
 
     public OziMapFormat() {
-        writeParameters = null;
         mInfo = new HashMap<>();
         mInfo.put("name", "Ozi");
         mInfo.put("description", "OziExplorer Map File Format");
         mInfo.put("vendor", "nikolaybespalov");
         mInfo.put("version", "0.1");
         mInfo.put("docURL", "https://github.com/nikolaybespalov/gt-ozi");
+
+        readParameters = new ParameterGroup(new DefaultParameterDescriptorGroup(mInfo, new GeneralParameterDescriptor[]{READ_GRIDGEOMETRY2D}));
     }
 
     @Override

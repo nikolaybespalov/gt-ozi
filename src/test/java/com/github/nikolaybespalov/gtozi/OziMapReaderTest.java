@@ -7,6 +7,7 @@ import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.data.DataSourceException;
 import org.geotools.data.FileServiceInfo;
 import org.geotools.geometry.GeneralEnvelope;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opengis.parameter.GeneralParameterValue;
@@ -23,6 +24,11 @@ public class OziMapReaderTest {
     @Before
     public void setUp() throws DataSourceException {
         reader = new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"));
+    }
+
+    @After
+    public void tearDown() {
+        reader.dispose();
     }
 
     @Test

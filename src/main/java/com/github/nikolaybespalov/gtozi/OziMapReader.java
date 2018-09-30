@@ -131,5 +131,10 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
         return files;
     }
 
+    @Override
+    public void dispose() {
+        worldImageReader.dispose();
+    }
+
     // TODO: определить остальные методы
 }

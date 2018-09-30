@@ -9,6 +9,11 @@ without using GDAL/[OziApi](http://www.oziexplorer3.com/oziapi/oziapi.html) or a
 
 The main idea is to parse the projection parameters from .MAP file and provide them to [WorldImageReader](http://docs.geotools.org/stable/javadocs/org/geotools/gce/image/WorldImageReader.html).
 
+The code is based on the implementation of the OZI dataset support in GDAL.
+
+## Key difference
+- Support for maps crossing the world border by longitude
+
 ## Supported projections
 - Latitude/Longitude
 - Mercator

@@ -23,7 +23,7 @@ public class OziMapReaderTest {
 
     @Before
     public void setUp() throws DataSourceException {
-        reader = new OziMapReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"));
+        reader = new OziMapReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"));
     }
 
     @After

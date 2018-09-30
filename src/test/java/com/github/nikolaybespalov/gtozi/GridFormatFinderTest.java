@@ -10,7 +10,7 @@ import static org.junit.Assert.assertNotNull;
 public class GridFormatFinderTest {
     @Test
     public void testFindFormat() {
-        AbstractGridFormat format = GridFormatFinder.findFormat(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"));
+        AbstractGridFormat format = GridFormatFinder.findFormat(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"));
 
         assertNotNull(format);
         assertNotEquals(format.getName(), "Unknown Format");

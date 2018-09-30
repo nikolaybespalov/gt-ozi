@@ -23,24 +23,24 @@ public class OziMapFormatTest {
     public void testAccepts() {
         assertFalse(format.accepts(null));
         assertFalse(format.accepts("string"));
-        assertFalse(format.accepts(ResourceUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff")));
-        assertTrue(format.accepts(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
-        assertFalse(format.accepts(ResourceUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map")));
+        assertFalse(format.accepts(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff")));
+        assertTrue(format.accepts(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+        assertFalse(format.accepts(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map")));
     }
 
     @Test
     public void testGetReader() {
         assertNull(format.getReader(null));
         assertThrows(IllegalArgumentException.class, () -> format.getReader("string"));
-        assertNull(format.getReader(ResourceUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff")));
-        assertNotNull(format.getReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
-        assertNull(format.getReader(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map"), GeoTools.getDefaultHints()));
+        assertNull(format.getReader(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff")));
+        assertNotNull(format.getReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+        assertNull(format.getReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map"), GeoTools.getDefaultHints()));
     }
 
     @Test
     public void testGetWriter() {
-        assertNull(format.getWriter(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
-        assertNull(format.getWriter(ResourceUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"), GeoTools.getDefaultHints()));
+        assertNull(format.getWriter(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+        assertNull(format.getWriter(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"), GeoTools.getDefaultHints()));
     }
 
     @Test

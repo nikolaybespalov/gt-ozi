@@ -5,6 +5,7 @@ import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.data.DataSourceException;
+import org.geotools.data.FileServiceInfo;
 import org.geotools.geometry.GeneralEnvelope;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,8 +15,7 @@ import org.opengis.parameter.ParameterValue;
 import java.awt.*;
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OziMapReaderTest {
     private AbstractGridCoverage2DReader reader;
@@ -61,5 +61,13 @@ public class OziMapReaderTest {
     @Test
     public void testGetOriginalGridRange() {
         assertNotNull(reader.getOriginalGridRange());
+    }
+
+    @Test
+    public void testGetInfo() {
+        assertTrue(reader.getInfo() instanceof FileServiceInfo);
+        assertTrue(((FileServiceInfo) reader.getInfo()).getFiles(null).hasNext());
+        assertEquals("mer.map", ((FileServiceInfo) reader.getInfo()).getFiles(null).next().getMainFile().getName());
+        assertEquals("mer.jpg", ((FileServiceInfo) reader.getInfo()).getFiles(null).next().getSupportFiles().get(0).getName());
     }
 }

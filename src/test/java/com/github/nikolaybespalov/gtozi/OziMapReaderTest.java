@@ -34,7 +34,7 @@ public class OziMapReaderTest {
     @Test
     public void testRead() throws IOException {
         // prepare to read a sub.sampled image
-        GeneralParameterValue[] params = new GeneralParameterValue[1];
+        GeneralParameterValue[] params = new GeneralParameterValue[2];
         // Define a GridGeometry in order to reduce the output
         final ParameterValue<GridGeometry2D> gg =
                 AbstractGridFormat.READ_GRIDGEOMETRY2D.createValue();
@@ -48,6 +48,7 @@ public class OziMapReaderTest {
         final GridEnvelope2D range = new GridEnvelope2D(rasterArea);
         gg.setValue(new GridGeometry2D(range, envelope));
         params[0] = gg;
+        params[1] = AbstractGridFormat.SUGGESTED_TILE_SIZE.createValue();
 
         assertNotNull(reader.read(params));
     }

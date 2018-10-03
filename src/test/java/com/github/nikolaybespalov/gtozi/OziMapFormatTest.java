@@ -3,6 +3,7 @@ package com.github.nikolaybespalov.gtozi;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.factory.GeoTools;
 import org.junit.Test;
+import org.opengis.parameter.ParameterValueGroup;
 
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,5 +49,13 @@ public class OziMapFormatTest {
         assertNull(format.getDefaultImageIOWriteParameters());
     }
 
+    @Test
+    public void testGetReadParameters() {
+        ParameterValueGroup readParameters = format.getReadParameters();
 
+        assertEquals(2, readParameters.values().size());
+
+        assertEquals(AbstractGridFormat.READ_GRIDGEOMETRY2D.getName(), readParameters.values().get(0).getDescriptor().getName());
+        assertEquals(AbstractGridFormat.SUGGESTED_TILE_SIZE.getName(), readParameters.values().get(1).getDescriptor().getName());
+    }
 }

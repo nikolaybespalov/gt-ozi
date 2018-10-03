@@ -1,30 +1,39 @@
 package com.github.nikolaybespalov.gtozi;
 
-import org.apache.commons.io.FilenameUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridEnvelope2D;
+import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
+import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.data.DataSourceException;
 import org.geotools.data.FileGroupProvider;
-import org.geotools.data.WorldFileWriter;
 import org.geotools.factory.Hints;
-import org.geotools.gce.image.WorldImageReader;
 import org.geotools.geometry.GeneralEnvelope;
-import org.geotools.metadata.iso.citation.Citations;
+import org.geotools.geometry.jts.JTS;
+import org.geotools.image.io.ImageIOExt;
 import org.geotools.metadata.iso.spatial.PixelTranslation;
-import org.geotools.referencing.wkt.Formattable;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.operation.transform.ProjectiveTransform;
 import org.opengis.coverage.grid.Format;
-import org.opengis.coverage.grid.GridEnvelope;
+import org.opengis.geometry.Envelope;
 import org.opengis.parameter.GeneralParameterValue;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.parameter.ParameterValue;
 import org.opengis.referencing.datum.PixelInCell;
 import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.spi.ImageReaderSpi;
+import javax.media.jai.ImageLayout;
+import javax.media.jai.JAI;
+import javax.media.jai.RenderedOp;
+import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.renderable.ParameterBlock;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,8 +43,9 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
         System.setProperty("org.geotools.referencing.forceXY", "true");
     }
 
-    private OziMapFileReader oziMapFileReader;
-    private WorldImageReader worldImageReader;
+    private final OziMapFileReader oziMapFileReader;
+    private final ImageReaderSpi imageReaderSpi;
+    private final MathTransform model2Raster;
 
     public OziMapReader(Object input) throws DataSourceException {
         this(input, null);
@@ -53,39 +63,41 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
             oziMapFileReader = new OziMapFileReader(inputFile);
 
-            CoordinateReferenceSystem crs = oziMapFileReader.getCoordinateReferenceSystem();
-            MathTransform grid2Crs = oziMapFileReader.getGrid2Crs();
+            coverageName = oziMapFileReader.getTitle();
 
-            String baseName = FilenameUtils.removeExtension(oziMapFileReader.getImageFile().getAbsolutePath());
+            crs = oziMapFileReader.getCoordinateReferenceSystem();
+            raster2Model = PixelTranslation.translate(oziMapFileReader.getGrid2Crs(), PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER);
+            model2Raster = raster2Model.inverse();
 
-            Path wldPath = Paths.get(baseName + ".wld");
+            File imageFile = oziMapFileReader.getImageFile();
 
-            if (wldPath.toFile().exists()) {
-                Files.delete(Paths.get(baseName + ".wld"));
-            }
+            inStreamSPI = ImageIOExt.getImageInputStreamSPI(imageFile);
 
-            Files.createFile(wldPath);
+            inStream = inStreamSPI.createInputStreamInstance(imageFile, ImageIO.getUseCache(), ImageIO.getCacheDirectory());
 
-            new WorldFileWriter(wldPath.toFile(), PixelTranslation.translate(grid2Crs, PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER)); // Нет необходимости закрывать WorldFileWriter
+            ImageReader imageReader = ImageIOExt.getImageioReader(inStream);
+            imageReader.setInput(inStream);
 
-            Path prjPath = Paths.get(baseName + ".prj");
+            imageReaderSpi = imageReader.getOriginatingProvider();
 
-            if (prjPath.toFile().exists()) {
-                Files.delete(Paths.get(baseName + ".prj"));
-            }
+            int hrWidth = imageReader.getWidth(0);
+            int hrHeight = imageReader.getHeight(0);
+            final Rectangle actualDim = new Rectangle(0, 0, hrWidth, hrHeight);
 
-            Files.createFile(prjPath);
+            originalGridRange = new GridEnvelope2D(actualDim);
 
-            final FileWriter prjWriter = new FileWriter(prjPath.toFile());
+            final AffineTransform tempTransform =
+                    new AffineTransform((AffineTransform) raster2Model);
+            tempTransform.translate(-0.5, -0.5);
 
-            prjWriter.write(((Formattable) crs).toWKT(Citations.OGC, 2));
-
-            prjWriter.close();
-
-            worldImageReader = new WorldImageReader(oziMapFileReader.getImageFile());
+            originalEnvelope =
+                    CRS.transform(
+                            ProjectiveTransform.create(tempTransform),
+                            new GeneralEnvelope(actualDim));
+            originalEnvelope.setCoordinateReferenceSystem(crs);
         } catch (DataSourceException e) {
             throw e;
-        } catch (IOException e) {
+        } catch (IOException | TransformException e) {
             throw new DataSourceException(e);
         }
     }
@@ -97,27 +109,108 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
     @Override
     public GridCoverage2D read(GeneralParameterValue[] params) throws IllegalArgumentException, IOException {
-        return worldImageReader.read(params);
-    }
+        // /////////////////////////////////////////////////////////////////////
+        //
+        // do we have parameters to use for reading from the specified source
+        //
+        // /////////////////////////////////////////////////////////////////////
+        GeneralEnvelope requestedEnvelope = null;
+        //Rectangle dim = null;
+        int[] suggestedTileSize = null;
+        if (params != null) {
+            // /////////////////////////////////////////////////////////////////////
+            //
+            // Checking params
+            //
+            // /////////////////////////////////////////////////////////////////////
+            for (GeneralParameterValue param1 : params) {
+                final ParameterValue param = (ParameterValue) param1;
+                final String name = param.getDescriptor().getName().getCode();
+                if (name.equals(AbstractGridFormat.READ_GRIDGEOMETRY2D.getName().toString())) {
+                    final GridGeometry2D gg = (GridGeometry2D) param.getValue();
+                    requestedEnvelope = new GeneralEnvelope((Envelope) gg.getEnvelope2D());
+                    //dim = gg.getGridRange2D().getBounds();
+                } else if (name.equals(AbstractGridFormat.SUGGESTED_TILE_SIZE.getName().toString())) {
+                    String suggestedTileSize_ = (String) param.getValue();
+                    if (suggestedTileSize_ != null && suggestedTileSize_.length() > 0) {
+                        suggestedTileSize_ = suggestedTileSize_.trim();
+                        int commaPosition = suggestedTileSize_.indexOf(",");
+                        if (commaPosition < 0) {
+                            int tileDim = Integer.parseInt(suggestedTileSize_);
+                            suggestedTileSize = new int[]{tileDim, tileDim};
+                        } else {
+                            int tileW =
+                                    Integer.parseInt(
+                                            suggestedTileSize_.substring(0, commaPosition));
+                            int tileH =
+                                    Integer.parseInt(
+                                            suggestedTileSize_.substring(commaPosition + 1));
+                            suggestedTileSize = new int[]{tileW, tileH};
+                        }
+                    }
+                }
+            }
+        }
 
-    @Override
-    public GridEnvelope getOriginalGridRange() {
-        return worldImageReader.getOriginalGridRange();
-    }
+        //
+        // set params
+        //
+        Integer imageChoice = 0;
+        final ImageReadParam readP = new ImageReadParam();
 
-    @Override
-    public GeneralEnvelope getOriginalEnvelope() {
-        return worldImageReader.getOriginalEnvelope();
-    }
+        if (requestedEnvelope != null) {
+            try {
+                com.vividsolutions.jts.geom.Envelope sourceGridRange = JTS.transform(new com.vividsolutions.jts.geom.Envelope(
+                        requestedEnvelope.getMinimum(0),
+                        requestedEnvelope.getMaximum(0),
+                        requestedEnvelope.getMinimum(1),
+                        requestedEnvelope.getMaximum(1)), model2Raster);
 
-    @Override
-    public GeneralEnvelope getOriginalEnvelope(String coverageName) {
-        return worldImageReader.getOriginalEnvelope(coverageName);
-    }
+                readP.setSourceRegion(new Rectangle((int) sourceGridRange.getMinX(), (int) sourceGridRange.getMinY(), (int) sourceGridRange.getMaxX() - (int) sourceGridRange.getMinX(), (int) sourceGridRange.getMaxY() - (int) sourceGridRange.getMinY()));
+            } catch (TransformException e) {
+                //return null;
+            }
+        }
 
-    @Override
-    public CoordinateReferenceSystem getCoordinateReferenceSystem() {
-        return worldImageReader.getCoordinateReferenceSystem();
+        Hints newHints = null;
+        if (suggestedTileSize != null) {
+            newHints = hints.clone();
+            final ImageLayout layout = new ImageLayout();
+            layout.setTileGridXOffset(0);
+            layout.setTileGridYOffset(0);
+            layout.setTileHeight(suggestedTileSize[1]);
+            layout.setTileWidth(suggestedTileSize[0]);
+            newHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
+        }
+
+        final ParameterBlock pbjRead = new ParameterBlock();
+        pbjRead.add(
+                inStreamSPI != null
+                        ? inStreamSPI.createInputStreamInstance(
+                        oziMapFileReader.getImageFile(), ImageIO.getUseCache(), ImageIO.getCacheDirectory())
+                        : ImageIO.createImageInputStream(oziMapFileReader.getImageFile()));
+        // pbjRead.add(wmsRequest ? ImageIO
+        // .createImageInputStream(((URL) source).openStream()) : ImageIO
+        // .createImageInputStream(source));
+        pbjRead.add(imageChoice);
+        pbjRead.add(Boolean.FALSE);
+        pbjRead.add(Boolean.FALSE);
+        pbjRead.add(Boolean.FALSE);
+        pbjRead.add(null);
+        pbjRead.add(null);
+        pbjRead.add(readP);
+        pbjRead.add(imageReaderSpi.createReaderInstance());
+        final RenderedOp coverageRaster = JAI.create("ImageRead", pbjRead, newHints);
+
+        //imageReaderSpi.createReaderInstance().read(imageChoice, readP);
+
+        // /////////////////////////////////////////////////////////////////////
+        //
+        // BUILDING COVERAGE
+        //
+        // /////////////////////////////////////////////////////////////////////
+        AffineTransform rasterToModel = getRescaledRasterToModel(coverageRaster);
+        return createImageCoverage(coverageRaster, ProjectiveTransform.create(rasterToModel));
     }
 
     @Override
@@ -129,11 +222,6 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
         }
 
         return files;
-    }
-
-    @Override
-    public void dispose() {
-        worldImageReader.dispose();
     }
 
     // TODO: определить остальные методы

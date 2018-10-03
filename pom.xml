@@ -86,11 +86,11 @@
             <artifactId>gt-referencing</artifactId>
             <version>${org.geotools.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-image</artifactId>
-            <version>${org.geotools.version}</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.geotools</groupId>-->
+            <!--<artifactId>gt-image</artifactId>-->
+            <!--<version>${org.geotools.version}</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-epsg-hsql</artifactId>

@@ -30,7 +30,12 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
         mInfo.put("version", "0.1");
         mInfo.put("docURL", "https://github.com/nikolaybespalov/gt-ozi");
 
-        readParameters = new ParameterGroup(new DefaultParameterDescriptorGroup(mInfo, new GeneralParameterDescriptor[]{READ_GRIDGEOMETRY2D}));
+        readParameters = new ParameterGroup(
+                new DefaultParameterDescriptorGroup(mInfo,
+                        new GeneralParameterDescriptor[]{
+                                READ_GRIDGEOMETRY2D,
+                                SUGGESTED_TILE_SIZE
+                        }));
     }
 
     @Override

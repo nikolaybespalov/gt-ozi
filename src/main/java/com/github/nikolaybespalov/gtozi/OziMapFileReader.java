@@ -3,6 +3,7 @@ package com.github.nikolaybespalov.gtozi;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.geotools.data.DataSourceException;
@@ -41,9 +42,14 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
+import java.util.logging.Logger;
+
+import static org.geotools.util.logging.Logging.getLogger;
 
 @SuppressWarnings("WeakerAccess")
 final class OziMapFileReader {
+    private static final Logger LOGGER = getLogger(OziMapFormat.class);
+
     public static final Map<String, String> OZI_PROJECTION_NAME_TO_GEOTOOLS = new HashMap<>();
     private static final Map<String, Ellipsoid> ELLIPS = new HashMap<>();
     private static final Map<String, GeodeticDatum> DATUMS = new HashMap<>();
@@ -108,6 +114,7 @@ final class OziMapFileReader {
         }
     }
 
+    private String title;
     private CoordinateReferenceSystem crs;
     private MathTransform grid2Crs;
     private File imageFile;
@@ -136,6 +143,18 @@ final class OziMapFileReader {
 
             if (!StringUtils.startsWith(header, "OziExplorer Map Data File")) {
                 throw new DataSourceException("File " + file.getAbsolutePath() + " does not a OziExplorer map data file.");
+            }
+
+            //
+            // Parse and validate file header
+            //
+
+            title = parseTitle(lines);
+
+            if (StringUtils.isEmpty(title)) {
+                LOGGER.warning("File " + file.getAbsolutePath() + " does not contain a title.");
+
+                title = FilenameUtils.removeExtension(file.getName());
             }
 
             //
@@ -190,6 +209,10 @@ final class OziMapFileReader {
         }
     }
 
+    public String getTitle() {
+        return title;
+    }
+
     public CoordinateReferenceSystem getCoordinateReferenceSystem() {
         return crs;
     }
@@ -204,6 +227,10 @@ final class OziMapFileReader {
 
     private String parseHeader(List<String> lines) {
         return lines.get(0);
+    }
+
+    private String parseTitle(List<String> lines) {
+        return lines.get(1);
     }
 
     private String parseImageFilename(List<String> lines) {

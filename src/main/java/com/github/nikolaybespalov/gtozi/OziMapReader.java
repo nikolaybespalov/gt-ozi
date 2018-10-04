@@ -50,7 +50,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
     private final ImageReaderSpi imageReaderSpi;
 
     public OziMapReader(Object input) throws DataSourceException {
-        this(input, null);
+        this(input, new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE));
     }
 
     public OziMapReader(Object input, Hints uHints) throws DataSourceException {
@@ -68,8 +68,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
             coverageName = oziMapFileReader.getTitle();
 
             crs = oziMapFileReader.getCoordinateReferenceSystem();
-            raster2Model = PixelTranslation.translate(oziMapFileReader.getGrid2Crs(), PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER);
-            //raster2Model = oziMapFileReader.getGrid2Crs();
+            raster2Model = oziMapFileReader.getGrid2Crs();
 
             File imageFile = oziMapFileReader.getImageFile();
 
@@ -90,7 +89,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
                 originalEnvelope =
                         CRS.transform(
-                                raster2Model,
+                                PixelTranslation.translate(oziMapFileReader.getGrid2Crs(), PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER),
                                 new GeneralEnvelope(actualDim));
                 originalEnvelope.setCoordinateReferenceSystem(crs);
             }
@@ -123,7 +122,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
                     try {
                         final Rectangle sourceArea =
-                                CRS.transform(raster2Model.inverse(), gg.getEnvelope2D())
+                                CRS.transform(PixelTranslation.translate(oziMapFileReader.getGrid2Crs(), PixelInCell.CELL_CENTER, PixelInCell.CELL_CORNER).inverse(), gg.getEnvelope2D())
                                         .toRectangle2D()
                                         .getBounds();
 

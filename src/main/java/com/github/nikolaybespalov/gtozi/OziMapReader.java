@@ -69,6 +69,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
             crs = oziMapFileReader.getCoordinateReferenceSystem();
             raster2Model = PixelTranslation.translate(oziMapFileReader.getGrid2Crs(), PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER);
+            //raster2Model = oziMapFileReader.getGrid2Crs();
 
             File imageFile = oziMapFileReader.getImageFile();
 
@@ -87,13 +88,9 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
                 originalGridRange = new GridEnvelope2D(actualDim);
 
-                final AffineTransform tempTransform =
-                        new AffineTransform((AffineTransform) raster2Model);
-                tempTransform.translate(-0.5, -0.5);
-
                 originalEnvelope =
                         CRS.transform(
-                                ProjectiveTransform.create(tempTransform),
+                                raster2Model,
                                 new GeneralEnvelope(actualDim));
                 originalEnvelope.setCoordinateReferenceSystem(crs);
             }
@@ -125,14 +122,19 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
                     final GridGeometry2D gg = (GridGeometry2D) param.getValue();
 
                     try {
-                        readP.setSourceRegion(gg.worldToGrid(gg.getEnvelope2D()));
+                        final Rectangle sourceArea =
+                                CRS.transform(raster2Model.inverse(), gg.getEnvelope2D())
+                                        .toRectangle2D()
+                                        .getBounds();
+
+                        readP.setSourceRegion(sourceArea);
                     } catch (TransformException e) {
                         LOGGER.warning("Filed to setup source region: " + e.getLocalizedMessage());
                     }
                 } else if (name.equals(AbstractGridFormat.SUGGESTED_TILE_SIZE.getName().toString())) {
                     String suggestedTileSize = (String) param.getValue();
 
-                    String[] tileSizeValues = suggestedTileSize.split(",");
+                    String[] tileSizeValues = suggestedTileSize.split(AbstractGridFormat.TILE_SIZE_SEPARATOR);
 
                     int tileWidth;
                     int tileHeight;

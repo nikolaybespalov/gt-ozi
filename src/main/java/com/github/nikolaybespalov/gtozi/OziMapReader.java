@@ -130,32 +130,29 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
                         LOGGER.warning("Filed to setup source region: " + e.getLocalizedMessage());
                     }
                 } else if (name.equals(AbstractGridFormat.SUGGESTED_TILE_SIZE.getName().toString())) {
-                    String suggestedTileSize_ = (String) param.getValue();
-                    if (suggestedTileSize_ != null && suggestedTileSize_.length() > 0) {
-                        suggestedTileSize_ = suggestedTileSize_.trim();
-                        int commaPosition = suggestedTileSize_.indexOf(",");
+                    String suggestedTileSize = (String) param.getValue();
 
-                        int tileWidth;
-                        int tileHeight;
+                    String[] tileSizeValues = suggestedTileSize.split(",");
 
-                        if (commaPosition < 0) {
-                            tileWidth = tileHeight = Integer.parseInt(suggestedTileSize_);
-                        } else {
-                            tileWidth =
-                                    Integer.parseInt(
-                                            suggestedTileSize_.substring(0, commaPosition));
-                            tileHeight =
-                                    Integer.parseInt(
-                                            suggestedTileSize_.substring(commaPosition + 1));
-                        }
+                    int tileWidth;
+                    int tileHeight;
 
-                        final ImageLayout layout = new ImageLayout();
-                        layout.setTileGridXOffset(0);
-                        layout.setTileGridYOffset(0);
-                        layout.setTileWidth(tileWidth);
-                        layout.setTileHeight(tileHeight);
-                        readHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
+                    if (tileSizeValues.length == 1) {
+                        tileWidth = tileHeight = Integer.parseInt(tileSizeValues[0]);
+                    } else if (tileSizeValues.length == 2) {
+                        tileWidth = Integer.parseInt(tileSizeValues[0]);
+                        tileHeight = Integer.parseInt(tileSizeValues[1]);
+                    } else {
+                        LOGGER.warning("Failed to parse tile size: " + suggestedTileSize);
+                        continue;
                     }
+
+                    final ImageLayout layout = new ImageLayout();
+                    layout.setTileGridXOffset(0);
+                    layout.setTileGridYOffset(0);
+                    layout.setTileWidth(tileWidth);
+                    layout.setTileHeight(tileHeight);
+                    readHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
                 }
             }
         }

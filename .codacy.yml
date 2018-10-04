@@ -2,3 +2,4 @@ exclude_paths:
   - '**/test/**'
   - '*.xml'
   - '**/*.xml'
+  - 'README.md'

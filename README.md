@@ -4,10 +4,38 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/8c3475abc76c4885a5f72875edb0fd16)](https://www.codacy.com/app/nikolaybespalov/gt-ozi)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.nikolaybespalov/gt-ozi/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.nikolaybespalov/gt-ozi)
 
-GeoTools plugin that allows you to read [OziExplorer](http://www.oziexplorer3.com/) spatial reference file(.MAP) 
-without using GDAL/[OziApi](http://www.oziexplorer3.com/oziapi/oziapi.html) or any other environment dependencies.
+GeoTools plugin that allows you to use [OziExplorer](http://www.oziexplorer3.com/) spatial reference file(.MAP) in your Java application.
 
-The main idea is to parse the projection parameters from .MAP file and provide them to [WorldImageReader](http://docs.geotools.org/stable/javadocs/org/geotools/gce/image/WorldImageReader.html).
+![OziExplorer](README.png "OziExplorer")
+
+It's as easy as reading any other map file
+```
+    File mapFile = new File("World.map");
+    
+    AbstractGridFormat oziFormat = GridFormatFinder.findFormat(mapFile);
+
+    AbstractGridCoverage2DReader oziReader = oziFormat.getReader(mapFile);
+    
+    GridCoverage2D coverage2D = oziReader.read(...);
+```
+Just add dependency to your _pom.xml_
+```xml
+    <dependency>
+        <groupId>com.github.nikolaybespalov</groupId>
+        <artifactId>gt-ozi</artifactId>
+        <version>${geotools.ozi.version}</version>
+        <scope>runtime</scope>
+    </dependency>
+```
+Or to your _build.gradle_
+```
+    dependencies {
+        runtime("com.github.nikolaybespalov:gt-ozi:${geotools.ozi.version}")
+    }
+```
+And your project will be able to work with .ozf files!
+
+~~The main idea is to parse the projection parameters from .MAP file and provide them to WorldImageReader.~~
 
 The code is based on the implementation of the OZI dataset support in GDAL.
 

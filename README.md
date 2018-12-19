@@ -33,7 +33,7 @@ Or to your _build.gradle_
         runtime("com.github.nikolaybespalov:gt-ozi:${geotools.ozi.version}")
     }
 ```
-And your project will be able to work with .ozf files!
+And your project will be able to work with .MAP files!
 
 ~~The main idea is to parse the projection parameters from .MAP file and provide them to WorldImageReader.~~
 

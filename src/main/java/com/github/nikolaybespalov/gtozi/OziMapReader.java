@@ -73,7 +73,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
             crs = oziMapFileReader.getCoordinateReferenceSystem();
             raster2Model = oziMapFileReader.getGrid2Crs();
 
-            File imageFile = oziMapFileReader.getImageFile();
+            File imageFile = oziMapFileReader.getRasterFile();
 
             inStreamSPI = ImageIOExt.getImageInputStreamSPI(imageFile);
 
@@ -176,7 +176,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
         pbjRead.add(
                 inStreamSPI.createInputStreamInstance(
-                        oziMapFileReader.getImageFile(), ImageIO.getUseCache(), ImageIO.getCacheDirectory()));
+                        oziMapFileReader.getRasterFile(), ImageIO.getUseCache(), ImageIO.getCacheDirectory()));
 
         pbjRead.add(imageChoice);
         pbjRead.add(Boolean.FALSE);
@@ -198,7 +198,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
         List<FileGroupProvider.FileGroup> files = super.getFiles();
 
         if (files.size() > 0) {
-            files.get(0).setSupportFiles(Collections.singletonList(oziMapFileReader.getImageFile()));
+            files.get(0).setSupportFiles(Collections.singletonList(oziMapFileReader.getRasterFile()));
         }
 
         return files;

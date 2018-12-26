@@ -117,7 +117,7 @@ final class OziMapFileReader {
     private String title;
     private CoordinateReferenceSystem crs;
     private MathTransform grid2Crs;
-    private File imageFile;
+    private File rasterFile;
 
     public OziMapFileReader(File file) throws DataSourceException {
         try {
@@ -158,23 +158,23 @@ final class OziMapFileReader {
             }
 
             //
-            // Parse and validate image filename
+            // Parse and validate raster filename
             //
 
-            String imageFilename = parseImageFilename(lines);
+            String rasterFilename = parseRasterFilename(lines);
 
-            if (StringUtils.isEmpty(imageFilename)) {
-                throw new DataSourceException("Map file does not contain an image filename");
+            if (StringUtils.isEmpty(rasterFilename)) {
+                throw new DataSourceException("Map file does not contain an raster filename");
             }
 
-            imageFile = new File(imageFilename);
+            rasterFile = new File(rasterFilename);
 
-            if (!imageFile.exists()) {
-                imageFile = new File(file.getParent(), imageFilename);
+            if (!rasterFile.exists()) {
+                rasterFile = new File(file.getParent(), rasterFile.getName());
             }
 
-            if (!Files.isReadable(imageFile.toPath())) {
-                throw new DataSourceException("Image file " + imageFile.getAbsolutePath() + " can not be read.");
+            if (!Files.isReadable(rasterFile.toPath())) {
+                throw new DataSourceException("Raster file " + rasterFile.getAbsolutePath() + " can not be read.");
             }
 
             //
@@ -221,8 +221,8 @@ final class OziMapFileReader {
         return grid2Crs;
     }
 
-    public File getImageFile() {
-        return imageFile;
+    public File getRasterFile() {
+        return rasterFile;
     }
 
     private String parseHeader(List<String> lines) {
@@ -233,7 +233,7 @@ final class OziMapFileReader {
         return lines.get(1);
     }
 
-    private String parseImageFilename(List<String> lines) {
+    private String parseRasterFilename(List<String> lines) {
         return lines.get(2);
     }
 

@@ -5,6 +5,7 @@ import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
+import org.geotools.coverage.grid.io.OverviewPolicy;
 import org.geotools.data.DataSourceException;
 import org.geotools.data.FileGroupProvider;
 import org.geotools.factory.Hints;
@@ -12,8 +13,10 @@ import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.image.io.ImageIOExt;
 import org.geotools.metadata.iso.spatial.PixelTranslation;
 import org.geotools.referencing.CRS;
+import org.geotools.referencing.operation.matrix.XAffineTransform;
 import org.geotools.referencing.operation.transform.ProjectiveTransform;
 import org.opengis.coverage.grid.Format;
+import org.opengis.geometry.Envelope;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.parameter.ParameterValue;
 import org.opengis.referencing.datum.PixelInCell;
@@ -89,9 +92,18 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
                 originalEnvelope =
                         CRS.transform(
-                                PixelTranslation.translate(oziMapFileReader.getGrid2Crs(), PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER),
+                                PixelTranslation.translate(oziMapFileReader.getGrid2Crs(),
+                                        PixelInCell.CELL_CORNER, PixelInCell.CELL_CENTER),
                                 new GeneralEnvelope(actualDim));
                 originalEnvelope.setCoordinateReferenceSystem(crs);
+
+                final AffineTransform tempTransform =
+                        new AffineTransform((AffineTransform) raster2Model);
+                tempTransform.translate(-0.5, -0.5);
+
+                highestRes = new double[2];
+                highestRes[0] = XAffineTransform.getScaleX0(tempTransform);
+                highestRes[1] = XAffineTransform.getScaleY0(tempTransform);
             }
         } catch (DataSourceException e) {
             throw e;
@@ -109,29 +121,21 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
     public GridCoverage2D read(GeneralParameterValue[] params) throws IllegalArgumentException, IOException {
         Hints readHints = new Hints();
 
-        Integer imageChoice = 0;
-        final ImageReadParam readP = new ImageReadParam();
+        GeneralEnvelope requestedEnvelope = null;
+        Rectangle dim = null;
+        OverviewPolicy overviewPolicy = null;
 
         if (params != null) {
-            for (GeneralParameterValue param1 : params) {
-                final ParameterValue param = (ParameterValue) param1;
+            for (GeneralParameterValue param : params) {
                 final String name = param.getDescriptor().getName().getCode();
+                final Object value = ((ParameterValue) param).getValue();
 
                 if (name.equals(AbstractGridFormat.READ_GRIDGEOMETRY2D.getName().toString())) {
-                    final GridGeometry2D gg = (GridGeometry2D) param.getValue();
-
-                    try {
-                        final Rectangle sourceArea =
-                                CRS.transform(PixelTranslation.translate(oziMapFileReader.getGrid2Crs(), PixelInCell.CELL_CENTER, PixelInCell.CELL_CORNER).inverse(), gg.getEnvelope2D())
-                                        .toRectangle2D()
-                                        .getBounds();
-
-                        readP.setSourceRegion(sourceArea);
-                    } catch (TransformException e) {
-                        LOGGER.warning("Filed to setup source region: " + e.getLocalizedMessage());
-                    }
+                    final GridGeometry2D gg = (GridGeometry2D) value;
+                    requestedEnvelope = new GeneralEnvelope((Envelope) gg.getEnvelope2D());
+                    dim = gg.getGridRange2D().getBounds();
                 } else if (name.equals(AbstractGridFormat.SUGGESTED_TILE_SIZE.getName().toString())) {
-                    String suggestedTileSize = (String) param.getValue();
+                    String suggestedTileSize = (String) value;
 
                     String[] tileSizeValues = suggestedTileSize.split(AbstractGridFormat.TILE_SIZE_SEPARATOR);
 
@@ -154,8 +158,18 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
                     layout.setTileWidth(tileWidth);
                     layout.setTileHeight(tileHeight);
                     readHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
+                } else if (name.equals(AbstractGridFormat.OVERVIEW_POLICY.getName().toString())) {
+                    overviewPolicy = (OverviewPolicy) value;
                 }
             }
+        }
+
+        Integer imageChoice;
+        final ImageReadParam readP = new ImageReadParam();
+        try {
+            imageChoice = setReadParams(overviewPolicy, readP, requestedEnvelope, dim);
+        } catch (TransformException e) {
+            throw new DataSourceException(e);
         }
 
         final ParameterBlock pbjRead = new ParameterBlock();

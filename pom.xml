@@ -111,6 +111,7 @@
             <artifactId>commons-csv</artifactId>
             <version>1.5</version>
         </dependency>
+        <!-- Test dependencies -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
@@ -120,6 +121,12 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-geotiff</artifactId>
+            <version>${org.geotools.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-sample-data</artifactId>
             <version>${org.geotools.version}</version>
             <scope>test</scope>
         </dependency>
@@ -243,6 +250,7 @@
                 <artifactId>maven-gpg-plugin</artifactId>
                 <version>1.5</version>
                 <configuration>
+                    <!--suppress UnresolvedMavenProperty -->
                     <passphrase>${env.GPG_PASSPHRASE}</passphrase>
                     <gpgArguments>--batch</gpgArguments>
                     <skip>${skipNexusStagingDeployMojo}</skip>

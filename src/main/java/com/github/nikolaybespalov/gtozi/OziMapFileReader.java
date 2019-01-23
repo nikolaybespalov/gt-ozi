@@ -37,11 +37,12 @@ import javax.measure.unit.SI;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static org.geotools.util.logging.Logging.getLogger;
@@ -72,7 +73,13 @@ final class OziMapFileReader {
         // Read ozi_datum.csv and ozi_ellips.csv
         //
 
-        try (CSVParser ellipsParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_ellips.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
+        InputStream oziEllipsIs = OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_ellips.csv");
+
+        if (oziEllipsIs == null) {
+            throw new ExceptionInInitializerError("ozi_ellips.csv not found");
+        }
+
+        try (CSVParser ellipsParser = new CSVParser(new InputStreamReader(oziEllipsIs), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
             for (CSVRecord ellipsRecord : ellipsParser) {
                 String ellipsoidCode = ellipsRecord.get("ELLIPSOID_CODE");
                 String name = ellipsRecord.get("NAME");
@@ -87,7 +94,14 @@ final class OziMapFileReader {
             throw new ExceptionInInitializerError(e);
         }
 
-        try (CSVParser datumParser = new CSVParser(new InputStreamReader(OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_datum.csv")), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#'))) {
+
+        InputStream oziDatumIs = OziMapFileReader.class.getClassLoader().getResourceAsStream("com/github/nikolaybespalov/gtozi/data/ozi_datum.csv");
+
+        if (oziDatumIs == null) {
+            throw new ExceptionInInitializerError("ozi_datum.csv not found");
+        }
+
+        try (CSVParser datumParser = new CSVParser(new InputStreamReader(oziDatumIs), CSVFormat.RFC4180.withFirstRecordAsHeader().withCommentMarker('#').withTrim())) {
             for (CSVRecord datumRecord : datumParser) {
                 String name = datumRecord.get("NAME");
                 String epsgDatumCode = datumRecord.get("EPSG_DATUM_CODE");
@@ -95,6 +109,12 @@ final class OziMapFileReader {
                 String dx = datumRecord.get("DELTAX");
                 String dy = datumRecord.get("DELTAY");
                 String dz = datumRecord.get("DELTAZ");
+
+                // CSV Parser cannot process a comment that does not start from the beginning.
+                // Need to trim tail of dz.
+                if (dz.indexOf('#') != -1) {
+                    dz = dz.substring(0, dz.indexOf('#')).trim();
+                }
 
                 GeodeticDatum datum;
 
@@ -572,8 +592,8 @@ final class OziMapFileReader {
                 throw new DataSourceException("Degenerate in at least one dimension");
             }
 
-            double pl_normalize[] = new double[6];
-            double geo_normalize[] = new double[6];
+            double[] pl_normalize = new double[6];
+            double[] geo_normalize = new double[6];
 
             pl_normalize[0] = -min_pixel / (max_pixel - min_pixel);
             pl_normalize[1] = 1.0 / (max_pixel - min_pixel);
@@ -656,7 +676,7 @@ final class OziMapFileReader {
             /* -------------------------------------------------------------------- */
             /*      Compute top/left origin.                                        */
             /* -------------------------------------------------------------------- */
-            double gt_normalized[] = new double[]{0, 0, 0, 0, 0, 0};
+            double[] gt_normalized = new double[]{0, 0, 0, 0, 0, 0};
 
             gt_normalized[0] = (sum_Lon * (sum_xx * sum_yy - sum_xy * sum_xy)
                     + sum_Lonx * (sum_y * sum_xy - sum_x * sum_yy)

@@ -12,6 +12,7 @@ import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
 import org.opengis.parameter.GeneralParameterDescriptor;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,7 +28,7 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
         mInfo.put("name", "Ozi");
         mInfo.put("description", "OziExplorer Map File Format");
         mInfo.put("vendor", "nikolaybespalov");
-        mInfo.put("version", "0.1");
+        mInfo.put("version", "0.1.17");
         mInfo.put("docURL", "https://github.com/nikolaybespalov/gt-ozi");
 
         readParameters = new ParameterGroup(
@@ -48,16 +49,17 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
         try {
             AbstractGridCoverage2DReader reader = getReader(source, hints);
 
-            if (reader != null) {
-                reader.dispose();
-
-                return true;
+            if (reader == null) {
+                return false;
             }
+
+            reader.dispose();
+
+            return true;
         } catch (Throwable t) {
             LOGGER.log(Level.SEVERE, t.getLocalizedMessage(), t);
+            return false;
         }
-
-        return false;
     }
 
     @Override
@@ -68,7 +70,12 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
     @Override
     public AbstractGridCoverage2DReader getReader(Object source, Hints hints) {
         if (source == null) {
-            LOGGER.severe("input should not be null");
+            LOGGER.severe("source should not be null");
+            return null;
+        }
+
+        if (!(source instanceof File)) {
+            LOGGER.severe("source should be a File");
             return null;
         }
 

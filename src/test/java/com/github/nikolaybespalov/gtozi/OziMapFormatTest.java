@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.opengis.parameter.ParameterValueGroup;
 
 import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class OziMapFormatTest {
     private final AbstractGridFormat format = new OziMapFormat();
@@ -16,26 +15,58 @@ public class OziMapFormatTest {
         assertEquals("Ozi", format.getName());
         assertEquals("OziExplorer Map File Format", format.getDescription());
         assertEquals("nikolaybespalov", format.getVendor());
-        assertEquals("0.1", format.getVersion());
+        assertEquals("0.1.17", format.getVersion());
         assertEquals("https://github.com/nikolaybespalov/gt-ozi", format.getDocURL());
     }
 
     @Test
-    public void testAccepts() {
+    public void acceptsWithNullShouldReturnFalse() {
         assertFalse(format.accepts(null));
+    }
+
+    @Test
+    public void acceptsWithNonFileShouldReturnFalse() {
         assertFalse(format.accepts("string"));
-        assertFalse(format.accepts(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff")));
-        assertTrue(format.accepts(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+    }
+
+    @Test
+    public void acceptsWithNonMapFileShouldReturnFalse() {
+        assertFalse(format.accepts(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.jpg")));
+    }
+
+    @Test
+    public void acceptsWithMapFileWithoutRasterFileLineShouldReturnFalse() {
         assertFalse(format.accepts(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map")));
     }
 
     @Test
-    public void testGetReader() {
+    public void acceptsWithCorrectMapFileShouldReturnTrue() {
+        assertTrue(format.accepts(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+    }
+
+    @Test
+    public void getReaderWithNullShouldReturnNull() {
         assertNull(format.getReader(null));
-        assertThrows(IllegalArgumentException.class, () -> format.getReader("string"));
-        assertNull(format.getReader(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.map.tiff")));
-        assertNotNull(format.getReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+    }
+
+    @Test
+    public void getReaderWithNonFileShouldReturnNull() {
+        assertNull(format.getReader("string"));
+    }
+
+    @Test
+    public void getReaderWithNonMapFileShouldReturnNull() {
+        assertNull(format.getReader(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.jpg")));
+    }
+
+    @Test
+    public void getReaderWithMapFileWithoutRasterFileLineShouldReturnNull() {
         assertNull(format.getReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map"), GeoTools.getDefaultHints()));
+    }
+
+    @Test
+    public void getReaderWithCorrectMapFileShouldReturnReader() {
+        assertNotNull(format.getReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
     }
 
     @Test

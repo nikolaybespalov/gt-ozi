@@ -23,20 +23,6 @@ public class OziMapReadTest {
     private static final String TEST_DATA_ROOT_PATH = "com/github/nikolaybespalov/gtozi/test-data/";
 
     @Test
-    public void testMercatorProjection() throws DataSourceException {
-        assertReaderEquals(
-                new GeoTiffReader(getResourceAsFile(TEST_DATA_ROOT_PATH + "mer.map.tiff")),
-                new OziMapReader(getResourceAsFile(TEST_DATA_ROOT_PATH + "mer.map")));
-    }
-
-    @Test
-    public void testTransverseMercatorProjection() throws DataSourceException {
-        assertReaderEquals(
-                new GeoTiffReader(getResourceAsFile(TEST_DATA_ROOT_PATH + "trans_mer.map.tiff")),
-                new OziMapReader(getResourceAsFile(TEST_DATA_ROOT_PATH + "trans_mer.map")));
-    }
-
-    @Test
     public void testLcc2() throws DataSourceException {
         assertReaderEquals(
                 new GeoTiffReader(getResourceAsFile(TEST_DATA_ROOT_PATH + "lcc-2.map.tiff")),

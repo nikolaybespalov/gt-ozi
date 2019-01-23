@@ -45,10 +45,6 @@ import static org.geotools.util.logging.Logging.getLogger;
 public final class OziMapReader extends AbstractGridCoverage2DReader {
     private static final Logger LOGGER = getLogger(OziMapReader.class);
 
-    static {
-        System.setProperty("org.geotools.referencing.forceXY", "true");
-    }
-
     private final OziMapFileReader oziMapFileReader;
     private final ImageReaderSpi imageReaderSpi;
 
@@ -130,36 +126,40 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
                 final String name = param.getDescriptor().getName().getCode();
                 final Object value = ((ParameterValue) param).getValue();
 
-                if (name.equals(AbstractGridFormat.READ_GRIDGEOMETRY2D.getName().toString())) {
-                    final GridGeometry2D gg = (GridGeometry2D) value;
-                    requestedEnvelope = new GeneralEnvelope((Envelope) gg.getEnvelope2D());
-                    dim = gg.getGridRange2D().getBounds();
-                } else if (name.equals(AbstractGridFormat.SUGGESTED_TILE_SIZE.getName().toString())) {
-                    String suggestedTileSize = (String) value;
+                switch (name) {
+                    case "ReadGridGeometry2D":
+                        final GridGeometry2D gg = (GridGeometry2D) value;
+                        requestedEnvelope = new GeneralEnvelope((Envelope) gg.getEnvelope2D());
+                        dim = gg.getGridRange2D().getBounds();
+                        break;
+                    case "SUGGESTED_TILE_SIZE":
+                        String suggestedTileSize = (String) value;
 
-                    String[] tileSizeValues = suggestedTileSize.split(AbstractGridFormat.TILE_SIZE_SEPARATOR);
+                        String[] tileSizeValues = suggestedTileSize.split(AbstractGridFormat.TILE_SIZE_SEPARATOR);
 
-                    int tileWidth;
-                    int tileHeight;
+                        int tileWidth;
+                        int tileHeight;
 
-                    if (tileSizeValues.length == 1) {
-                        tileWidth = tileHeight = Integer.parseInt(tileSizeValues[0]);
-                    } else if (tileSizeValues.length == 2) {
-                        tileWidth = Integer.parseInt(tileSizeValues[0]);
-                        tileHeight = Integer.parseInt(tileSizeValues[1]);
-                    } else {
-                        LOGGER.warning("Failed to parse tile size: " + suggestedTileSize);
-                        continue;
-                    }
+                        if (tileSizeValues.length == 1) {
+                            tileWidth = tileHeight = Integer.parseInt(tileSizeValues[0]);
+                        } else if (tileSizeValues.length == 2) {
+                            tileWidth = Integer.parseInt(tileSizeValues[0]);
+                            tileHeight = Integer.parseInt(tileSizeValues[1]);
+                        } else {
+                            LOGGER.warning("Failed to parse tile size: " + suggestedTileSize);
+                            continue;
+                        }
 
-                    final ImageLayout layout = new ImageLayout();
-                    layout.setTileGridXOffset(0);
-                    layout.setTileGridYOffset(0);
-                    layout.setTileWidth(tileWidth);
-                    layout.setTileHeight(tileHeight);
-                    readHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
-                } else if (name.equals(AbstractGridFormat.OVERVIEW_POLICY.getName().toString())) {
-                    overviewPolicy = (OverviewPolicy) value;
+                        final ImageLayout layout = new ImageLayout();
+                        layout.setTileGridXOffset(0);
+                        layout.setTileGridYOffset(0);
+                        layout.setTileWidth(tileWidth);
+                        layout.setTileHeight(tileHeight);
+                        readHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
+                        break;
+                    case "org.geotools.coverage.grid.io.OverviewPolicy":
+                        overviewPolicy = (OverviewPolicy) value;
+                        break;
                 }
             }
         }

@@ -592,27 +592,9 @@ final class OziMapFileReader {
                 throw new DataSourceException("Degenerate in at least one dimension");
             }
 
-            double[] pl_normalize = new double[6];
-            double[] geo_normalize = new double[6];
+            AffineTransform2D plNormalize = new AffineTransform2D(1.0 / (max_pixel - min_pixel), 0.0, 0.0, 1.0 / (max_line - min_line), -min_pixel / (max_pixel - min_pixel), -min_line / (max_line - min_line));
 
-            pl_normalize[0] = -min_pixel / (max_pixel - min_pixel);
-            pl_normalize[1] = 1.0 / (max_pixel - min_pixel);
-            pl_normalize[2] = 0.0;
-            pl_normalize[3] = -min_line / (max_line - min_line);
-            pl_normalize[4] = 0.0;
-            pl_normalize[5] = 1.0 / (max_line - min_line);
-
-            AffineTransform2D pl_normalize2 = new AffineTransform2D(pl_normalize[1], pl_normalize[2], pl_normalize[4], pl_normalize[5], pl_normalize[0], pl_normalize[3]);
-
-            geo_normalize[0] = -min_geox / (max_geox - min_geox);
-            geo_normalize[1] = 1.0 / (max_geox - min_geox);
-            geo_normalize[2] = 0.0;
-            geo_normalize[3] = -min_geoy / (max_geoy - min_geoy);
-            geo_normalize[4] = 0.0;
-            geo_normalize[5] = 1.0 / (max_geoy - min_geoy);
-
-            AffineTransform2D geo_normalize2 = new AffineTransform2D(geo_normalize[1], geo_normalize[2], geo_normalize[4], geo_normalize[5], geo_normalize[0], geo_normalize[3]);
-
+            AffineTransform2D geoNormalize = new AffineTransform2D(1.0 / (max_geox - min_geox), 0.0, 0.0, 1.0 / (max_geoy - min_geoy), -min_geox / (max_geox - min_geox), -min_geoy / (max_geoy - min_geoy));
 
             /* -------------------------------------------------------------------- */
             /* In the general case, do a least squares error approximation by       */
@@ -631,18 +613,17 @@ final class OziMapFileReader {
             double sum_Latx = 0.0;
             double sum_Laty = 0.0;
 
-
             for (CalibrationPoint cp : calibrationPoints) {
                 DirectPosition2D pixelLine = new DirectPosition2D();
 
-                pl_normalize2.transform(cp.pixelLine, pixelLine);
+                plNormalize.transform(cp.pixelLine, pixelLine);
 
                 double pixel = pixelLine.x;
                 double line = pixelLine.y;
 
                 DirectPosition2D xy = new DirectPosition2D();
 
-                geo_normalize2.transform((DirectPosition) cp.xy, xy);
+                geoNormalize.transform((DirectPosition) cp.xy, xy);
 
                 double geox = xy.x;
                 double geoy = xy.y;
@@ -671,7 +652,6 @@ final class OziMapFileReader {
             if (divisor == 0.0) {
                 throw new DataSourceException("Divisor is zero, there is no valid solution");
             }
-
 
             /* -------------------------------------------------------------------- */
             /*      Compute top/left origin.                                        */
@@ -720,8 +700,8 @@ final class OziMapFileReader {
             /*      Compose the resulting transformation with the normalization     */
             /*      geotransformations.                                             */
             /* -------------------------------------------------------------------- */
-            MathTransform2D inv_geo_normalize2 = geo_normalize2.inverse();
-            MathTransform gt1p2 = ConcatenatedTransform.create(pl_normalize2, gt_normalized2);
+            MathTransform2D inv_geo_normalize2 = geoNormalize.inverse();
+            MathTransform gt1p2 = ConcatenatedTransform.create(plNormalize, gt_normalized2);
 
             return ConcatenatedTransform.create(gt1p2, inv_geo_normalize2);
         }

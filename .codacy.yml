@@ -2,4 +2,6 @@ exclude_paths:
   - '**/test/**'
   - '*.xml'
   - '**/*.xml'
+  - '.codacy.yml'
+  - '.travis.yml'
   - 'README.md'

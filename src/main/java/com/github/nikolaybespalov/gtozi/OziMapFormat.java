@@ -31,35 +31,24 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
         mInfo.put("version", "0.1.17");
         mInfo.put("docURL", "https://github.com/nikolaybespalov/gt-ozi");
 
-        readParameters = new ParameterGroup(
-                new DefaultParameterDescriptorGroup(mInfo,
-                        new GeneralParameterDescriptor[]{
-                                READ_GRIDGEOMETRY2D,
-                                SUGGESTED_TILE_SIZE
-                        }));
+        readParameters = new ParameterGroup(new DefaultParameterDescriptorGroup(mInfo,
+                new GeneralParameterDescriptor[]{
+                        READ_GRIDGEOMETRY2D,
+                        SUGGESTED_TILE_SIZE
+                }));
     }
 
     @Override
     public boolean accepts(Object source, Hints hints) {
-        if (source == null) {
-            LOGGER.severe("input should not be null");
+        AbstractGridCoverage2DReader reader = getReader(source, hints);
+
+        if (reader == null) {
             return false;
         }
 
-        try {
-            AbstractGridCoverage2DReader reader = getReader(source, hints);
+        reader.dispose();
 
-            if (reader == null) {
-                return false;
-            }
-
-            reader.dispose();
-
-            return true;
-        } catch (Throwable t) {
-            LOGGER.log(Level.SEVERE, t.getLocalizedMessage(), t);
-            return false;
-        }
+        return true;
     }
 
     @Override

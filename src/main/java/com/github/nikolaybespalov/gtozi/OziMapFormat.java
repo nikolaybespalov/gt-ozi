@@ -63,11 +63,6 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
             return null;
         }
 
-        if (!(source instanceof File)) {
-            LOGGER.severe("source should be a File");
-            return null;
-        }
-
         try {
             return new OziMapReader(source);
         } catch (DataSourceException e) {

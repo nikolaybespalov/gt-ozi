@@ -28,6 +28,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CRSFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.crs.ProjectedCRS;
 import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.datum.DatumFactory;
 import org.opengis.referencing.datum.Ellipsoid;
@@ -322,59 +323,15 @@ final class OziMapFileReader {
     }
 
     private CoordinateReferenceSystem createCrs(List<String> lines, String projectionName, String[] projectionSetup, GeographicCRS geoCrs) throws DataSourceException, FactoryException {
-        CoordinateReferenceSystem crs;
-
-        //  Parameters:
-        //    1. Latitude Origin
-        //    2. Longitude Origin
-        //    3. K Factor
-        //    4. False Easting
-        //    5. False Northing
-        //    6. Latitude 1
-        //    7. Latitude 2
-        //    8. Height - used in the Vertical Near-Sided Perspective Projection
-        //    9. Sat - not used
-        //    10. Path - not used
-
-        MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
-        CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+//        MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+//        CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
 
         if ("Latitude/Longitude".equals(projectionName)) {
-            crs = geoCrs;
+            return geoCrs;
         } else if ("Mercator".equals(projectionName)) {
-            ParameterValueGroup projectionParameters = mtFactory.getDefaultParameters("Mercator_1SP");
-
-            double scaleFactor = NumberUtils.toDouble(projectionSetup[3], 1.0);
-
-            projectionParameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(projectionSetup[1]));
-            projectionParameters.parameter("central_meridian").setValue(NumberUtils.toDouble(projectionSetup[2]));
-            projectionParameters.parameter("scale_factor").setValue(scaleFactor);
-            projectionParameters.parameter("false_easting").setValue(NumberUtils.toDouble(projectionSetup[4]));
-            projectionParameters.parameter("false_northing").setValue(NumberUtils.toDouble(projectionSetup[5]));
-
-            Map<String, Object> projCsProperties = new HashMap<>();
-
-            projCsProperties.put(NAME_KEY, "unnamed");
-
-            Conversion conversion = new DefiningConversion("Transverse_Mercator", projectionParameters);
-
-            crs = crsFactory.createProjectedCRS(projCsProperties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
+            return createProjectedCrs("unnamed", projectionName, projectionSetup, geoCrs);
         } else if ("Transverse Mercator".equals(projectionName)) {
-            ParameterValueGroup projectionParameters = mtFactory.getDefaultParameters("Transverse_Mercator");
-
-            projectionParameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(projectionSetup[1]));
-            projectionParameters.parameter("central_meridian").setValue(NumberUtils.toDouble(projectionSetup[2]));
-            projectionParameters.parameter("scale_factor").setValue(NumberUtils.toDouble(projectionSetup[3]));
-            projectionParameters.parameter("false_easting").setValue(NumberUtils.toDouble(projectionSetup[4]));
-            projectionParameters.parameter("false_northing").setValue(NumberUtils.toDouble(projectionSetup[5]));
-
-            Map<String, Object> projCsProperties = new HashMap<>();
-
-            projCsProperties.put(NAME_KEY, "unnamed");
-
-            Conversion conversion = new DefiningConversion("Transverse_Mercator", projectionParameters);
-
-            crs = crsFactory.createProjectedCRS(projCsProperties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
+            return createProjectedCrs("unnamed", projectionName, projectionSetup, geoCrs);
         } else if ("(UTM) Universal Transverse Mercator".equals(projectionName)) {
             int zone = -1;
             boolean north = true;
@@ -404,25 +361,58 @@ final class OziMapFileReader {
 
             String projCsName = "UTM Zone " + zone + ", Northern Hemisphere";
 
-            Map<String, Object> projCsProperties = new HashMap<>();
-
-            projCsProperties.put(NAME_KEY, projCsName);
-
-            ParameterValueGroup projectionParameters = mtFactory.getDefaultParameters("Transverse_Mercator");
-
-            projectionParameters.parameter("latitude_of_origin").setValue(0);
-            projectionParameters.parameter("central_meridian").setValue(zone * 6 - 183);
-            projectionParameters.parameter("scale_factor").setValue(0.9996);
-            projectionParameters.parameter("false_easting").setValue(500000.0);
-
-            Conversion conversion = new DefiningConversion("Transverse_Mercator", projectionParameters);
-
-            crs = crsFactory.createProjectedCRS(projCsProperties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
+            return createProjectedCrs(projCsName, projectionName, new String[]{"", "0", String.valueOf(zone * 6 - 183), "0.9996", "500000.0", ""}, geoCrs);
         } else {
             throw new DataSourceException("Unsupported projection: " + projectionName);
         }
+    }
 
-        return crs;
+    private ProjectedCRS createProjectedCrs(String name, String projectionName, String[] projectionSetup, GeographicCRS geoCrs) throws FactoryException {
+        //  Projection Setup:
+        //    1. Latitude Origin
+        //    2. Longitude Origin
+        //    3. K Factor
+        //    4. False Easting
+        //    5. False Northing
+        //    6. Latitude 1
+        //    7. Latitude 2
+        //    8. Height - used in the Vertical Near-Sided Perspective Projection
+        //    9. Sat - not used
+        //    10. Path - not used
+
+        MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+        CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+
+        String geotoolsProjectionName = OZI_PROJECTION_NAME_TO_GEOTOOLS.get(projectionName);
+
+        ParameterValueGroup projectionParameters = mtFactory.getDefaultParameters(geotoolsProjectionName);
+
+        if (NumberUtils.isCreatable(projectionSetup[1])) {
+            projectionParameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(projectionSetup[1]));
+        }
+
+        if (NumberUtils.isCreatable(projectionSetup[2])) {
+            projectionParameters.parameter("central_meridian").setValue(NumberUtils.toDouble(projectionSetup[2]));
+        }
+
+        double scaleFactor = NumberUtils.toDouble(projectionSetup[3], 1.0);
+        projectionParameters.parameter("scale_factor").setValue(scaleFactor);
+
+        if (NumberUtils.isCreatable(projectionSetup[4])) {
+            projectionParameters.parameter("false_easting").setValue(NumberUtils.toDouble(projectionSetup[4]));
+        }
+
+        if (NumberUtils.isCreatable(projectionSetup[5])) {
+            projectionParameters.parameter("false_northing").setValue(NumberUtils.toDouble(projectionSetup[5]));
+        }
+
+        Map<String, Object> projCsProperties = new HashMap<>();
+
+        projCsProperties.put(NAME_KEY, name);
+
+        Conversion conversion = new DefiningConversion(geotoolsProjectionName, projectionParameters);
+
+        return crsFactory.createProjectedCRS(projCsProperties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
     }
 
     private List<CalibrationPoint> parseCalibrationPoints(List<String> lines, MathTransform world2Crs) throws TransformException {
@@ -586,9 +576,6 @@ final class OziMapFileReader {
             double min_geoy = cp0.xy.y;
             double max_geoy = cp0.xy.y;
 
-//            CalibrationPoint minCp = cp0;
-//            CalibrationPoint maxCp = cp0;
-
             for (int i = 1; i < calibrationPoints.size(); ++i) {
                 CalibrationPoint cp = calibrationPoints.get(i);
 
@@ -601,10 +588,6 @@ final class OziMapFileReader {
                 min_geoy = Math.min(min_geoy, cp.xy.y);
                 max_geoy = Math.max(max_geoy, cp.xy.y);
             }
-
-//            if (max_geox < min_geox) {
-//                max_geox = maxCp.latLon.x;
-//            }
 
             double EPS = 1.0e-12;
 

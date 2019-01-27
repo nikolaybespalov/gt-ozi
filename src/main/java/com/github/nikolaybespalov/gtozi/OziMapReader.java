@@ -58,7 +58,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
             File inputFile = getSourceAsFile();
 
             if (inputFile == null) {
-                throw new IllegalArgumentException("No input stream for the provided source: " + source);
+                throw new DataSourceException("No input stream for the provided source: " + source);
             }
 
             oziMapFileReader = new OziMapFileReader(inputFile);

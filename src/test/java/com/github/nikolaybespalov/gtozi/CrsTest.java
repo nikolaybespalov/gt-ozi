@@ -2,20 +2,18 @@ package com.github.nikolaybespalov.gtozi;
 
 import org.geotools.TestData;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
+import org.geotools.factory.Hints;
 import org.geotools.referencing.CRS;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
 public class CrsTest {
-//    static {
-//        System.setProperty("org.geotools.referencing.forceXY", "true");
-//        Hints.putSystemDefault(Hints.FORCE_AXIS_ORDER_HONORING, "http");
-//        // setup the referencing tolerance to make it more tolerant to tiny differences
-//        // between projections (increases the chance of matching a random prj file content
-//        // to an actual EPSG code
-//        Hints.putSystemDefault(Hints.COMPARISON_TOLERANCE, 1e-9);
-//    }
+    static {
+        // setup the referencing tolerance to make it more tolerant to tiny differences
+        // between projections
+        Hints.putSystemDefault(Hints.COMPARISON_TOLERANCE, 1e-9);
+    }
 
     // Latitude/Longitude
 

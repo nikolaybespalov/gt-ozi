@@ -12,12 +12,12 @@ import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.cs.DefaultCartesianCS;
+import org.geotools.referencing.cs.DefaultCoordinateSystemAxis;
 import org.geotools.referencing.cs.DefaultEllipsoidalCS;
 import org.geotools.referencing.datum.BursaWolfParameters;
 import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.geotools.referencing.datum.DefaultGeodeticDatum;
 import org.geotools.referencing.datum.DefaultPrimeMeridian;
-import org.geotools.referencing.operation.DefaultMathTransformFactory;
 import org.geotools.referencing.operation.DefiningConversion;
 import org.geotools.referencing.operation.projection.MapProjection;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
@@ -25,9 +25,10 @@ import org.geotools.referencing.operation.transform.ConcatenatedTransform;
 import org.opengis.geometry.DirectPosition;
 import org.opengis.parameter.ParameterValueGroup;
 import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.NoSuchIdentifierException;
+import org.opengis.referencing.crs.CRSFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.crs.GeographicCRS;
+import org.opengis.referencing.cs.EllipsoidalCS;
 import org.opengis.referencing.datum.DatumFactory;
 import org.opengis.referencing.datum.Ellipsoid;
 import org.opengis.referencing.datum.GeodeticDatum;
@@ -46,6 +47,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 import static org.geotools.util.logging.Logging.getLogger;
+import static org.opengis.referencing.IdentifiedObject.NAME_KEY;
 
 @SuppressWarnings("WeakerAccess")
 final class OziMapFileReader {
@@ -201,9 +203,7 @@ final class OziMapFileReader {
             // Parse datum
             //
 
-            GeodeticDatum datum = parseDatum(lines);
-
-            GeographicCRS geoCrs = ReferencingFactoryFinder.getCRSFactory(null).createGeographicCRS(Collections.singletonMap("name", datum.getName().getCode()), datum, DefaultEllipsoidalCS.GEODETIC_2D);
+            String datumName = parseDatum(lines);
 
             //
             // Parse projection
@@ -211,11 +211,15 @@ final class OziMapFileReader {
 
             String projectionName = parseMapProjection(lines);
 
-            if ("Albers Equal Area".equals(projectionName)) {
-                geoCrs = ReferencingFactoryFinder.getCRSAuthorityFactory("EPSG", null).createGeographicCRS("NAD27");
-            }
+            //
+            // Parse 'Projection Setup'
+            //
 
-            crs = parseProjectionSetup(lines, projectionName, geoCrs);
+            String[] projectionSetup = parseProjectionSetup(lines);
+
+            GeographicCRS geoCrs = createGeoCrs(datumName);
+
+            crs = createCrs(lines, projectionName, projectionSetup, geoCrs);
 
             MathTransform world2Crs = CRS.findMathTransform(geoCrs, crs, true);
 
@@ -257,17 +261,14 @@ final class OziMapFileReader {
         return lines.get(2);
     }
 
-    private GeodeticDatum parseDatum(List<String> lines) throws DataSourceException {
-        // The line with the datum name can be not only on the fourth line
-        for (String line : lines) {
-            String[] values = lineValues(line);
-
-            if (DATUMS.containsKey(values[0])) {
-                return DATUMS.get(values[0]);
-            }
+    private String parseDatum(List<String> lines) throws DataSourceException {
+        if (lines.size() < 5) {
+            throw new DataSourceException("Not enough data");
         }
 
-        throw new DataSourceException("Unknown datum");
+        String[] values = lineValues(lines.get(4));
+
+        return values[0];
     }
 
     private String parseMapProjection(List<String> lines) throws DataSourceException {
@@ -288,7 +289,39 @@ final class OziMapFileReader {
         return projectionName;
     }
 
-    private CoordinateReferenceSystem parseProjectionSetup(List<String> lines, String projectionName, GeographicCRS geoCrs) throws DataSourceException, FactoryException {
+    private String[] parseProjectionSetup(List<String> lines) throws DataSourceException {
+        String[] values = null;
+
+        for (String line : lines) {
+            if (StringUtils.startsWith(line, "Projection Setup")) {
+                values = lineValues(line);
+            }
+        }
+
+        if (values == null) {
+            throw new DataSourceException("'Projection Setup' not found");
+        }
+
+        return values;
+    }
+
+    private GeographicCRS createGeoCrs(String datumName) throws FactoryException {
+        CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+
+        Map<String, Object> geoCsProperties = new HashMap<>();
+
+        geoCsProperties.put(NAME_KEY, datumName);
+
+        GeodeticDatum geodeticDatum = DATUMS.get(datumName);
+
+        EllipsoidalCS ellipsoidalCS = new DefaultEllipsoidalCS("",
+                DefaultCoordinateSystemAxis.LONGITUDE,
+                DefaultCoordinateSystemAxis.LATITUDE);
+
+        return crsFactory.createGeographicCRS(geoCsProperties, geodeticDatum, ellipsoidalCS);
+    }
+
+    private CoordinateReferenceSystem createCrs(List<String> lines, String projectionName, String[] projectionSetup, GeographicCRS geoCrs) throws DataSourceException, FactoryException {
         CoordinateReferenceSystem crs;
 
         //  Parameters:
@@ -303,12 +336,50 @@ final class OziMapFileReader {
         //    9. Sat - not used
         //    10. Path - not used
 
+        MathTransformFactory mtFactory = ReferencingFactoryFinder.getMathTransformFactory(null);
+        CRSFactory crsFactory = ReferencingFactoryFinder.getCRSFactory(null);
+
         if ("Latitude/Longitude".equals(projectionName)) {
             crs = geoCrs;
+        } else if ("Mercator".equals(projectionName)) {
+            ParameterValueGroup projectionParameters = mtFactory.getDefaultParameters("Mercator_1SP");
+
+            double scaleFactor = NumberUtils.toDouble(projectionSetup[3], 1.0);
+
+            projectionParameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(projectionSetup[1]));
+            projectionParameters.parameter("central_meridian").setValue(NumberUtils.toDouble(projectionSetup[2]));
+            projectionParameters.parameter("scale_factor").setValue(scaleFactor);
+            projectionParameters.parameter("false_easting").setValue(NumberUtils.toDouble(projectionSetup[4]));
+            projectionParameters.parameter("false_northing").setValue(NumberUtils.toDouble(projectionSetup[5]));
+
+            Map<String, Object> projCsProperties = new HashMap<>();
+
+            projCsProperties.put(NAME_KEY, "unnamed");
+
+            Conversion conversion = new DefiningConversion("Transverse_Mercator", projectionParameters);
+
+            crs = crsFactory.createProjectedCRS(projCsProperties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
+        } else if ("Transverse Mercator".equals(projectionName)) {
+            ParameterValueGroup projectionParameters = mtFactory.getDefaultParameters("Transverse_Mercator");
+
+            projectionParameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(projectionSetup[1]));
+            projectionParameters.parameter("central_meridian").setValue(NumberUtils.toDouble(projectionSetup[2]));
+            projectionParameters.parameter("scale_factor").setValue(NumberUtils.toDouble(projectionSetup[3]));
+            projectionParameters.parameter("false_easting").setValue(NumberUtils.toDouble(projectionSetup[4]));
+            projectionParameters.parameter("false_northing").setValue(NumberUtils.toDouble(projectionSetup[5]));
+
+            Map<String, Object> projCsProperties = new HashMap<>();
+
+            projCsProperties.put(NAME_KEY, "unnamed");
+
+            Conversion conversion = new DefiningConversion("Transverse_Mercator", projectionParameters);
+
+            crs = crsFactory.createProjectedCRS(projCsProperties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
         } else if ("(UTM) Universal Transverse Mercator".equals(projectionName)) {
             int zone = -1;
             boolean north = true;
 
+            // Try to guess the UTM zone
             for (String line : lines) {
                 if (StringUtils.startsWith(line, "Point")) {
                     String[] values = lineValues(line);
@@ -319,50 +390,36 @@ final class OziMapFileReader {
 
                     zone = NumberUtils.toInt(values[13], -1);
                     north = "N".equals(values[16]);
+                    break;
                 }
             }
 
             if (zone == -1) {
-                throw new DataSourceException("Unknown UTM Zone");
+                throw new DataSourceException("Failed to guess UTM zone");
             }
 
-            if (north) {
-                String datumName = geoCrs.getDatum().getName().getCode();
-                String epsgCode = "EPSG:";
-                switch (datumName) {
-                    case "NAD83":
-                        epsgCode += "269";
-                        break;
-                    case "NAD27 Central":
-                        epsgCode += "267";
-                        break;
-                    case "WGS 84":
-                        epsgCode += "326";
-                        break;
-                    default:
-                        throw new DataSourceException("Unsupported UTM datum: " + geoCrs.getDatum().getName().getCode());
-                }
-
-                crs = CRS.decode(epsgCode + zone);
-            } else {
-                throw new DataSourceException("Southern hemisphere UTM not supported. Sorry. Contact me, please");
+            if (!north) {
+                throw new DataSourceException("Southern hemisphere UTM are not supported. Sorry. Contact me, please");
             }
+
+            String projCsName = "UTM Zone " + zone + ", Northern Hemisphere";
+
+            Map<String, Object> projCsProperties = new HashMap<>();
+
+            projCsProperties.put(NAME_KEY, projCsName);
+
+            ParameterValueGroup projectionParameters = mtFactory.getDefaultParameters("Transverse_Mercator");
+
+            projectionParameters.parameter("latitude_of_origin").setValue(0);
+            projectionParameters.parameter("central_meridian").setValue(zone * 6 - 183);
+            projectionParameters.parameter("scale_factor").setValue(0.9996);
+            projectionParameters.parameter("false_easting").setValue(500000.0);
+
+            Conversion conversion = new DefiningConversion("Transverse_Mercator", projectionParameters);
+
+            crs = crsFactory.createProjectedCRS(projCsProperties, geoCrs, conversion, DefaultCartesianCS.GENERIC_2D);
         } else {
-            String[] values = null;
-
-            for (String line : lines) {
-                if (StringUtils.startsWith(line, "Projection Setup")) {
-                    values = lineValues(line);
-                }
-            }
-
-            if (values == null) {
-                throw new DataSourceException("'Projection Setup' is required");
-            }
-
-            Conversion conversion = createConversion(projectionName, values);
-
-            crs = ReferencingFactoryFinder.getCRSFactory(null).createProjectedCRS(Collections.singletonMap("name", "unnamed"), geoCrs, conversion, DefaultCartesianCS.PROJECTED);
+            throw new DataSourceException("Unsupported projection: " + projectionName);
         }
 
         return crs;
@@ -476,6 +533,7 @@ final class OziMapFileReader {
 
         DatumFactory datumFactory = ReferencingFactoryFinder.getDatumFactory(null);
 
+
         return datumFactory.createGeodeticDatum(parameters, ellipsoid, DefaultPrimeMeridian.GREENWICH);
     }
 
@@ -497,41 +555,6 @@ final class OziMapFileReader {
      */
     private static String[] lineValues(String line) {
         return Arrays.stream(line.split(",", -1)).map(String::trim).toArray(String[]::new);
-    }
-
-    // нужно замутить универсальную функцию, которая мапит параметры на геотулс имена
-    // http://docs.geotools.org/latest/userguide/library/referencing/transform.html
-    private static Conversion createConversion(String projectionName, String[] values) throws DataSourceException, NoSuchIdentifierException {
-        final String methodName = OZI_PROJECTION_NAME_TO_GEOTOOLS.get(projectionName);
-
-        DefaultMathTransformFactory mathTransformFactory = new DefaultMathTransformFactory();
-        ParameterValueGroup parameters = mathTransformFactory.getDefaultParameters(methodName);
-
-        if (values.length < 6) {
-            throw new DataSourceException("Not enough data");
-        }
-
-        if (!"Sinusoidal".equals(projectionName) && !"Van Der Grinten".equals(projectionName)) {
-            parameters.parameter("latitude_of_origin").setValue(NumberUtils.toDouble(values[1]));
-        }
-
-        parameters.parameter("central_meridian").setValue(NumberUtils.toDouble(values[2]));
-        parameters.parameter("false_easting").setValue(NumberUtils.toDouble(values[4]));
-        parameters.parameter("false_northing").setValue(NumberUtils.toDouble(values[5]));
-
-        if (("Mercator".equals(projectionName) || "Transverse Mercator".equals(projectionName)) && NumberUtils.isCreatable(values[3])) {
-            parameters.parameter("scale_factor").setValue(NumberUtils.toDouble(values[3]));
-        } else if ("Lambert Conformal Conic".equals(projectionName) || "Albers Equal Area".equals(projectionName)) {
-            if (values.length > 6 && NumberUtils.isCreatable(values[6])) {
-                parameters.parameter("standard_parallel_1").setValue(NumberUtils.toDouble(values[6]));
-            }
-
-            if (values.length > 7 && NumberUtils.isCreatable(values[7])) {
-                parameters.parameter("standard_parallel_2").setValue(NumberUtils.toDouble(values[7]));
-            }
-        }
-
-        return new DefiningConversion(methodName, parameters);
     }
 
     private MathTransform createGrid2Crs(List<CalibrationPoint> calibrationPoints) throws DataSourceException, NoninvertibleTransformException {

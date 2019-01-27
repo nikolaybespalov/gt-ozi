@@ -5,7 +5,6 @@ import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
-import org.geotools.coverage.grid.io.OverviewPolicy;
 import org.geotools.data.DataSourceException;
 import org.geotools.data.FileGroupProvider;
 import org.geotools.factory.Hints;
@@ -119,7 +118,6 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
 
         GeneralEnvelope requestedEnvelope = null;
         Rectangle dim = null;
-        OverviewPolicy overviewPolicy = null;
 
         if (params != null) {
             for (GeneralParameterValue param : params) {
@@ -157,8 +155,8 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
                         layout.setTileHeight(tileHeight);
                         readHints.add(new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout));
                         break;
-                    case "org.geotools.coverage.grid.io.OverviewPolicy":
-                        overviewPolicy = (OverviewPolicy) value;
+                    default:
+                        LOGGER.warning("Unsupported read parameter: " + name);
                         break;
                 }
             }
@@ -167,7 +165,7 @@ public final class OziMapReader extends AbstractGridCoverage2DReader {
         Integer imageChoice;
         final ImageReadParam readP = new ImageReadParam();
         try {
-            imageChoice = setReadParams(overviewPolicy, readP, requestedEnvelope, dim);
+            imageChoice = setReadParams(null, readP, requestedEnvelope, dim);
         } catch (TransformException e) {
             throw new DataSourceException(e);
         }

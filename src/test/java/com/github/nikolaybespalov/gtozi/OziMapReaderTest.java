@@ -1,10 +1,10 @@
 package com.github.nikolaybespalov.gtozi;
 
+import org.geotools.TestData;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
-import org.geotools.data.DataSourceException;
 import org.geotools.data.FileServiceInfo;
 import org.geotools.geometry.GeneralEnvelope;
 import org.junit.After;
@@ -19,16 +19,23 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class OziMapReaderTest {
+    private static final String COVERAGE_NAME = "merc-nad27";
     private AbstractGridCoverage2DReader reader;
 
     @Before
-    public void setUp() throws DataSourceException {
-        reader = new OziMapReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"));
+    public void setUp() throws Exception {
+        reader = new OziMapReader(TestData.file(CrsTest.class, "02-merc/" + COVERAGE_NAME + ".map"));
     }
 
     @After
     public void tearDown() {
         reader.dispose();
+    }
+
+    @Test
+    public void getCoverageNamesShouldReturnCorrectName() {
+        assertEquals(reader.getGridCoverageCount(), 1);
+        assertEquals(COVERAGE_NAME, reader.getGridCoverageNames()[0]);
     }
 
     @Test
@@ -59,27 +66,27 @@ public class OziMapReaderTest {
     }
 
     @Test
-    public void testGetOriginalEnvelop() {
+    public void getOriginalEnvelopShouldReturnNonNull() {
         assertNotNull(reader.getOriginalEnvelope());
-        assertNotNull(reader.getOriginalEnvelope("mer"));
+        assertNotNull(reader.getOriginalEnvelope(COVERAGE_NAME));
     }
 
     @Test
-    public void testGetFormat() {
+    public void getFormatShouldReturnEqualsToOziMapFormatClass() {
         assertNotNull(reader.getFormat());
         assertEquals(OziMapFormat.class, reader.getFormat().getClass());
     }
 
     @Test
-    public void testGetOriginalGridRange() {
+    public void getOriginalGridRangeShouldReturnNonNull() {
         assertNotNull(reader.getOriginalGridRange());
     }
 
     @Test
-    public void testGetInfo() {
+    public void getInfoShouldReturnMainFileAndSupportFile() {
         assertTrue(reader.getInfo() instanceof FileServiceInfo);
         assertTrue(((FileServiceInfo) reader.getInfo()).getFiles(null).hasNext());
-        assertEquals("mer.map", ((FileServiceInfo) reader.getInfo()).getFiles(null).next().getMainFile().getName());
-        assertEquals("mer.jpg", ((FileServiceInfo) reader.getInfo()).getFiles(null).next().getSupportFiles().get(0).getName());
+        assertEquals(COVERAGE_NAME + ".map", ((FileServiceInfo) reader.getInfo()).getFiles(null).next().getMainFile().getName());
+        assertEquals(COVERAGE_NAME + ".jpg", ((FileServiceInfo) reader.getInfo()).getFiles(null).next().getSupportFiles().get(0).getName());
     }
 }

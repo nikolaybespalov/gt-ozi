@@ -1,5 +1,6 @@
 package com.github.nikolaybespalov.gtozi;
 
+import org.geotools.TestData;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.factory.GeoTools;
 import org.junit.Test;
@@ -30,18 +31,18 @@ public class OziMapFormatTest {
     }
 
     @Test
-    public void acceptsWithNonMapFileShouldReturnFalse() {
-        assertFalse(format.accepts(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.jpg")));
+    public void acceptsWithNonMapFileShouldReturnFalse() throws Exception {
+        assertFalse(format.accepts(TestData.file(OziMapFormatTest.class, "02-merc/merc-nad27.jpg")));
     }
 
     @Test
-    public void acceptsWithMapFileWithoutRasterFileLineShouldReturnFalse() {
-        assertFalse(format.accepts(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map")));
+    public void acceptsWithMapFileWithoutRasterFileLineShouldReturnFalse() throws Exception {
+        assertFalse(format.accepts(TestData.url(OziMapFormatTest.class, "bad/noimagefile1.map")));
     }
 
     @Test
-    public void acceptsWithCorrectMapFileShouldReturnTrue() {
-        assertTrue(format.accepts(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+    public void acceptsWithCorrectMapFileShouldReturnTrue() throws Exception {
+        assertTrue(format.accepts(TestData.file(OziMapFormatTest.class, "02-merc/merc-nad27.map")));
     }
 
     @Test
@@ -55,28 +56,28 @@ public class OziMapFormatTest {
     }
 
     @Test
-    public void getReaderWithNonMapFileShouldReturnNull() {
-        assertNull(format.getReader(TestUtils.getResourceAsUrl("com/github/nikolaybespalov/gtozi/test-data/mer.jpg")));
+    public void getReaderWithNonMapFileShouldReturnNull() throws Exception {
+        assertNull(format.getReader(TestData.file(OziMapFormatTest.class, "02-merc/merc-nad27.jpg")));
     }
 
     @Test
-    public void getReaderWithMapFileWithoutRasterFileLineShouldReturnNull() {
-        assertNull(format.getReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/bad/noimagefile1.map"), GeoTools.getDefaultHints()));
+    public void getReaderWithMapFileWithoutRasterFileLineShouldReturnNull() throws Exception {
+        assertNull(format.getReader(TestData.file(OziMapFormatTest.class, "bad/noimagefile1.map"), GeoTools.getDefaultHints()));
     }
 
     @Test
-    public void getReaderWithCorrectMapFileShouldReturnReader() {
-        assertNotNull(format.getReader(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
+    public void getReaderWithCorrectMapFileShouldReturnReader() throws Exception {
+        assertNotNull(format.getReader(TestData.file(OziMapFormatTest.class, "02-merc/merc-nad27.map")));
     }
 
     @Test
-    public void testGetWriter() {
-        assertNull(format.getWriter(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map")));
-        assertNull(format.getWriter(TestUtils.getResourceAsFile("com/github/nikolaybespalov/gtozi/test-data/mer.map"), GeoTools.getDefaultHints()));
+    public void getWriterShouldReturnNull() throws Exception {
+        assertNull(format.getWriter(TestData.file(OziMapFormatTest.class, "02-merc/merc-nad27.map")));
+        assertNull(format.getWriter(TestData.file(OziMapFormatTest.class, "02-merc/merc-nad27.map"), GeoTools.getDefaultHints()));
     }
 
     @Test
-    public void testGetDefaultImageIOWriteParameters() {
+    public void getDefaultImageIOWriteParametersShouldReturnNull() {
         assertNull(format.getDefaultImageIOWriteParameters());
     }
 

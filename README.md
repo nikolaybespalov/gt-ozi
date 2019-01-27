@@ -6,6 +6,8 @@
 
 GeoTools plugin that allows you to use [OziExplorer](http://www.oziexplorer3.com/) spatial reference file(.MAP) in your Java application.
 
+_This code is based on an implementation from GDAL._
+
 ![OziExplorer](README.png "OziExplorer")
 
 It's as easy as reading any other map file
@@ -23,58 +25,23 @@ Just add dependency to your _pom.xml_
     <dependency>
         <groupId>com.github.nikolaybespalov</groupId>
         <artifactId>gt-ozi</artifactId>
-        <version>${geotools.ozi.version}</version>
+        <version>${gt-ozi.version}</version>
         <scope>runtime</scope>
     </dependency>
 ```
 Or to your _build.gradle_
 ```
     dependencies {
-        runtime("com.github.nikolaybespalov:gt-ozi:${geotools.ozi.version}")
+        runtime("com.github.nikolaybespalov:gt-ozi:${gt-ozi.version}")
     }
 ```
-And your project will be able to work with .MAP files!
-
-~~The main idea is to parse the projection parameters from .MAP file and provide them to WorldImageReader.~~
-
-The code is based on the implementation of the OZI dataset support in GDAL.
-
-## Key difference
-- Support for maps crossing the world border by longitude
+And your project will be able to work with .map files!
 
 ## Supported projections
 - Latitude/Longitude
 - Mercator
 - Transverse Mercator
 - (UTM) Universal Transverse Mercator
-- ~~(BNG) British National Grid~~
-- ~~(IG) Irish Grid~~
-- ~~(NZG) New Zealand Grid~~
-- ~~(NZTM2) New Zealand TM 2000~~
-- ~~(SG) Swedish Grid~~
-- ~~(SUI) Swiss Grid~~
-- ~~(I) France Zone I~~
-- ~~(II) France Zone II~~
-- ~~(III) France Zone III~~
-- ~~(IV) France Zone IV~~
-- Lambert Conformal Conic
-- ~~(A)Lambert Azimuthual Equal Area~~
-- ~~(EQC) Equidistant Conic~~
-- Sinusoidal
-- ~~Polyconic (American)~~
-- Albers Equal Area
-- Van Der Grinten
-- ~~Vertical Near-Sided Perspective~~
-- ~~(WIV) Wagner IV~~
-- ~~Bonne~~
-- ~~(MT0) Montana State Plane Zone 2500~~
-- ~~(ITA1) Italy Grid Zone 1~~
-- ~~(ITA2) Italy Grid Zone 2~~
-- ~~(VICMAP-TM) Victoria Aust.(pseudo AMG)~~
-- ~~(VICGRID) Victoria Australia~~
-- ~~(VG94) VICGRID94 Victoria Australia~~
-- ~~Gnomonic~~
-- ~~State Plane Coordinate System~~
 
 ## Supported datums
 All datums from the [list](http://www.oziexplorer3.com/namesearch/datum_list.html) are supported.
@@ -82,5 +49,5 @@ All datums from the [list](http://www.oziexplorer3.com/namesearch/datum_list.htm
 ## Supported ellipsoids
 All ellipsoids from the [list](http://www.oziexplorer3.com/eng/help/userdatums.html) are supported.
 
-## What about the .ozf2/.ozf3?
+## What about the .ozf2/.ozf3 files?
 Look at [imageio-ozf](https://github.com/nikolaybespalov/imageio-ozf) library.

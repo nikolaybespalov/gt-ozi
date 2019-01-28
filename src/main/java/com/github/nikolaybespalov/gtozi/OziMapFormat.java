@@ -12,7 +12,6 @@ import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
 import org.opengis.parameter.GeneralParameterDescriptor;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,11 +59,6 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
     public AbstractGridCoverage2DReader getReader(Object source, Hints hints) {
         if (source == null) {
             LOGGER.severe("source should not be null");
-            return null;
-        }
-
-        if (!(source instanceof File)) {
-            LOGGER.severe("source should be a File");
             return null;
         }
 

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.nikolaybespalov</groupId>
@@ -8,8 +9,8 @@
     <version>0.1.17-SNAPSHOT</version>
 
     <name>gt-ozi</name>
-    <description>GeoTools plugin that allows you to read OziExplorer spatial reference file(.MAP) without using
-        GDAL/OziApi or any other environment dependencies.
+    <description>GeoTools plugin that allows you to use OziExplorer spatial reference file(.map) in your Java
+        application.
     </description>
     <url>https://github.com/nikolaybespalov/gt-ozi</url>
     <inceptionYear>2018</inceptionYear>

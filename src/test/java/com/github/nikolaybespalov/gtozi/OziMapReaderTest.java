@@ -33,8 +33,12 @@ public class OziMapReaderTest {
     }
 
     @Test
-    public void getCoverageNamesShouldReturnCorrectName() {
+    public void getGridCoverageCountShouldReturnOne() {
         assertEquals(reader.getGridCoverageCount(), 1);
+    }
+
+    @Test
+    public void getCoverageNamesShouldReturnCorrectName() {
         assertEquals(COVERAGE_NAME, reader.getGridCoverageNames()[0]);
     }
 

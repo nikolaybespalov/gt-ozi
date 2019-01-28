@@ -82,7 +82,7 @@ public class OziMapFormatTest {
     }
 
     @Test
-    public void testGetReadParameters() {
+    public void getReadParametersShouldReturnTwoParameters() {
         ParameterValueGroup readParameters = format.getReadParameters();
 
         assertEquals(2, readParameters.values().size());

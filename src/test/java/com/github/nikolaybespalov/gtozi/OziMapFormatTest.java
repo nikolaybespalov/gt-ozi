@@ -36,11 +36,6 @@ public class OziMapFormatTest {
     }
 
     @Test
-    public void acceptsWithMapFileWithoutRasterFileLineShouldReturnFalse() throws Exception {
-        assertFalse(format.accepts(TestData.url(OziMapFormatTest.class, "bad/noimagefile1.map")));
-    }
-
-    @Test
     public void acceptsWithCorrectMapFileShouldReturnTrue() throws Exception {
         assertTrue(format.accepts(TestData.file(OziMapFormatTest.class, "02-merc/merc-nad27.map")));
     }

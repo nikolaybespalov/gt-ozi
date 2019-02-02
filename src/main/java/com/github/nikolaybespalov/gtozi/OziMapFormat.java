@@ -63,6 +63,8 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
                 case "OziExplorer Map Data File Version 2.1":
                 case "OziExplorer Map Data File Version 2.2":
                     return true;
+                default:
+                    return false;
             }
         } catch (IOException e) {
             // ignore it

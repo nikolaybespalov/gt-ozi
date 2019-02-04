@@ -73,11 +73,6 @@
     <dependencies>
         <dependency>
             <groupId>org.geotools</groupId>
-            <artifactId>gt-main</artifactId>
-            <version>${org.geotools.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.geotools</groupId>
             <artifactId>gt-coverage</artifactId>
             <version>${org.geotools.version}</version>
         </dependency>
@@ -89,11 +84,6 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-epsg-hsql</artifactId>
-            <version>${org.geotools.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-epsg-extension</artifactId>
             <version>${org.geotools.version}</version>
         </dependency>
         <dependency>

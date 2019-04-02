@@ -1,15 +1,20 @@
 package com.github.nikolaybespalov.gtozi;
 
 import org.geotools.TestData;
-import org.geotools.coverage.CoverageFactoryFinder;
-import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridEnvelope2D;
+import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
+import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.data.FileServiceInfo;
-import org.geotools.factory.Hints;
+import org.geotools.geometry.GeneralEnvelope;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.opengis.parameter.GeneralParameterValue;
+import org.opengis.parameter.ParameterValue;
 
+import java.awt.*;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,15 +75,36 @@ public class OziMapReaderTest {
     }
 
     @Test
-    public void testPassGridCoverageFactory() throws IOException {
-        Hints hints = new Hints();
+    public void readWithSuggestedTileSizeShouldReturnTheSameResult() throws IOException {
+        final ParameterValue<String> sts = AbstractGridFormat.SUGGESTED_TILE_SIZE.createValue();
+        sts.setValue("256,256");
 
-        GridCoverageFactory gridCoverageFactory = CoverageFactoryFinder.getGridCoverageFactory(null);
+        GridCoverage2D coverage = reader.read(new GeneralParameterValue[]{sts});
 
-        hints.put(Hints.GRID_COVERAGE_FACTORY, gridCoverageFactory);
+        assertEquals(coverage.getRenderedImage().getTileWidth(), 256);
+        assertEquals(coverage.getRenderedImage().getTileHeight(), 256);
+    }
 
-        OziMapReader reader = new OziMapReader(TestData.file(CrsTest.class, MAP_FILE_PATH), hints);
+    @Test
+    public void readWithGridGeometryShouldReturnTheSameResult() throws IOException {
 
-        reader.dispose();
+        GeneralParameterValue[] params = new GeneralParameterValue[1];
+
+        final ParameterValue<GridGeometry2D> gg =
+                AbstractGridFormat.READ_GRIDGEOMETRY2D.createValue();
+        final GeneralEnvelope envelope = reader.getOriginalEnvelope();
+        final Dimension dim = new Dimension();
+        dim.setSize(
+                reader.getOriginalGridRange().getSpan(0) / 4,
+                reader.getOriginalGridRange().getSpan(1) / 4);
+        final Rectangle rasterArea = ((GridEnvelope2D) reader.getOriginalGridRange());
+        rasterArea.setSize(dim);
+        final GridEnvelope2D range = new GridEnvelope2D(rasterArea);
+        gg.setValue(new GridGeometry2D(range, envelope));
+        params[0] = gg;
+
+        GridCoverage2D coverage = reader.read(params);
+
+        assertEquals(range, coverage.getGridGeometry().getGridRange2D());
     }
 }

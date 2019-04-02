@@ -67,10 +67,12 @@ public final class OziMapFormat extends AbstractGridFormat implements Format {
                     return false;
             }
         } catch (IOException e) {
-            // ignore it
-        }
+            if (LOGGER.isLoggable(Level.SEVERE)) {
+                LOGGER.log(Level.SEVERE, "First line could not be read", e);
+            }
 
-        return false;
+            return false;
+        }
     }
 
     @Override

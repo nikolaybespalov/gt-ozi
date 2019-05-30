@@ -219,6 +219,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <javadocExecutable>${java.home}/../bin/javadoc</javadocExecutable>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -307,6 +310,37 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <profiles>
+        <profile>
+            <id>upload-coverage-report</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.gavinmogan</groupId>
+                        <artifactId>codacy-maven-plugin</artifactId>
+                        <version>1.0.3</version>
+                        <configuration>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <apiToken>${env.CODACY_API_TOKEN}</apiToken>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <projectToken>${env.CODACY_PROJECT_TOKEN}</projectToken>
+                            <coverageReportFile>target/coverage-reports/jacoco/jacoco.xml</coverageReportFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>post-test</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>coverage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <repositories>
         <repository>
